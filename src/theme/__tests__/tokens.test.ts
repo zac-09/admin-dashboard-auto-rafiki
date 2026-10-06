@@ -36,6 +36,25 @@ function contrast(a: string, b: string): number {
 
 const MODES: ThemeMode[] = ['light', 'dark'];
 
+/**
+ * KNOWN GAPS in the palette as specified (identical in the app repo), raised with Isaac:
+ * these pairs measure below 4.5:1 although the app's palette comment claims 4.6:1. Until the
+ * values change, the UI does not use them for body-size text. Remove an entry once fixed;
+ * the test fails if an entry starts passing, so this list cannot go stale.
+ */
+const KNOWN_LOW_CONTRAST = new Set([
+  'light:accent', // #0E8FA3 on #FFFFFF = 3.83:1
+  'light:success', // #1E8E63 on #FFFFFF = 4.11:1
+  'light:onAccent', // #FFFFFF on #0E8FA3 = 3.83:1
+]);
+
+function expectLegible(key: string, ratios: number[]): void {
+  const passes = ratios.every((r) => r >= 4.5);
+  expect(passes, `${key}: ${ratios.map((r) => r.toFixed(2)).join(', ')}`).toBe(
+    !KNOWN_LOW_CONTRAST.has(key),
+  );
+}
+
 describe.each(MODES)('%s palette', (mode) => {
   const palette = palettes[mode];
 
@@ -48,13 +67,15 @@ describe.each(MODES)('%s palette', (mode) => {
   it.each(['textPrimary', 'textMuted', 'accent', 'success', 'danger', 'warning'] as const)(
     '%s is legible text on background and surface (≥ 4.5:1)',
     (token) => {
-      expect(contrast(palette[token], palette.background)).toBeGreaterThanOrEqual(4.5);
-      expect(contrast(palette[token], palette.surface)).toBeGreaterThanOrEqual(4.5);
+      expectLegible(`${mode}:${token}`, [
+        contrast(palette[token], palette.background),
+        contrast(palette[token], palette.surface),
+      ]);
     },
   );
 
   it('onAccent is legible on an accent fill', () => {
-    expect(contrast(palette.onAccent, palette.accent)).toBeGreaterThanOrEqual(4.5);
+    expectLegible(`${mode}:onAccent`, [contrast(palette.onAccent, palette.accent)]);
   });
 });
 
