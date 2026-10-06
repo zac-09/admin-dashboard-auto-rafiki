@@ -118,6 +118,16 @@ firebase deploy --only firestore:indexes --project auto-rafiki
 One-time Console setup: enable the **Email/Password** sign-in provider (alongside Phone)
 and register a **Web app** for the config values.
 
+## Motion and loading states
+
+Ported from the app's motion system so both feel the same (`src/components/motion`):
+`presets.ts` (the app's settle / snappy / pop springs, fade timings and 55 ms list stagger),
+`Reveal` (spring entrances), `Pop`, `AnimatedNumber`, and `SuccessMark` / `SuccessMoment`
+(spinner → ring closes → tick draws → diamond burst → title rises) for sign-in and vetting /
+suspension outcomes. Loading uses shaped skeletons with the accent sweep
+(`src/components/ui/Skeleton.tsx`), never a bare "Loading…". Everything honours the OS
+reduced-motion setting. Tests skip animations and choreography waits (`src/test/setup.ts`).
+
 ## Layout
 
 ```

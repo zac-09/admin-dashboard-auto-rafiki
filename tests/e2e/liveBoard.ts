@@ -117,6 +117,14 @@ async function main() {
     await page.type('input[type=email]', 'e2e-ops@autorafiki.test');
     await page.type('input[type=password]', PASSWORD);
     await page.click('button[type=submit]');
+    // The sign-in moment: spinner → tick → "Signed in", then the shell.
+    await page.waitForFunction(() => document.body.textContent?.includes('Signed in'), {
+      timeout: 10_000,
+    });
+    await page.screenshot({ path: `${OUT}/signin-moment.png` });
+    await new Promise((r) => setTimeout(r, 450));
+    await page.screenshot({ path: `${OUT}/signin-moment-tick.png` });
+    pass('sign-in plays the success moment');
     await page.waitForSelector('nav[aria-label="Main"]');
     pass('ops staff sign in with email and password');
 

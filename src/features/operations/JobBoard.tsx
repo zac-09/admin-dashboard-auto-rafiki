@@ -47,25 +47,25 @@ export function JobBoard({
               {columns[status].length === 0 ? (
                 <p className="py-2 text-xs text-muted">None</p>
               ) : null}
-              <AnimatePresence mode="popLayout" initial={false}>
-                {columns[status].map((job) => (
-                  <motion.div
-                    key={job.id}
-                    layoutId={job.id}
-                    layout="position"
-                    initial={{ opacity: 0, scale: 0.96 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={springs.settle}
-                  >
-                    <JobCard
-                      job={job}
-                      now={now}
-                      attention={flagged.get(job.id)}
-                      mechanicName={job.mechanicId ? mechanicNames.get(job.mechanicId) : undefined}
-                    />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+              {/* No AnimatePresence: a moved card unmounts at once and its shared layoutId makes
+                  the new one glide in from the old column (an exit here would leave a ghost). */}
+              {columns[status].map((job) => (
+                <motion.div
+                  key={job.id}
+                  layoutId={job.id}
+                  layout="position"
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={springs.settle}
+                >
+                  <JobCard
+                    job={job}
+                    now={now}
+                    attention={flagged.get(job.id)}
+                    mechanicName={job.mechanicId ? mechanicNames.get(job.mechanicId) : undefined}
+                  />
+                </motion.div>
+              ))}
             </section>
           ))}
         </div>
