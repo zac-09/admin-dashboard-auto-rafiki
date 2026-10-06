@@ -8,6 +8,9 @@ const src = fileURLToPath(new URL('./src', import.meta.url));
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  // Tests never read .env files: .env.local may point dev builds at production, and a test
+  // must never reach it. Tests get the safe defaults (mocks on, emulators on) instead.
+  envDir: process.env.VITEST ? false : undefined,
   resolve: { alias: { '@': src } },
   build: {
     // The Firebase SDK (auth + firestore + functions) is ~540 kB minified / 160 kB gzipped on its

@@ -1,5 +1,7 @@
 import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
 
+import { JobDetailPage } from '@/features/operations/JobDetailPage';
+import { OperationsPage } from '@/features/operations/OperationsPage';
 import { MechanicDetailPage } from '@/features/vetting/MechanicDetailPage';
 import { VettingQueuePage } from '@/features/vetting/VettingQueuePage';
 
@@ -32,8 +34,24 @@ export const routes: RouteObject[] = [
           </RequirePermission>
         ),
       },
+      {
+        path: '/operations',
+        element: (
+          <RequirePermission permission="operations.view">
+            <OperationsPage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: '/operations/jobs/:jobId',
+        element: (
+          <RequirePermission permission="operations.view">
+            <JobDetailPage />
+          </RequirePermission>
+        ),
+      },
       // Modules not built yet.
-      ...NAV_ITEMS.filter((item) => item.to !== '/vetting').map((item) => ({
+      ...NAV_ITEMS.filter((item) => !['/vetting', '/operations'].includes(item.to)).map((item) => ({
         path: item.to,
         element: (
           <RequirePermission permission={item.permission}>

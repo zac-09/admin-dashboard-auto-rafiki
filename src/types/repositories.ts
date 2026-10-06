@@ -2,7 +2,8 @@ import type { DecideVettingInput, DecideVettingResult, VettingStatus } from '../
 
 import type { AdminSession } from './admin';
 import type { AuditEntry } from './audit';
-import type { MechanicDoc } from './firestore';
+import type { Job, Rating } from './domain';
+import type { MechanicDoc, UserDoc } from './firestore';
 
 /**
  * Every screen and hook talks to these interfaces only. `lib/mocks` implements them with
@@ -42,9 +43,45 @@ export interface VettingRepository {
   decide(input: DecideVettingInput): Promise<DecideVettingResult>;
 }
 
+/** Live feeds for the control room. Every subscription emits the full current list. */
+export interface OperationsRepository {
+  /** Jobs not yet complete or cancelled (board + map). */
+  subscribeActiveJobs(onChange: (jobs: Job[]) => void, onError: (e: Error) => void): Unsubscribe;
+  /** Complete and cancelled jobs requested since `sinceIso` (the board's closed columns). */
+  subscribeClosedJobs(
+    sinceIso: string,
+    onChange: (jobs: Job[]) => void,
+    onError: (e: Error) => void,
+  ): Unsubscribe;
+  /** Mechanics with isOnline (any vetting status) for the map. */
+  subscribeOnlineMechanics(
+    onChange: (mechanics: MechanicDoc[]) => void,
+    onError: (e: Error) => void,
+  ): Unsubscribe;
+  /** Ratings of 1 or 2 stars (either direction) since `sinceIso` (alert rail). */
+  subscribeLowRatings(
+    sinceIso: string,
+    onChange: (ratings: Rating[]) => void,
+    onError: (e: Error) => void,
+  ): Unsubscribe;
+  subscribeJob(
+    jobId: string,
+    onChange: (job: Job | null) => void,
+    onError: (e: Error) => void,
+  ): Unsubscribe;
+}
+
+export interface PeopleRepository {
+  /** users/{uid}: private to app users, readable by staff (phone for support calls). */
+  getUser(userId: string): Promise<UserDoc | null>;
+  getMechanic(userId: string): Promise<MechanicDoc | null>;
+}
+
 export interface Repositories {
   auth: AuthRepository;
   mechanics: MechanicRepository;
   audit: AuditRepository;
   vetting: VettingRepository;
+  operations: OperationsRepository;
+  people: PeopleRepository;
 }
