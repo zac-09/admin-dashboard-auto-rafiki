@@ -18,9 +18,11 @@ export type AuditAction =
   | 'mechanic.vetting.suspend'
   /** flagDispute / resolveDispute (customer support). */
   | 'job.dispute.open'
-  | 'job.dispute.resolve';
+  | 'job.dispute.resolve'
+  /** markSubscriptionPaid: a weekly subscription payment was recorded. */
+  | 'subscription.paid';
 
-export type AuditTargetType = 'staff' | 'mechanic' | 'job';
+export type AuditTargetType = 'staff' | 'mechanic' | 'job' | 'subscription';
 
 export interface AuditEntry {
   id: string;

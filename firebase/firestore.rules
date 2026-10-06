@@ -211,5 +211,12 @@ service cloud.firestore {
     match /disputes/{jobId} {
       allow read, write: if false;
     }
+
+    // subscriptions/{mechanicId}_{weekStart}: Phase-1 weekly payments, recorded by the audited
+    // markSubscriptionPaid callable. Staff read via the rule above; nobody else reads or writes
+    // (not even the mechanic, until the app has a subscriptions screen agreed with Isaac).
+    match /subscriptions/{paymentId} {
+      allow read, write: if false;
+    }
   }
 }

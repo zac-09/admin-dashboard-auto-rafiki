@@ -4,4 +4,5 @@ export * from './firestore';
 export * from './admin';
 export * from './audit';
 export * from './support';
+export * from './subscriptions';
 export * from './repositories';

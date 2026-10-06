@@ -5,6 +5,7 @@
  *
  * - setUserRole:   admin-only callable that sets a staff member's `role` claim (audited)
  * - decideVetting: approve / reject / suspend a mechanic (admin, ops; audited)
+ * - markSubscriptionPaid: record a mechanic's weekly UGX 15,000 (admin, ops; audited)
  * - addSupportNote, flagDispute, resolveDispute: customer support on a job (all roles;
  *   suspending a mechanic as a dispute outcome needs admin or ops; audited)
  */
@@ -17,9 +18,11 @@ import { onCall } from 'firebase-functions/v2/https';
 import { SERVICE_LABELS } from '../../src/lib/labels';
 import { AUDIT_COLLECTION } from '../../src/types/audit';
 import { COLLECTIONS } from '../../src/types/firestore';
+import { SUBSCRIPTIONS } from '../../src/types/subscriptions';
 import { DISPUTES, SUPPORT_NOTES, type Dispute } from '../../src/types/support';
 
 import { decideVetting as decideVettingHandler, type VettingDeps } from './decideVetting';
+import { markSubscriptionPaid as markPaidHandler, type MarkPaidDeps } from './markPaid';
 import { setUserRole as setUserRoleHandler, type Caller, type RoleDeps } from './setUserRole';
 import {
   addSupportNote as addSupportNoteHandler,
@@ -127,6 +130,46 @@ const supportDeps: SupportDeps = {
   now: () => new Date(),
 };
 
+const markPaidDeps: MarkPaidDeps = {
+  async transact(run) {
+    const db = getFirestore();
+    await db.runTransaction(async (tx) => {
+      await run({
+        async getMechanic(id) {
+          const snap = await tx.get(db.collection(COLLECTIONS.mechanics).doc(id));
+          const m = snap.data();
+          return snap.exists && m
+            ? { userId: id, vetting: m.vetting, businessName: String(m.businessName ?? '') }
+            : null;
+        },
+        async getVettingHistory(id) {
+          const snap = await tx.get(
+            db
+              .collection(AUDIT_COLLECTION)
+              .where('targetType', '==', 'mechanic')
+              .where('targetId', '==', id),
+          );
+          return snap.docs.map((d) => {
+            const e = d.data();
+            return { action: e.action, targetId: e.targetId, at: e.at };
+          });
+        },
+        async getPayment(id) {
+          const snap = await tx.get(db.collection(SUBSCRIPTIONS).doc(id));
+          return snap.exists ? (snap.data() as never) : null;
+        },
+        createPayment: (payment) => {
+          tx.create(db.collection(SUBSCRIPTIONS).doc(payment.id), payment);
+        },
+        audit: (entry) => {
+          tx.create(db.collection(AUDIT_COLLECTION).doc(), entry);
+        },
+      });
+    });
+  },
+  now: () => new Date(),
+};
+
 type CallableRequest = { auth?: { uid: string; token: Record<string, unknown> } };
 
 function callerOf(request: CallableRequest): Caller | null {
@@ -156,4 +199,8 @@ export const flagDispute = onCall((request) =>
 
 export const resolveDispute = onCall((request) =>
   resolveDisputeHandler(callerOf(request), request.data, supportDeps),
+);
+
+export const markSubscriptionPaid = onCall((request) =>
+  markPaidHandler(callerOf(request), request.data, markPaidDeps),
 );
