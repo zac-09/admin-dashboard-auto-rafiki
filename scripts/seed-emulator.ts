@@ -12,7 +12,16 @@ import { initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 
-import { JOBS, MECHANICS, MESSAGES, RATINGS, USERS } from '../src/lib/mocks/contractFixtures';
+import {
+  JOBS,
+  MECHANICS,
+  MESSAGES,
+  RATINGS,
+  USERS,
+  FIXTURE_NOW,
+  shiftIso,
+  shiftJob,
+} from '../src/lib/mocks/contractFixtures';
 import { AUDIT_ENTRIES } from '../src/lib/mocks/auditFixtures';
 import { MOCK_APP_USER, MOCK_PASSWORD, MOCK_STAFF } from '../src/lib/mocks/fixtures';
 import { AUDIT_COLLECTION, COLLECTIONS } from '../src/types';
@@ -59,8 +68,15 @@ for (const u of USERS) {
   });
 }
 for (const m of MECHANICS) batch.set(db.collection(COLLECTIONS.mechanics).doc(m.userId), m);
-for (const j of JOBS) batch.set(db.collection(COLLECTIONS.jobs).doc(j.id), j);
-for (const r of RATINGS) batch.set(db.collection(COLLECTIONS.ratings).doc(r.id), r);
+// Shift fixture times so FIXTURE_NOW is now: the board's elapsed times and alerts look live.
+const offset = Date.now() - FIXTURE_NOW.getTime();
+for (const j of JOBS) batch.set(db.collection(COLLECTIONS.jobs).doc(j.id), shiftJob(j, offset));
+for (const r of RATINGS) {
+  batch.set(db.collection(COLLECTIONS.ratings).doc(r.id), {
+    ...r,
+    createdAt: shiftIso(r.createdAt, offset),
+  });
+}
 for (const msg of MESSAGES) {
   batch.set(
     db.collection(COLLECTIONS.jobs).doc(msg.jobId).collection(COLLECTIONS.messages).doc(msg.id),

@@ -9,22 +9,8 @@ import type {
   UserDoc,
 } from '@/types';
 
-import { FIXTURE_NOW, JOBS, RATINGS, USERS } from './contractFixtures';
+import { FIXTURE_NOW, JOBS, RATINGS, shiftIso, shiftJob, USERS } from './contractFixtures';
 import type { MockVettingStore } from './mockVettingRepositories';
-
-/** Moves fixture timestamps so FIXTURE_NOW becomes "now": elapsed times then look real. */
-function shiftIso(iso: string, offsetMs: number): string {
-  return new Date(new Date(iso).getTime() + offsetMs).toISOString();
-}
-
-function shiftJob(job: Job, offsetMs: number): Job {
-  return {
-    ...job,
-    expiresAt: shiftIso(job.expiresAt, offsetMs),
-    request: { ...job.request, createdAt: shiftIso(job.request.createdAt, offsetMs) },
-    timeline: job.timeline.map((t) => ({ ...t, at: shiftIso(t.at, offsetMs) })),
-  };
-}
 
 type Listener = () => void;
 

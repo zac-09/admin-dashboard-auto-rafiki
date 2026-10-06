@@ -50,6 +50,14 @@ npm run test:rules      # Firestore rules on the emulator (fast)
 npm run test:emulator   # rules + callables end to end (auth, firestore, functions emulators)
 ```
 
+Tests never read `.env*` files (`envDir` is off under Vitest), so a `.env.local` pointed at
+production cannot leak into a test run.
+
+`tests/integration/operations.*.test.ts` drive the dashboard's real Firestore listeners. Under
+Node the web SDK's gRPC listen stream desyncs against the emulator if a listener is its first
+request, so `opsHarness.ts` signs in once per file and makes a one-off read first. Browsers use
+a different transport and are unaffected.
+
 The rules tests in `tests/rules/app.*.test.ts` drive a call-for-call port of the app's
 Firestore writes (`tests/rules/appClient.ts`). They cover every app access path. A rules
 change that breaks one does not ship.
