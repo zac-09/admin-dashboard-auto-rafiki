@@ -9,6 +9,19 @@ const src = fileURLToPath(new URL('./src', import.meta.url));
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: { alias: { '@': src } },
+  build: {
+    // The Firebase SDK (auth + firestore + functions) is ~540 kB minified / 160 kB gzipped on its
+    // own and cannot be split further; everything else stays well under the default 500 kB.
+    chunkSizeWarningLimit: 600,
+    rolldownOptions: {
+      output: {
+        // The Firebase SDK changes rarely: its own chunk caches across dashboard deploys.
+        advancedChunks: {
+          groups: [{ name: 'firebase', test: /node_modules[\\/](@firebase|firebase)[\\/]/ }],
+        },
+      },
+    },
+  },
   test: {
     projects: [
       {

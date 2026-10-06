@@ -13,6 +13,7 @@ import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 
 import { JOBS, MECHANICS, MESSAGES, RATINGS, USERS } from '../src/lib/mocks/contractFixtures';
+import { AUDIT_ENTRIES } from '../src/lib/mocks/auditFixtures';
 import { MOCK_APP_USER, MOCK_PASSWORD, MOCK_STAFF } from '../src/lib/mocks/fixtures';
 import { AUDIT_COLLECTION, COLLECTIONS } from '../src/types';
 
@@ -72,19 +73,9 @@ batch.set(db.collection(COLLECTIONS.presence).doc('u_customer_aisha'), {
   lastSeen: FieldValue.serverTimestamp(),
   viewingJobId: 'job_enroute_late',
 });
-batch.set(db.collection(AUDIT_COLLECTION).doc('seed'), {
-  action: 'staff.bootstrap',
-  actorUid: 'system',
-  actorEmail: null,
-  actorRole: 'system',
-  targetType: 'staff',
-  targetId: 'staff-admin',
-  targetLabel: 'admin@autorafiki.test',
-  before: null,
-  after: 'admin',
-  reason: 'Emulator seed',
-  at: new Date().toISOString(),
-});
+for (const { id, ...entry } of AUDIT_ENTRIES) {
+  batch.set(db.collection(AUDIT_COLLECTION).doc(id), entry);
+}
 await batch.commit();
 
 console.log(
