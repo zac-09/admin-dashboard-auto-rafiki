@@ -44,7 +44,7 @@ export function decisionLabel(decision: VettingDecision, current: VettingStatus)
 
 /**
  * Practical-assessment checklist, every item required to approve or re-verify.
- * PLACEHOLDER WORDING drafted by the dashboard team: Isaac to confirm the real assessment.
+ * Confirmed by Isaac (2026-10-06) as the assessment the team actually runs.
  * Item ids are stored in the audit log, so reword labels freely but never reuse an id.
  */
 export const ASSESSMENT_CHECKLIST: readonly { id: string; label: string }[] = [
