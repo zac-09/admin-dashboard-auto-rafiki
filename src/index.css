@@ -188,3 +188,8 @@
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Search fields: no browser-blue clear button (off-brand); Escape / backspace clear instead. */
+input[type='search']::-webkit-search-cancel-button {
+  appearance: none;
+}

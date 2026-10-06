@@ -4,6 +4,7 @@ import { NavLink } from 'react-router';
 
 import { springs } from '@/components/motion';
 import { WheelMark } from '@/components/ui';
+import { usePalette } from '@/features/support/paletteStore';
 import { can } from '@/lib/permissions';
 import type { AdminSession } from '@/types';
 
@@ -30,6 +31,21 @@ export function Sidebar({
           <span className="micro-label">Operations</span>
         </div>
       </div>
+      {can(session.role, 'support.view') ? (
+        <div className="px-2 pb-2">
+          <button
+            type="button"
+            onClick={() => {
+              onNavigate?.();
+              usePalette.getState().setOpen(true);
+            }}
+            className="flex min-h-10 w-full items-center justify-between rounded-control border border-hairline bg-background px-3 text-sm text-muted transition-colors hover:border-primary hover:text-primary"
+          >
+            <span>Search</span>
+            <kbd className="text-xs">⌘K</kbd>
+          </button>
+        </div>
+      ) : null}
       <nav aria-label="Main" className="flex-1 overflow-y-auto px-2">
         <ul className="flex flex-col gap-0.5">
           {items.map((item) => (

@@ -118,6 +118,15 @@ firebase deploy --only firestore:indexes --project auto-rafiki
 One-time Console setup: enable the **Email/Password** sign-in provider (alongside Phone)
 and register a **Web app** for the config values.
 
+## Customer support
+
+`/support` searches by phone (any Ugandan format), job id or business name, also from anywhere
+with ⌘K / Ctrl+K, and lists open disputes. `/jobs/:id` is the full record: timeline, chat
+transcript, ratings both ways, people, internal notes, the dispute, interventions.
+`/support/people/:uid` shows a person's jobs on either side. Notes and disputes are written only
+by the `addSupportNote`, `flagDispute` and `resolveDispute` callables (audited); app users can
+never read them. Resolving with "Mechanic suspended" needs admin or ops.
+
 ## Motion and loading states
 
 Ported from the app's motion system so both feel the same (`src/components/motion`):

@@ -1,4 +1,4 @@
-import type { MechanicProfile, ServiceType, VehicleCategory } from '@/types';
+import type { MechanicProfile, ServiceType, VehicleCategory } from '../types/domain';
 
 /** Ported from the app's src/features/jobs/labels.ts so both sides use the same words. */
 export const SERVICE_LABELS: Record<ServiceType, string> = {

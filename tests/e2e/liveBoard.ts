@@ -160,7 +160,7 @@ async function main() {
     await page.screenshot({ path: `${OUT}/operations-dark.png`, fullPage: true });
     pass('dark mode switch applies');
 
-    await page.goto(`${base}/operations/jobs/e2e_live`);
+    await page.goto(`${base}/jobs/e2e_live`);
     await page.waitForSelector('section[aria-label="Timeline"]');
     await page.screenshot({ path: `${OUT}/job-detail-dark.png`, fullPage: true });
     pass('job detail opens');

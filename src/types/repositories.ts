@@ -2,8 +2,9 @@ import type { DecideVettingInput, DecideVettingResult, VettingStatus } from '../
 
 import type { AdminSession } from './admin';
 import type { AuditEntry } from './audit';
-import type { Job, Rating } from './domain';
+import type { ChatMessage, Job, Rating, UgPhone } from './domain';
 import type { MechanicDoc, UserDoc } from './firestore';
+import type { Dispute, DisputeOutcome, SupportNote } from './support';
 
 /**
  * Every screen and hook talks to these interfaces only. `lib/mocks` implements them with
@@ -85,6 +86,46 @@ export interface PeopleRepository {
   getMechanic(userId: string): Promise<MechanicDoc | null>;
 }
 
+/** Customer support: search, a job's full record, notes and disputes. */
+export interface SupportRepository {
+  findJob(jobId: string): Promise<Job | null>;
+  /** Exact E.164 match on users and mechanics (both store `phone`). */
+  findByPhone(phone: UgPhone): Promise<{ users: UserDoc[]; mechanics: MechanicDoc[] }>;
+  /** Every mechanic, for business-name search in the browser (fine at pilot scale). */
+  listMechanics(): Promise<MechanicDoc[]>;
+  getUser(userId: string): Promise<UserDoc | null>;
+  listJobsForCustomer(userId: string): Promise<Job[]>;
+  listJobsForMechanic(userId: string): Promise<Job[]>;
+  subscribeMessages(
+    jobId: string,
+    onChange: (messages: ChatMessage[]) => void,
+    onError: (e: Error) => void,
+  ): Unsubscribe;
+  subscribeJobRatings(
+    jobId: string,
+    onChange: (ratings: Rating[]) => void,
+    onError: (e: Error) => void,
+  ): Unsubscribe;
+  subscribeNotes(
+    jobId: string,
+    onChange: (notes: SupportNote[]) => void,
+    onError: (e: Error) => void,
+  ): Unsubscribe;
+  subscribeDispute(
+    jobId: string,
+    onChange: (dispute: Dispute | null) => void,
+    onError: (e: Error) => void,
+  ): Unsubscribe;
+  subscribeOpenDisputes(
+    onChange: (disputes: Dispute[]) => void,
+    onError: (e: Error) => void,
+  ): Unsubscribe;
+  /** The audited callables. */
+  addNote(jobId: string, text: string): Promise<void>;
+  flagDispute(jobId: string, reason: string): Promise<void>;
+  resolveDispute(input: { jobId: string; outcome: DisputeOutcome; note: string }): Promise<void>;
+}
+
 export interface Repositories {
   auth: AuthRepository;
   mechanics: MechanicRepository;
@@ -92,4 +133,5 @@ export interface Repositories {
   vetting: VettingRepository;
   operations: OperationsRepository;
   people: PeopleRepository;
+  support: SupportRepository;
 }

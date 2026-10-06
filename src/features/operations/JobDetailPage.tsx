@@ -1,7 +1,11 @@
 import type { ReactNode } from 'react';
-import { Link, useParams } from 'react-router';
+import { Link, useNavigate, useParams } from 'react-router';
 
 import { Notice, Skeleton, SkeletonDetail } from '@/components/ui';
+import { ChatTranscript } from '@/features/support/ChatTranscript';
+import { DisputePanel } from '@/features/support/DisputePanel';
+import { NotesPanel } from '@/features/support/NotesPanel';
+import { RatingsList } from '@/features/support/RatingsList';
 import { PhoneLink } from '@/features/vetting/PhoneLink';
 import { formatUgx } from '@/lib/format';
 import { SERVICE_LABELS, VEHICLE_LABELS } from '@/lib/labels';
@@ -44,10 +48,16 @@ export function JobDetailPage() {
   const customer = useUser(job?.request.customerId);
   const mechanic = useMechanic(job?.mechanicId);
 
+  const navigate = useNavigate();
+  // Jobs are opened from the board, alerts, search and people pages: go back to wherever it was.
   const back = (
-    <Link to="/operations" className="mb-4 inline-block text-sm underline">
-      Back to live operations
-    </Link>
+    <button
+      type="button"
+      onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/operations'))}
+      className="mb-4 inline-block text-sm underline"
+    >
+      Back
+    </button>
   );
   if (live.status === 'loading')
     return (
@@ -126,12 +136,22 @@ export function JobDetailPage() {
             <StepTrack job={job} />
           </Panel>
 
+          <Panel title="Chat">
+            <ChatTranscript jobId={job.id} />
+          </Panel>
+
+          <Panel title="Ratings">
+            <RatingsList jobId={job.id} />
+          </Panel>
+
           <Panel title="People">
             <dl className="text-sm">
               <Row label="Customer">
                 {customer.data ? (
                   <span className="flex flex-col">
-                    <span>{customer.data.displayName || 'No name set'}</span>
+                    <Link to={`/support/people/${customer.data.id}`} className="underline">
+                      {customer.data.displayName || 'No name set'}
+                    </Link>
                     <PhoneLink phone={customer.data.phone} />
                   </span>
                 ) : (
@@ -145,10 +165,13 @@ export function JobDetailPage() {
                   <span className="text-muted">Not matched yet</span>
                 ) : m ? (
                   <span className="flex flex-col">
-                    <Link to={`/vetting/${m.userId}`} className="underline">
+                    <Link to={`/support/people/${m.userId}`} className="underline">
                       {m.businessName}
                     </Link>
                     <PhoneLink phone={m.phone} />
+                    <Link to={`/vetting/${m.userId}`} className="text-xs text-muted underline">
+                      Vetting record
+                    </Link>
                   </span>
                 ) : (
                   <span className="text-muted">
@@ -160,19 +183,27 @@ export function JobDetailPage() {
           </Panel>
         </div>
 
-        <Panel title="Interventions">
-          {can(session?.role, 'operations.intervene') ? (
-            <div className="flex flex-col gap-5">
-              {m ? <SuspendMechanicForm mechanic={m} jobId={job.id} /> : null}
-              <p className="text-xs text-muted">
-                Cancel and re-broadcast arrive once the app understands an admin cancellation and
-                re-sends alerts when a broadcast widens.
-              </p>
-            </div>
-          ) : (
-            <p className="text-sm text-muted">Your role can view jobs but not intervene.</p>
-          )}
-        </Panel>
+        <div className="flex flex-col gap-4">
+          <Panel title="Dispute">
+            <DisputePanel jobId={job.id} />
+          </Panel>
+          <Panel title="Support notes">
+            <NotesPanel jobId={job.id} />
+          </Panel>
+          <Panel title="Interventions">
+            {can(session?.role, 'operations.intervene') ? (
+              <div className="flex flex-col gap-5">
+                {m ? <SuspendMechanicForm mechanic={m} jobId={job.id} /> : null}
+                <p className="text-xs text-muted">
+                  Cancel and re-broadcast arrive once the app understands an admin cancellation and
+                  re-sends alerts when a broadcast widens.
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-muted">Your role can view jobs but not intervene.</p>
+            )}
+          </Panel>
+        </div>
       </div>
     </>
   );

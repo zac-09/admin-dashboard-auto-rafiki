@@ -4,6 +4,7 @@ import { Outlet, useLocation } from 'react-router';
 
 import { Reveal, springs, timings } from '@/components/motion';
 import { WheelMark } from '@/components/ui';
+import { CommandPalette } from '@/features/support/CommandPalette';
 import type { AdminSession } from '@/types';
 
 import { Sidebar } from './Sidebar';
@@ -85,6 +86,8 @@ export function AppShell({ session }: { session: AdminSession }) {
           </div>
         ) : null}
       </AnimatePresence>
+
+      <CommandPalette />
 
       <main className="min-w-0 p-4 md:p-8">
         {/* Each page settles in like the app's screens; tabs within a page do not re-trigger. */}

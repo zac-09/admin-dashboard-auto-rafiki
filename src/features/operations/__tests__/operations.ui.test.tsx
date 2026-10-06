@@ -116,7 +116,7 @@ describe('live operations board', () => {
 
 describe('job detail and interventions', () => {
   it('shows the timeline and both parties, and suspends the mechanic with an audit trail', async () => {
-    const { user } = await openAs('admin', '/operations/jobs/job_enroute_late');
+    const { user } = await openAs('admin', '/jobs/job_enroute_late');
     expect(await screen.findByRole('heading', { name: 'Flat tyre · Car' })).toBeInTheDocument();
     const timeline = screen.getByRole('region', { name: 'Timeline' });
     // Three steps done (the last one is "now"), three still to come on the path.
@@ -137,7 +137,11 @@ describe('job detail and interventions', () => {
     );
     expect(await within(people).findByRole('link', { name: 'Namukasa Motors' })).toHaveAttribute(
       'href',
-      '/vetting/u_mech_namukasa',
+      '/support/people/u_mech_namukasa',
+    );
+    expect(within(people).getByRole('link', { name: 'Aisha Nakato' })).toHaveAttribute(
+      'href',
+      '/support/people/u_customer_aisha',
     );
 
     await user.type(screen.getByLabelText(/Reason/), 'Abandoned the customer');
@@ -146,13 +150,13 @@ describe('job detail and interventions', () => {
       await screen.findByText('Namukasa Motors is suspended and receives no new job broadcasts.'),
     ).toBeInTheDocument();
 
-    await user.click(within(people).getByRole('link', { name: 'Namukasa Motors' }));
+    await user.click(within(people).getByRole('link', { name: 'Vetting record' }));
     const history = await screen.findByRole('region', { name: 'Vetting history' });
     expect(history).toHaveTextContent(/Suspended.*Abandoned the customer \(job job_enroute_late\)/);
   });
 
   it('support sees the job but cannot intervene', async () => {
-    await openAs('support', '/operations/jobs/job_enroute_late');
+    await openAs('support', '/jobs/job_enroute_late');
     expect(
       await screen.findByText('Your role can view jobs but not intervene.'),
     ).toBeInTheDocument();
@@ -160,7 +164,7 @@ describe('job detail and interventions', () => {
   });
 
   it('says so when the job does not exist', async () => {
-    await openAs('admin', '/operations/jobs/nope');
+    await openAs('admin', '/jobs/nope');
     expect(await screen.findByText('No job with id nope.')).toBeInTheDocument();
   });
 });

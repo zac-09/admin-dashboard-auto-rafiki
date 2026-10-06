@@ -12,7 +12,7 @@ function AlertItem({ alert }: { alert: Alert }) {
   if (alert.kind === 'low-rating') {
     const r = alert.rating;
     return (
-      <Link to={`/operations/jobs/${r.jobId}`} className="flex flex-col gap-0.5">
+      <Link to={`/jobs/${r.jobId}`} className="flex flex-col gap-0.5">
         <span className="font-semibold">
           {r.stars} {r.stars === 1 ? 'star' : 'stars'}: {ratingDirection(r)}
         </span>
@@ -22,7 +22,7 @@ function AlertItem({ alert }: { alert: Alert }) {
   }
   const { job, ms } = alert;
   return (
-    <Link to={`/operations/jobs/${job.id}`} className="flex flex-col gap-0.5">
+    <Link to={`/jobs/${job.id}`} className="flex flex-col gap-0.5">
       <span className="font-semibold">
         {alert.kind === 'stale-request'
           ? `No taker for ${formatDuration(ms)}`

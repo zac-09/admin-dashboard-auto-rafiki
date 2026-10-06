@@ -15,9 +15,12 @@ export type AuditAction =
   /** decideVetting: approve (incl. reinstate / re-verify), reject, suspend. */
   | 'mechanic.vetting.approve'
   | 'mechanic.vetting.reject'
-  | 'mechanic.vetting.suspend';
+  | 'mechanic.vetting.suspend'
+  /** flagDispute / resolveDispute (customer support). */
+  | 'job.dispute.open'
+  | 'job.dispute.resolve';
 
-export type AuditTargetType = 'staff' | 'mechanic';
+export type AuditTargetType = 'staff' | 'mechanic' | 'job';
 
 export interface AuditEntry {
   id: string;

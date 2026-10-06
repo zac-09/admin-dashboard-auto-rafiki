@@ -21,8 +21,12 @@ export class MockOperationsStore {
   ratings: Rating[];
   private listeners = new Set<Listener>();
 
+  /** How far fixture times were moved so FIXTURE_NOW reads as "now". */
+  readonly offset: number;
+
   constructor(now: Date = new Date()) {
     const offset = now.getTime() - FIXTURE_NOW.getTime();
+    this.offset = offset;
     for (const job of JOBS) this.jobs.set(job.id, shiftJob(structuredClone(job), offset));
     this.ratings = RATINGS.map((r) => ({ ...r, createdAt: shiftIso(r.createdAt, offset) }));
   }

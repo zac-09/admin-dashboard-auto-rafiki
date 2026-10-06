@@ -23,8 +23,9 @@ import {
   shiftJob,
 } from '../src/lib/mocks/contractFixtures';
 import { AUDIT_ENTRIES } from '../src/lib/mocks/auditFixtures';
+import { DISPUTES_FIXTURE, NOTES_FIXTURE } from '../src/lib/mocks/supportFixtures';
 import { MOCK_APP_USER, MOCK_PASSWORD, MOCK_STAFF } from '../src/lib/mocks/fixtures';
-import { AUDIT_COLLECTION, COLLECTIONS } from '../src/types';
+import { AUDIT_COLLECTION, COLLECTIONS, DISPUTES, SUPPORT_NOTES } from '../src/types';
 
 const projectId = process.env.GCLOUD_PROJECT ?? 'demo-autorafiki';
 if (
@@ -92,6 +93,19 @@ batch.set(db.collection(COLLECTIONS.presence).doc('u_customer_aisha'), {
 for (const { id, ...entry } of AUDIT_ENTRIES) {
   batch.set(db.collection(AUDIT_COLLECTION).doc(id), entry);
 }
+for (const d of DISPUTES_FIXTURE) {
+  batch.set(db.collection(DISPUTES).doc(d.jobId), { ...d, openedAt: shiftIso(d.openedAt, offset) });
+}
+NOTES_FIXTURE.forEach((n, i) => {
+  batch.set(
+    db
+      .collection(COLLECTIONS.jobs)
+      .doc(n.jobId)
+      .collection(SUPPORT_NOTES)
+      .doc(`note_${i + 1}`),
+    { ...n, createdAt: shiftIso(n.createdAt, offset) },
+  );
+});
 await batch.commit();
 
 console.log(

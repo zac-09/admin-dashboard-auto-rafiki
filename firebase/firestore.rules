@@ -201,5 +201,15 @@ service cloud.firestore {
     match /auditLog/{entryId} {
       allow write: if false;
     }
+
+    // Customer support (dashboard-only). Staff read via the rule above; Cloud Functions write
+    // (addSupportNote, flagDispute, resolveDispute). App users never see these, not even the
+    // customer or mechanic on the job.
+    match /jobs/{jobId}/supportNotes/{noteId} {
+      allow read, write: if false;
+    }
+    match /disputes/{jobId} {
+      allow read, write: if false;
+    }
   }
 }

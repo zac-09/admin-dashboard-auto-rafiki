@@ -25,7 +25,7 @@ export function JobCard({
   const closed = job.status === 'complete' || job.status === 'cancelled';
   return (
     <Link
-      to={`/operations/jobs/${job.id}`}
+      to={`/jobs/${job.id}`}
       className={`flex flex-col gap-1 rounded-control border bg-background p-3 text-sm transition-[border-color,transform] hover:-translate-y-0.5 hover:border-primary ${
         attention ? 'border-warning' : 'border-hairline'
       } ${fresh ? 'fresh' : ''}`}

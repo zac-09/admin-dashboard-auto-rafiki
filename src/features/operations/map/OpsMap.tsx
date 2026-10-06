@@ -13,7 +13,7 @@ function JobMarker({ pin }: { pin: JobPin }) {
   return (
     <button
       type="button"
-      onClick={() => navigate(`/operations/jobs/${pin.id}`)}
+      onClick={() => navigate(`/jobs/${pin.id}`)}
       aria-label={`Job: ${pin.label}${pin.attention ? ', needs attention' : ''}`}
       className={`flex items-center gap-1.5 rounded-control border-2 bg-background px-2 py-1 text-xs font-semibold whitespace-nowrap text-primary shadow ${
         pin.attention ? 'border-warning' : 'border-primary'
