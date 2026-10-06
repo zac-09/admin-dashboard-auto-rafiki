@@ -2,7 +2,8 @@ import { lazy, Suspense, useMemo } from 'react';
 import { useSearchParams } from 'react-router';
 
 import { PageHeader } from '@/app/pages/PageHeader';
-import { Notice } from '@/components/ui';
+import { AnimatedNumber } from '@/components/motion';
+import { Notice, Skeleton, SkeletonBoard } from '@/components/ui';
 import { useNow } from '@/lib/useLive';
 
 import { AlertRail } from './AlertRail';
@@ -57,10 +58,17 @@ export function OperationsPage() {
   return (
     <>
       <PageHeader label="Control room" title="Live operations" />
-      <p className="mb-4 text-sm text-muted" aria-live="polite">
-        {active.status === 'loading'
-          ? 'Connecting…'
-          : `${activeJobs.length} active ${activeJobs.length === 1 ? 'job' : 'jobs'} · ${onlineMechanics.length} mechanics online (${receiving} receiving jobs)`}
+      <p className="mb-4 text-sm text-muted">
+        {active.status === 'loading' ? (
+          <Skeleton className="h-3.5 w-80 max-w-full" />
+        ) : (
+          <>
+            <AnimatedNumber value={activeJobs.length} /> active{' '}
+            {activeJobs.length === 1 ? 'job' : 'jobs'} ·{' '}
+            <AnimatedNumber value={onlineMechanics.length} /> mechanics online (
+            <AnimatedNumber value={receiving} /> receiving jobs)
+          </>
+        )}
       </p>
       {failures.map(([what, error]) => (
         <div key={what} className="mb-3">
@@ -92,9 +100,21 @@ export function OperationsPage() {
             ))}
           </nav>
           {view === 'board' ? (
-            <JobBoard jobs={allJobs} alerts={alerts} now={now} mechanicNames={names} />
+            active.status === 'loading' ? (
+              <SkeletonBoard />
+            ) : (
+              <JobBoard jobs={allJobs} alerts={alerts} now={now} mechanicNames={names} />
+            )
           ) : (
-            <Suspense fallback={<p className="text-sm text-muted">Loading map…</p>}>
+            <Suspense
+              fallback={
+                <div
+                  role="status"
+                  aria-label="Loading map"
+                  className="panel skeleton h-[60vh] min-h-80"
+                />
+              }
+            >
               <OpsMap
                 jobs={jobPins(activeJobs, alerts)}
                 mechanics={mechanicPins(onlineMechanics)}

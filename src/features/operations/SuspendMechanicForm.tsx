@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 
+import { SuccessMoment } from '@/components/motion';
 import { Button, Notice } from '@/components/ui';
 import { useDecideVetting } from '@/features/vetting/hooks';
 import { MAX_REASON, nextVetting } from '@/lib/vetting';
@@ -9,9 +10,23 @@ import type { MechanicDoc } from '@/types';
 export function SuspendMechanicForm({ mechanic, jobId }: { mechanic: MechanicDoc; jobId: string }) {
   const [reason, setReason] = useState('');
   const [done, setDone] = useState(false);
+  const [moment, setMoment] = useState<'pending' | 'success' | null>(null);
   const mutation = useDecideVetting();
 
-  if (done || mechanic.vetting === 'suspended') {
+  const overlay = moment ? (
+    <SuccessMoment
+      status={moment}
+      pendingTitle="Suspending…"
+      title="Suspended"
+      subtitle={`${mechanic.businessName} receives no new jobs`}
+      onDone={() => {
+        setDone(true);
+        setMoment(null);
+      }}
+    />
+  ) : null;
+
+  if ((done || mechanic.vetting === 'suspended') && !moment) {
     return (
       <p className="text-sm">
         {mechanic.businessName} is suspended and receives no new job broadcasts.
@@ -22,20 +37,22 @@ export function SuspendMechanicForm({ mechanic, jobId }: { mechanic: MechanicDoc
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
+    setMoment('pending');
     try {
       await mutation.mutateAsync({
         mechanicId: mechanic.userId,
         decision: 'suspend',
         reason: `${reason.trim()} (job ${jobId})`,
       });
-      setDone(true);
+      setMoment('success');
     } catch {
-      // Shown from mutation.error.
+      setMoment(null); // Shown from mutation.error.
     }
   }
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3" aria-label="Suspend mechanic">
+      {overlay}
       <p className="text-xs text-muted">
         Stops new job broadcasts to {mechanic.businessName}. This job is not changed. The job id is
         added to the reason in the audit log.

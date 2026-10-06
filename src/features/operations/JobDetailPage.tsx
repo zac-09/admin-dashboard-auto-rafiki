@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { Link, useParams } from 'react-router';
 
-import { Notice } from '@/components/ui';
+import { Reveal, staggerDelay } from '@/components/motion';
+import { Notice, Skeleton, SkeletonDetail } from '@/components/ui';
 import { PhoneLink } from '@/features/vetting/PhoneLink';
 import { formatDateTime, formatUgx } from '@/lib/format';
 import { SERVICE_LABELS, VEHICLE_LABELS } from '@/lib/labels';
@@ -50,9 +51,7 @@ export function JobDetailPage() {
     return (
       <>
         {back}
-        <p role="status" className="text-sm text-muted">
-          Loading…
-        </p>
+        <SkeletonDetail label="Loading job" />
       </>
     );
   if (live.status === 'error')
@@ -123,8 +122,13 @@ export function JobDetailPage() {
 
           <Panel title="Timeline">
             <ol className="flex flex-col gap-3 text-sm">
-              {timelineSteps(job).map((step, i) => (
-                <li key={`${step.status}-${i}`} className="flex gap-3">
+              {timelineSteps(job).map((step, i, all) => (
+                <Reveal
+                  as="li"
+                  key={`${step.status}-${i}`}
+                  delay={staggerDelay(i, all.length)}
+                  className="flex gap-3"
+                >
                   <span aria-hidden className="mt-1.5 diamond text-muted" />
                   <span className="flex flex-col">
                     <span className="font-semibold">{STATUS_LABELS[step.status]}</span>
@@ -135,7 +139,7 @@ export function JobDetailPage() {
                         : ''}
                     </span>
                   </span>
-                </li>
+                </Reveal>
               ))}
             </ol>
           </Panel>
@@ -150,7 +154,7 @@ export function JobDetailPage() {
                   </span>
                 ) : (
                   <span className="text-muted">
-                    {customer.isPending ? 'Loading…' : request.customerId}
+                    {customer.isPending ? <Skeleton className="h-3.5 w-40" /> : request.customerId}
                   </span>
                 )}
               </Row>
@@ -166,7 +170,7 @@ export function JobDetailPage() {
                   </span>
                 ) : (
                   <span className="text-muted">
-                    {mechanic.isPending ? 'Loading…' : job.mechanicId}
+                    {mechanic.isPending ? <Skeleton className="h-3.5 w-40" /> : job.mechanicId}
                   </span>
                 )}
               </Row>

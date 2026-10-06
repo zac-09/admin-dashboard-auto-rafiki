@@ -1,4 +1,7 @@
+import { AnimatePresence, motion } from 'motion/react';
 import { Link } from 'react-router';
+
+import { AnimatedNumber, Pop, springs, timings } from '@/components/motion';
 
 import { SERVICE_LABELS } from '@/lib/labels';
 
@@ -37,18 +40,30 @@ export function AlertRail({ alerts }: { alerts: readonly Alert[] }) {
     <section aria-label="Alerts" className="panel p-4">
       <h2 className="micro-label mb-3 flex items-center justify-between">
         <span>Alerts</span>
-        <span>{alerts.length}</span>
+        <Pop trigger={alerts.length}>
+          <AnimatedNumber value={alerts.length} />
+        </Pop>
       </h2>
       {alerts.length === 0 ? (
         <p className="text-sm text-muted">Nothing needs you right now.</p>
       ) : (
         <ul className="grid gap-3 text-sm sm:grid-cols-2 xl:grid-cols-3">
-          {alerts.map((alert) => (
-            <li key={alert.key} className="flex gap-3">
-              <span aria-hidden className="mt-1.5 diamond text-warning" />
-              <AlertItem alert={alert} />
-            </li>
-          ))}
+          <AnimatePresence initial={false}>
+            {alerts.map((alert) => (
+              <motion.li
+                key={alert.key}
+                layout
+                className="flex gap-3"
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, transition: timings.exit }}
+                transition={springs.settle}
+              >
+                <span aria-hidden className="mt-1.5 diamond text-warning" />
+                <AlertItem alert={alert} />
+              </motion.li>
+            ))}
+          </AnimatePresence>
         </ul>
       )}
     </section>

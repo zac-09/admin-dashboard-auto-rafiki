@@ -49,9 +49,9 @@ describe('live operations board', () => {
     // Fixture jobs closed over 24 h ago are outside the board's closed-jobs window.
     expect(column('Complete')).toHaveTextContent('None');
     expect(column('Cancelled')).toHaveTextContent('None');
-    expect(
-      screen.getByText(/3 active jobs · 2 mechanics online \(2 receiving jobs\)/),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/active jobs/).closest('p')).toHaveTextContent(
+      '3 active jobs · 2 mechanics online (2 receiving jobs)',
+    );
   });
 
   it('lists the alerts: stale request, late mechanic, low rating', async () => {
