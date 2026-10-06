@@ -43,10 +43,18 @@ export interface VettingRepository {
   decide(input: DecideVettingInput): Promise<DecideVettingResult>;
 }
 
+/** `fromCache`: the feed is showing cached data because the server is unreachable. */
+export interface FeedMeta {
+  fromCache: boolean;
+}
+
 /** Live feeds for the control room. Every subscription emits the full current list. */
 export interface OperationsRepository {
   /** Jobs not yet complete or cancelled (board + map). */
-  subscribeActiveJobs(onChange: (jobs: Job[]) => void, onError: (e: Error) => void): Unsubscribe;
+  subscribeActiveJobs(
+    onChange: (jobs: Job[], meta: FeedMeta) => void,
+    onError: (e: Error) => void,
+  ): Unsubscribe;
   /** Complete and cancelled jobs requested since `sinceIso` (the board's closed columns). */
   subscribeClosedJobs(
     sinceIso: string,

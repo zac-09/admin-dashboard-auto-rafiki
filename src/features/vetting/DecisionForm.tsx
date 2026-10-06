@@ -49,6 +49,14 @@ export function DecisionForm({
   const mutation = useDecideVetting();
 
   const needsChecklist = decision === 'approve';
+  const ticked = checklist.length;
+  const missing = !decision
+    ? 'Choose a decision'
+    : needsChecklist && !isChecklistComplete(checklist)
+      ? `${ticked} of ${ASSESSMENT_CHECKLIST.length} checks done`
+      : !reason.trim()
+        ? 'Add a reason for the audit log'
+        : null;
   const valid =
     decision !== null &&
     reason.trim().length > 0 &&
@@ -80,7 +88,7 @@ export function DecisionForm({
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4" aria-label="Vetting decision">
       <fieldset className="flex flex-col gap-2">
-        <legend className="micro-label mb-2">Decision</legend>
+        <legend className="sr-only">Decision</legend>
         {options.map((d) => (
           <label
             key={d}
@@ -107,7 +115,12 @@ export function DecisionForm({
 
       {needsChecklist ? (
         <fieldset className="flex flex-col gap-1">
-          <legend className="micro-label mb-2">Practical assessment (all required)</legend>
+          <legend className="micro-label mb-2 flex w-full items-center justify-between">
+            <span>Practical assessment (all required)</span>
+            <span aria-hidden>
+              {ticked}/{ASSESSMENT_CHECKLIST.length}
+            </span>
+          </legend>
           {ASSESSMENT_CHECKLIST.map((item) => (
             <label
               key={item.id}
@@ -149,12 +162,17 @@ export function DecisionForm({
 
       {mutation.error ? <Notice tone="error">{mutation.error.message}</Notice> : null}
 
-      <Button type="submit" disabled={!valid || mutation.isPending}>
+      <Button
+        id="decide"
+        type="submit"
+        disabled={!valid || mutation.isPending}
+        hint={mutation.isPending ? null : missing}
+      >
         {mutation.isPending
           ? 'Saving…'
           : decision
             ? `${decisionLabel(decision, mechanic.vetting)} ${mechanic.businessName}`
-            : 'Choose a decision'}
+            : 'Save decision'}
       </Button>
     </form>
   );

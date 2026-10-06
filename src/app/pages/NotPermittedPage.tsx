@@ -1,10 +1,12 @@
 import { ROLE_LABELS } from '@/lib/permissions';
 import { useSession } from '@/lib/session';
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
 
 import { PageHeader } from './PageHeader';
 
 export function NotPermittedPage() {
   const session = useSession();
+  useDocumentTitle('Restricted');
   return (
     <>
       <PageHeader label="Restricted" title="Not available for your role" />

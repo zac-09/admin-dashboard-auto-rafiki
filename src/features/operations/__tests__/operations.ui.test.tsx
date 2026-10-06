@@ -47,8 +47,8 @@ describe('live operations board', () => {
     expect(column('On the way')).toHaveTextContent('Namukasa Motors');
     expect(column('Working')).toHaveTextContent('Engine trouble · Matatu');
     // Fixture jobs closed over 24 h ago are outside the board's closed-jobs window.
-    expect(column('Complete')).toHaveTextContent('None');
-    expect(column('Cancelled')).toHaveTextContent('None');
+    expect(column('Complete')).toHaveTextContent('No jobs');
+    expect(column('Cancelled')).toHaveTextContent('No jobs');
     expect(screen.getByText(/active jobs/).closest('p')).toHaveTextContent(
       '3 active jobs · 2 mechanics online (2 receiving jobs)',
     );
@@ -119,7 +119,16 @@ describe('job detail and interventions', () => {
     const { user } = await openAs('admin', '/operations/jobs/job_enroute_late');
     expect(await screen.findByRole('heading', { name: 'Flat tyre · Car' })).toBeInTheDocument();
     const timeline = screen.getByRole('region', { name: 'Timeline' });
-    expect(within(timeline).getAllByRole('listitem')).toHaveLength(3);
+    // Three steps done (the last one is "now"), three still to come on the path.
+    const steps = within(timeline).getAllByRole('listitem');
+    expect(steps.map((li) => li.textContent)).toEqual([
+      expect.stringMatching(/^Requested/),
+      expect.stringMatching(/^Mechanic assigned/),
+      expect.stringMatching(/^On the way · now/),
+      'ArrivedNot yet',
+      'WorkingNot yet',
+      'CompleteNot yet',
+    ]);
     const people = screen.getByRole('region', { name: 'People' });
     expect(await within(people).findByText('Aisha Nakato')).toBeInTheDocument();
     expect(within(people).getByRole('link', { name: '+256772123456' })).toHaveAttribute(

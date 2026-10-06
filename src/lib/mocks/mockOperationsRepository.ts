@@ -1,5 +1,6 @@
 import { ACTIVE_STATUSES, CLOSED_STATUSES } from '@/features/operations/constants';
 import type {
+  FeedMeta,
   Job,
   MechanicDoc,
   OperationsRepository,
@@ -49,12 +50,13 @@ export class MockOperationsRepository implements OperationsRepository {
     this.vetting = vetting;
   }
 
-  subscribeActiveJobs(onChange: (jobs: Job[]) => void): Unsubscribe {
+  subscribeActiveJobs(onChange: (jobs: Job[], meta: FeedMeta) => void): Unsubscribe {
     return this.store.listen(() =>
       onChange(
         [...this.store.jobs.values()]
           .filter((j) => ACTIVE_STATUSES.includes(j.status))
           .sort(newestFirst),
+        { fromCache: false },
       ),
     );
   }

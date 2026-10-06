@@ -3,7 +3,8 @@ import { useSearchParams } from 'react-router';
 
 import { PageHeader } from '@/app/pages/PageHeader';
 import { AnimatedNumber } from '@/components/motion';
-import { Notice, Skeleton, SkeletonBoard } from '@/components/ui';
+import { Notice, Skeleton, SkeletonBoard, Tabs } from '@/components/ui';
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
 import { useNow } from '@/lib/useLive';
 
 import { AlertRail } from './AlertRail';
@@ -13,17 +14,19 @@ import {
   useClosedJobs,
   useLowRatings,
   useMechanicNames,
+  useOnline,
   useOnlineMechanics,
 } from './hooks';
 import { JobBoard } from './JobBoard';
+import { LiveBadge, type Connection } from './LiveBadge';
 import { jobPins, mechanicPins } from './map/pins';
 
 const OpsMap = lazy(() => import('./map/OpsMap'));
 
 const VIEWS = [
-  { id: 'board', label: 'Job board' },
-  { id: 'map', label: 'Map' },
-] as const;
+  { id: 'board' as const, label: 'Job board' },
+  { id: 'map' as const, label: 'Map' },
+];
 
 export function OperationsPage() {
   const [params, setParams] = useSearchParams();
@@ -33,10 +36,20 @@ export function OperationsPage() {
   const closed = useClosedJobs();
   const online = useOnlineMechanics();
   const lowRatings = useLowRatings();
+  const isOnline = useOnline();
 
-  const activeJobs = useMemo(() => active.data ?? [], [active.data]);
+  const activeJobs = useMemo(() => active.data?.jobs ?? [], [active.data]);
+  const connection: Connection = !isOnline
+    ? 'offline'
+    : active.status === 'loading'
+      ? 'connecting'
+      : active.status === 'error' || active.data.fromCache
+        ? 'reconnecting'
+        : 'live';
   const onlineMechanics = useMemo(() => online.data ?? [], [online.data]);
   const alerts = computeAlerts(activeJobs, lowRatings.data ?? [], now);
+  // The alert count in the tab title, so staff see it from any other tab.
+  useDocumentTitle(alerts.length > 0 ? `(${alerts.length}) Live operations` : 'Live operations');
 
   const allJobs = useMemo(() => [...activeJobs, ...(closed.data ?? [])], [activeJobs, closed.data]);
   const assigned = useMemo(
@@ -57,7 +70,10 @@ export function OperationsPage() {
 
   return (
     <>
-      <PageHeader label="Control room" title="Live operations" />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader label="Control room" title="Live operations" />
+        <LiveBadge state={connection} />
+      </div>
       <p className="mb-4 text-sm text-muted">
         {active.status === 'loading' ? (
           <Skeleton className="h-3.5 w-80 max-w-full" />
@@ -82,23 +98,12 @@ export function OperationsPage() {
             the whole width below so more status columns fit. */}
         <AlertRail alerts={alerts} />
         <div className="min-w-0">
-          <nav aria-label="Operations views" className="mb-4 flex gap-1 border-b border-hairline">
-            {VIEWS.map((v) => (
-              <button
-                key={v.id}
-                type="button"
-                aria-current={v.id === view ? 'page' : undefined}
-                onClick={() => setParams(v.id === 'board' ? {} : { view: v.id })}
-                className={`-mb-px min-h-10 border-b-2 px-3 text-sm ${
-                  v.id === view
-                    ? 'border-accent font-semibold text-primary'
-                    : 'border-transparent text-muted hover:text-primary'
-                }`}
-              >
-                {v.label}
-              </button>
-            ))}
-          </nav>
+          <Tabs
+            label="Operations views"
+            value={view}
+            onChange={(id) => setParams(id === 'board' ? {} : { view: id })}
+            items={VIEWS}
+          />
           {view === 'board' ? (
             active.status === 'loading' ? (
               <SkeletonBoard />

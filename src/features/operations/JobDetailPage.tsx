@@ -1,18 +1,19 @@
 import type { ReactNode } from 'react';
 import { Link, useParams } from 'react-router';
 
-import { Reveal, staggerDelay } from '@/components/motion';
 import { Notice, Skeleton, SkeletonDetail } from '@/components/ui';
 import { PhoneLink } from '@/features/vetting/PhoneLink';
-import { formatDateTime, formatUgx } from '@/lib/format';
+import { formatUgx } from '@/lib/format';
 import { SERVICE_LABELS, VEHICLE_LABELS } from '@/lib/labels';
 import { can } from '@/lib/permissions';
 import { useSession } from '@/lib/session';
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
 import { useNow } from '@/lib/useLive';
 
 import { CANCELLED_BY_LABELS, STATUS_LABELS } from './board';
 import { useJob, useMechanic, useUser } from './hooks';
-import { formatDuration, msInStatus, timelineSteps } from './jobTime';
+import { formatDuration, msInStatus } from './jobTime';
+import { StepTrack } from './StepTrack';
 import { SuspendMechanicForm } from './SuspendMechanicForm';
 
 function Panel({ title, children }: { title: string; children: ReactNode }) {
@@ -38,6 +39,7 @@ export function JobDetailPage() {
   const session = useSession();
   const now = useNow();
   const live = useJob(jobId);
+  useDocumentTitle(live.data ? `Job ${live.data.id}` : 'Job');
   const job = live.data ?? null;
   const customer = useUser(job?.request.customerId);
   const mechanic = useMechanic(job?.mechanicId);
@@ -121,27 +123,7 @@ export function JobDetailPage() {
           </Panel>
 
           <Panel title="Timeline">
-            <ol className="flex flex-col gap-3 text-sm">
-              {timelineSteps(job).map((step, i, all) => (
-                <Reveal
-                  as="li"
-                  key={`${step.status}-${i}`}
-                  delay={staggerDelay(i, all.length)}
-                  className="flex gap-3"
-                >
-                  <span aria-hidden className="mt-1.5 diamond text-muted" />
-                  <span className="flex flex-col">
-                    <span className="font-semibold">{STATUS_LABELS[step.status]}</span>
-                    <span className="text-muted">
-                      {formatDateTime(step.at)}
-                      {step.durationMs != null
-                        ? ` · lasted ${formatDuration(step.durationMs)}`
-                        : ''}
-                    </span>
-                  </span>
-                </Reveal>
-              ))}
-            </ol>
+            <StepTrack job={job} />
           </Panel>
 
           <Panel title="People">

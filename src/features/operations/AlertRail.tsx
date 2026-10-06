@@ -45,7 +45,10 @@ export function AlertRail({ alerts }: { alerts: readonly Alert[] }) {
         </Pop>
       </h2>
       {alerts.length === 0 ? (
-        <p className="text-sm text-muted">Nothing needs you right now.</p>
+        <p className="flex items-center gap-3 text-sm text-muted">
+          <span aria-hidden className="diamond text-success" />
+          Nothing needs you right now.
+        </p>
       ) : (
         <ul className="grid gap-3 text-sm sm:grid-cols-2 xl:grid-cols-3">
           <AnimatePresence initial={false}>
@@ -59,7 +62,7 @@ export function AlertRail({ alerts }: { alerts: readonly Alert[] }) {
                 exit={{ opacity: 0, transition: timings.exit }}
                 transition={springs.settle}
               >
-                <span aria-hidden className="mt-1.5 diamond text-warning" />
+                <span aria-hidden className="mt-1.5 diamond sonar text-warning" />
                 <AlertItem alert={alert} />
               </motion.li>
             ))}

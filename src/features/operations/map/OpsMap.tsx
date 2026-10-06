@@ -19,7 +19,10 @@ function JobMarker({ pin }: { pin: JobPin }) {
         pin.attention ? 'border-warning' : 'border-primary'
       }`}
     >
-      <span aria-hidden className={`diamond ${pin.attention ? 'text-warning' : 'text-accent'}`} />
+      <span
+        aria-hidden
+        className={`diamond ${pin.attention ? 'sonar text-warning' : 'text-accent'}`}
+      />
       {pin.attention ? `${pin.label} !` : pin.label}
     </button>
   );
@@ -48,7 +51,7 @@ function Legend() {
         <span aria-hidden className="diamond text-accent" /> Job (status written on the pin)
       </li>
       <li className="flex items-center gap-1.5">
-        <span aria-hidden className="diamond text-warning" /> Job needing attention (marked !)
+        <span aria-hidden className="diamond sonar text-warning" /> Job needing attention (marked !)
       </li>
       <li className="flex items-center gap-1.5">
         <span aria-hidden className="size-3 rounded-full bg-accent" /> Mechanic receiving jobs

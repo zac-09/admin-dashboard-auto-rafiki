@@ -13,6 +13,7 @@ import {
 import { ACTIVE_STATUSES, CLOSED_STATUSES } from '@/features/operations/constants';
 import {
   COLLECTIONS,
+  type FeedMeta,
   type Job,
   type MechanicDoc,
   type OperationsRepository,
@@ -30,10 +31,16 @@ const db = () => getFirestore(getFirebaseApp());
 const jobsOf = (s: QuerySnapshot) => s.docs.map((d) => ({ ...(d.data() as Job), id: d.id }));
 
 export class FirestoreOperationsRepository implements OperationsRepository {
-  subscribeActiveJobs(onChange: (jobs: Job[]) => void, onError: (e: Error) => void): Unsubscribe {
+  subscribeActiveJobs(
+    onChange: (jobs: Job[], meta: FeedMeta) => void,
+    onError: (e: Error) => void,
+  ): Unsubscribe {
+    // Metadata changes (cache ↔ server) drive the control room's Live / Reconnecting badge.
+    // They re-emit the same documents and cost no reads.
     return onSnapshot(
       query(collection(db(), COLLECTIONS.jobs), where('status', 'in', [...ACTIVE_STATUSES])),
-      (s) => onChange(jobsOf(s)),
+      { includeMetadataChanges: true },
+      (s) => onChange(jobsOf(s), { fromCache: s.metadata.fromCache }),
       onError,
     );
   }

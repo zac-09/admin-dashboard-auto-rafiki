@@ -6,6 +6,7 @@ import { Notice, SkeletonLines, SkeletonDetail } from '@/components/ui';
 import { formatDateTime, formatUgx } from '@/lib/format';
 import { can } from '@/lib/permissions';
 import { useSession } from '@/lib/session';
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
 import { ASSESSMENT_CHECKLIST } from '@/lib/vetting';
 import type { MechanicDoc } from '@/types';
 
@@ -104,6 +105,7 @@ export function MechanicDetailPage() {
   const { mechanicId = '' } = useParams();
   const session = useSession();
   const live = useMechanic(mechanicId);
+  useDocumentTitle(live.mechanic?.businessName ?? 'Mechanic');
   const [saved, setSaved] = useState<{ mechanicId: string; message: string } | null>(null);
   const [moment, setMoment] = useState<
     | { status: 'pending' }

@@ -12,7 +12,8 @@ setMotionScaleForTesting(0);
 if (typeof window !== 'undefined' && !window.matchMedia) {
   window.matchMedia = (query: string) =>
     ({
-      matches: false,
+      // Tests render the desktop layout; reduced motion is off.
+      matches: /min-width/.test(query),
       media: query,
       onchange: null,
       addEventListener: () => undefined,

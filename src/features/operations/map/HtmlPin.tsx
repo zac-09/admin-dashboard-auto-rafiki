@@ -1,6 +1,9 @@
 import { useMap } from '@vis.gl/react-google-maps';
+import { useReducedMotion } from 'motion/react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+
+const GLIDE_MS = 900;
 
 /**
  * Renders React content at a lat/lng with a plain OverlayView. Unlike AdvancedMarker this needs
@@ -48,12 +51,33 @@ export function HtmlPin({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, container]);
 
+  // Position updates (a mechanic's live location every ~5 s) glide instead of jumping.
+  const reduced = useReducedMotion();
   useEffect(() => {
     if (!overlay) return;
-    (overlay as google.maps.OverlayView & { latLng: google.maps.LatLng }).latLng =
-      new google.maps.LatLng(position);
-    overlay.draw();
-  }, [overlay, position.lat, position.lng]); // eslint-disable-line react-hooks/exhaustive-deps
+    const pin = overlay as google.maps.OverlayView & { latLng: google.maps.LatLng };
+    const from = { lat: pin.latLng.lat(), lng: pin.latLng.lng() };
+    const to = position;
+    if (reduced || (from.lat === to.lat && from.lng === to.lng)) {
+      pin.latLng = new google.maps.LatLng(to);
+      overlay.draw();
+      return;
+    }
+    let frame = 0;
+    const start = performance.now();
+    const step = (t: number) => {
+      const p = Math.min(1, (t - start) / GLIDE_MS);
+      const e = 1 - (1 - p) ** 3; // ease-out cubic
+      pin.latLng = new google.maps.LatLng({
+        lat: from.lat + (to.lat - from.lat) * e,
+        lng: from.lng + (to.lng - from.lng) * e,
+      });
+      overlay.draw();
+      if (p < 1) frame = requestAnimationFrame(step);
+    };
+    frame = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frame);
+  }, [overlay, position.lat, position.lng, reduced]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return createPortal(children, container);
 }

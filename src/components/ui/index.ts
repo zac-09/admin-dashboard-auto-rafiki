@@ -11,3 +11,4 @@ export {
   SkeletonPanel,
   SkeletonTable,
 } from './Skeleton';
+export { Tabs, type TabItem } from './Tabs';

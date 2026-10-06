@@ -1,9 +1,11 @@
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
 import type { NavItem } from '../navigation';
 
 import { PageHeader } from './PageHeader';
 
 /** Stand-in until the module is built (see CLAUDE.md, "Modules, in build order"). */
 export function ModulePlaceholder({ item }: { item: NavItem }) {
+  useDocumentTitle(item.label);
   return (
     <>
       <PageHeader label={`Module ${item.module}`} title={item.label} />

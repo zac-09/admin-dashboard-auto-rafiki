@@ -12,10 +12,13 @@ export function JobCard({
   now,
   mechanicName,
   attention,
+  fresh = false,
 }: {
   job: Job;
   now: Date;
   mechanicName?: string | null;
+  /** Just arrived or just changed status: glow once. */
+  fresh?: boolean;
   /** Set when the alert rail flags this job; shown as text, not just colour. */
   attention?: string;
 }) {
@@ -23,13 +26,13 @@ export function JobCard({
   return (
     <Link
       to={`/operations/jobs/${job.id}`}
-      className={`flex flex-col gap-1 rounded-control border bg-background p-3 text-sm hover:border-primary ${
+      className={`flex flex-col gap-1 rounded-control border bg-background p-3 text-sm transition-[border-color,transform] hover:-translate-y-0.5 hover:border-primary ${
         attention ? 'border-warning' : 'border-hairline'
-      }`}
+      } ${fresh ? 'fresh' : ''}`}
     >
       {attention ? (
         <span className="flex items-center gap-1.5 text-xs font-semibold">
-          <span aria-hidden className="diamond text-warning" />
+          <span aria-hidden className="diamond sonar text-warning" />
           {attention}
         </span>
       ) : null}

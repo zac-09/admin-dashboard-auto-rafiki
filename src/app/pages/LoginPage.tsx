@@ -1,12 +1,15 @@
 import { useState, type FormEvent } from 'react';
 import { Navigate, useLocation } from 'react-router';
 
+import { useAnimate, useReducedMotion } from 'motion/react';
+
 import { Reveal, SuccessMoment } from '@/components/motion';
 import { Button, Notice, TextField, WheelMark } from '@/components/ui';
 import { env } from '@/lib/env';
 import { MOCK_PASSWORD } from '@/lib/mocks/fixtures';
 import { getRepositories } from '@/lib/repositories';
 import { setSession, useSessionStore } from '@/lib/session';
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
 import type { AdminSession } from '@/types';
 
 type Moment = { status: 'pending' } | { status: 'success'; session: AdminSession };
@@ -20,6 +23,9 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [moment, setMoment] = useState<Moment | null>(null);
+  const [form, animate] = useAnimate<HTMLFormElement>();
+  const reduced = useReducedMotion();
+  useDocumentTitle('Sign in');
 
   // Hold the redirect while the sign-in moment plays (the auth listener signs us in first).
   if (status === 'signedIn' && !moment) return <Navigate to={from} replace />;
@@ -41,6 +47,10 @@ export function LoginPage() {
     } catch (e) {
       setMoment(null);
       setError((e as Error).message);
+      // A short shake on every failed attempt, like a rejected passcode.
+      if (!reduced && form.current) {
+        void animate(form.current, { x: [0, -10, 9, -6, 4, 0] }, { duration: 0.42 });
+      }
     }
   }
 
@@ -79,7 +89,12 @@ export function LoginPage() {
         />
       ) : null}
       <Reveal className="w-full max-w-sm">
-        <form onSubmit={onSubmit} className="panel flex w-full flex-col gap-5 p-6" noValidate>
+        <form
+          ref={form}
+          onSubmit={onSubmit}
+          className="panel flex w-full flex-col gap-5 p-6"
+          noValidate
+        >
           <div className="flex items-center gap-3">
             <WheelMark size={44} />
             <div className="flex flex-col">
@@ -106,7 +121,12 @@ export function LoginPage() {
           />
           {error ? <Notice tone="error">{error}</Notice> : null}
           {info ? <Notice tone="info">{info}</Notice> : null}
-          <Button type="submit" disabled={busy || !email || !password}>
+          <Button
+            id="sign-in"
+            type="submit"
+            disabled={busy || !email || !password}
+            hint={!busy && (!email || !password) ? 'Enter your email and password' : null}
+          >
             Sign in
           </Button>
           <button type="button" onClick={onReset} className="self-start text-sm underline">

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useSyncExternalStore } from 'react';
 
 import { useRepositories } from '@/lib/repositories';
 import { useLive } from '@/lib/useLive';
@@ -15,7 +15,9 @@ function useSince(windowMs: number): string {
 
 export function useActiveJobs() {
   const { operations } = useRepositories();
-  return useLive<Job[]>('active-jobs', (next, fail) => operations.subscribeActiveJobs(next, fail));
+  return useLive<{ jobs: Job[]; fromCache: boolean }>('active-jobs', (next, fail) =>
+    operations.subscribeActiveJobs((jobs, meta) => next({ jobs, fromCache: meta.fromCache }), fail),
+  );
 }
 
 export function useClosedJobs() {
@@ -81,4 +83,20 @@ export function useMechanic(userId: string | undefined) {
     queryFn: () => people.getMechanic(userId!),
     enabled: !!userId,
   });
+}
+
+/** The browser's own network state (navigator.onLine), live. */
+export function useOnline(): boolean {
+  return useSyncExternalStore(
+    (onChange) => {
+      window.addEventListener('online', onChange);
+      window.addEventListener('offline', onChange);
+      return () => {
+        window.removeEventListener('online', onChange);
+        window.removeEventListener('offline', onChange);
+      };
+    },
+    () => navigator.onLine,
+    () => true,
+  );
 }

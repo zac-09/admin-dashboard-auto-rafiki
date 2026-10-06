@@ -18,6 +18,14 @@ function apply(mode: ThemeMode): void {
   else delete document.documentElement.dataset.theme;
 }
 
+/** Crossfade light ↔ dark with a View Transition where supported (instant otherwise). */
+function applyWithCrossfade(mode: ThemeMode): void {
+  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
+  if (doc.startViewTransition && !reduced) doc.startViewTransition(() => apply(mode));
+  else apply(mode);
+}
+
 interface ThemeState {
   mode: ThemeMode;
   setMode(mode: ThemeMode): void;
@@ -28,7 +36,7 @@ interface ThemeState {
 export const useThemeMode = create<ThemeState>((set, get) => ({
   mode: readStored(),
   setMode(mode) {
-    apply(mode);
+    applyWithCrossfade(mode);
     try {
       localStorage.setItem(THEME_STORAGE_KEY, mode);
     } catch {
