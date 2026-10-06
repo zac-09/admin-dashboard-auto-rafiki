@@ -11,7 +11,9 @@ let instance: Repositories | null = null;
  */
 export function getRepositories(): Repositories {
   if (!instance) {
-    instance = env.useMocks ? createMockRepositories() : createFirebaseRepositories();
+    // `import.meta.env.DEV` is a build-time constant, so production bundles drop the mocks.
+    instance =
+      import.meta.env.DEV && env.useMocks ? createMockRepositories() : createFirebaseRepositories();
   }
   return instance;
 }

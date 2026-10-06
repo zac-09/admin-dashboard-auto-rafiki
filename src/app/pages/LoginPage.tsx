@@ -83,7 +83,7 @@ export function LoginPage() {
         <button type="button" onClick={onReset} className="self-start text-sm underline">
           Reset password
         </button>
-        {env.useMocks ? (
+        {import.meta.env.DEV && env.useMocks ? (
           <p className="text-xs text-muted">
             Mock mode: admin@, ops@ or support@autorafiki.test, password “{MOCK_PASSWORD}”.
           </p>
