@@ -1,4 +1,8 @@
+import type { DecideVettingInput, DecideVettingResult, VettingStatus } from '../lib/vetting';
+
 import type { AdminSession } from './admin';
+import type { AuditEntry } from './audit';
+import type { MechanicDoc } from './firestore';
 
 /**
  * Every screen and hook talks to these interfaces only. `lib/mocks` implements them with
@@ -17,6 +21,30 @@ export interface AuthRepository {
   subscribe(onChange: (session: AdminSession | null) => void): Unsubscribe;
 }
 
+export interface MechanicRepository {
+  /** One-shot read of a vetting queue (not live: verified mechanics stream location updates). */
+  listByVetting(status: VettingStatus): Promise<MechanicDoc[]>;
+  /** Live profile for the detail page; null when the doc does not exist. */
+  subscribe(
+    userId: string,
+    onChange: (mechanic: MechanicDoc | null) => void,
+    onError: (error: Error) => void,
+  ): Unsubscribe;
+}
+
+export interface AuditRepository {
+  /** Every audit entry about a mechanic, newest first. */
+  listMechanicEntries(): Promise<AuditEntry[]>;
+}
+
+export interface VettingRepository {
+  /** The `decideVetting` callable: the only way vetting changes. */
+  decide(input: DecideVettingInput): Promise<DecideVettingResult>;
+}
+
 export interface Repositories {
   auth: AuthRepository;
+  mechanics: MechanicRepository;
+  audit: AuditRepository;
+  vetting: VettingRepository;
 }

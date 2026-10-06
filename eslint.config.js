@@ -28,6 +28,11 @@ export default defineConfig([
     extends: [reactHooks.configs.flat.recommended, reactRefresh.configs.vite],
   },
   {
+    // Test helpers are never hot-reloaded.
+    files: ['src/test/**', 'src/**/__tests__/**'],
+    rules: { 'react-refresh/only-export-components': 'off' },
+  },
+  {
     // Theming rule: no hardcoded colours in app code. Hex values live in the token files;
     // Google map styles are JSON and cannot read tokens.
     files: ['src/**/*.{ts,tsx}'],

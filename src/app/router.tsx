@@ -1,5 +1,8 @@
 import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
 
+import { MechanicDetailPage } from '@/features/vetting/MechanicDetailPage';
+import { VettingQueuePage } from '@/features/vetting/VettingQueuePage';
+
 import { RequirePermission, ProtectedShell } from './guards';
 import { NAV_ITEMS } from './navigation';
 import { LoginPage } from './pages/LoginPage';
@@ -13,7 +16,24 @@ export const routes: RouteObject[] = [
     children: [
       // Every role can view vetting, the first module.
       { index: true, element: <Navigate to="/vetting" replace /> },
-      ...NAV_ITEMS.map((item) => ({
+      {
+        path: '/vetting',
+        element: (
+          <RequirePermission permission="vetting.view">
+            <VettingQueuePage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: '/vetting/:mechanicId',
+        element: (
+          <RequirePermission permission="vetting.view">
+            <MechanicDetailPage />
+          </RequirePermission>
+        ),
+      },
+      // Modules not built yet.
+      ...NAV_ITEMS.filter((item) => item.to !== '/vetting').map((item) => ({
         path: item.to,
         element: (
           <RequirePermission permission={item.permission}>

@@ -39,6 +39,11 @@ export class MockAuthRepository implements AuthRepository {
     return account;
   }
 
+  /** The signed-in session, for mock repositories that act on the user's behalf. */
+  current(): AdminSession | null {
+    return this.session;
+  }
+
   async signOut(): Promise<void> {
     this.set(null);
   }

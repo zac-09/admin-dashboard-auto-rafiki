@@ -1,24 +1,15 @@
-import { render, screen, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useState } from 'react';
-import { createMemoryRouter, RouterProvider } from 'react-router';
 
 import { createMockRepositories, MOCK_PASSWORD } from '@/lib/mocks';
 import { setRepositoriesForTesting } from '@/lib/repositories';
-import { useSessionStore, useSessionSync } from '@/lib/session';
+import { useSessionStore } from '@/lib/session';
+import { renderApp } from '@/test/renderApp';
 import { THEME_STORAGE_KEY, useThemeMode } from '@/theme/themeMode';
-
-import { routes } from '../router';
-
-function Harness({ path }: { path: string }) {
-  useSessionSync();
-  const [router] = useState(() => createMemoryRouter(routes, { initialEntries: [path] }));
-  return <RouterProvider router={router} />;
-}
 
 async function signInAs(email: string, password = MOCK_PASSWORD) {
   const user = userEvent.setup();
-  render(<Harness path="/vetting" />);
+  renderApp('/vetting');
   await user.type(await screen.findByLabelText('Email'), email);
   await user.type(screen.getByLabelText('Password'), password);
   await user.click(screen.getByRole('button', { name: 'Sign in' }));
@@ -51,7 +42,7 @@ describe('role-gated shell', () => {
       'aria-current',
       'page',
     );
-    expect(screen.getByRole('heading', { name: 'Vetting' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Mechanic vetting' })).toBeInTheDocument();
   });
 
   it('support sees no Revenue or Staff, and is stopped at /staff', async () => {
@@ -69,10 +60,10 @@ describe('role-gated shell', () => {
       status: 'signedIn',
       session: { uid: 's', email: 'support@autorafiki.test', displayName: null, role: 'support' },
     });
-    setRepositoriesForTesting({
-      auth: { ...createMockRepositories().auth, subscribe: () => () => undefined },
-    });
-    render(<Harness path="/staff" />);
+    const repos = createMockRepositories();
+    repos.auth.subscribe = () => () => undefined;
+    setRepositoriesForTesting(repos);
+    renderApp('/staff');
     expect(
       await screen.findByRole('heading', { name: 'Not available for your role' }),
     ).toBeInTheDocument();

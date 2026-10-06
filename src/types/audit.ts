@@ -11,9 +11,13 @@ export type AuditAction =
   /** setUserRole: a staff member's role claim was granted, changed or revoked. */
   | 'staff.role.set'
   /** bootstrap-admin script: the first admin was created outside the dashboard. */
-  | 'staff.bootstrap';
+  | 'staff.bootstrap'
+  /** decideVetting: approve (incl. reinstate / re-verify), reject, suspend. */
+  | 'mechanic.vetting.approve'
+  | 'mechanic.vetting.reject'
+  | 'mechanic.vetting.suspend';
 
-export type AuditTargetType = 'staff';
+export type AuditTargetType = 'staff' | 'mechanic';
 
 export interface AuditEntry {
   id: string;
@@ -31,5 +35,7 @@ export interface AuditEntry {
   after: string | null;
   /** Mandatory, free text from the operator. */
   reason: string;
+  /** Approvals: the practical-assessment checklist item ids that were ticked. */
+  checklist?: string[];
   at: IsoDate;
 }

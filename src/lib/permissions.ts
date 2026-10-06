@@ -1,4 +1,4 @@
-import type { AdminRole } from '@/types/admin';
+import type { AdminRole } from '../types/admin';
 
 /**
  * What each dashboard role may do. The UI uses this to hide and gate; Cloud Functions import
