@@ -127,6 +127,17 @@ transcript, ratings both ways, people, internal notes, the dispute, intervention
 by the `addSupportNote`, `flagDispute` and `resolveDispute` callables (audited); app users can
 never read them. Resolving with "Mechanic suspended" needs admin or ops.
 
+## Revenue & analytics
+
+`/revenue` (admin, ops). **Subscriptions**: Phase-1 UGX 15,000 per verified mechanic per week;
+weeks run Monday–Sunday Kampala time, due Monday, overdue from Thursday; billed from the week a
+mechanic is verified (from `TRACKING_START`, 5 Oct 2026, for mechanics verified before the
+dashboard). Only payments are stored (`subscriptions/{mechanicId}_{weekStart}`, written by the
+audited `markSubscriptionPaid` callable); dues are computed from the rules in
+`src/lib/subscriptions.ts` and the vetting history. **KPIs**: request → arrival median (target
+< 30 min), jobs/day, active mechanics (≥ 3 completed jobs in 7 days), acceptance, completion,
+average rating, jobs per mechanic per week. Both tabs export CSV (formula-safe).
+
 ## Motion and loading states
 
 Ported from the app's motion system so both feel the same (`src/components/motion`):

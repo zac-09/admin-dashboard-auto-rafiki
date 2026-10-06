@@ -4,6 +4,7 @@ import type { AdminSession } from './admin';
 import type { AuditEntry } from './audit';
 import type { ChatMessage, Job, Rating, UgPhone } from './domain';
 import type { MechanicDoc, UserDoc } from './firestore';
+import type { PaymentMethod, SubscriptionPayment } from './subscriptions';
 import type { Dispute, DisputeOutcome, SupportNote } from './support';
 
 /**
@@ -126,6 +127,22 @@ export interface SupportRepository {
   resolveDispute(input: { jobId: string; outcome: DisputeOutcome; note: string }): Promise<void>;
 }
 
+/** Phase-1 subscriptions and the KPI inputs. One-shot reads (react-query), not live. */
+export interface RevenueRepository {
+  /** Payments for weeks `fromWeek`..`toWeek` (Monday dates, inclusive). */
+  listPayments(fromWeek: string, toWeek: string): Promise<SubscriptionPayment[]>;
+  /** Jobs requested at or after `sinceIso`. */
+  listJobsSince(sinceIso: string): Promise<Job[]>;
+  listRatingsSince(sinceIso: string): Promise<Rating[]>;
+  /** The audited markSubscriptionPaid callable. */
+  markPaid(input: {
+    mechanicId: string;
+    weekStart: string;
+    method: PaymentMethod;
+    reference?: string;
+  }): Promise<void>;
+}
+
 export interface Repositories {
   auth: AuthRepository;
   mechanics: MechanicRepository;
@@ -134,4 +151,5 @@ export interface Repositories {
   operations: OperationsRepository;
   people: PeopleRepository;
   support: SupportRepository;
+  revenue: RevenueRepository;
 }

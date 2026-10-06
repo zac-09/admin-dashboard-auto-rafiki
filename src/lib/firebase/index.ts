@@ -7,6 +7,7 @@ import {
   FirestoreMechanicRepository,
 } from './firestoreRepositories';
 import { FirestoreOperationsRepository, FirestorePeopleRepository } from './operationsRepository';
+import { FirestoreRevenueRepository } from './revenueRepository';
 import { FirestoreSupportRepository } from './supportRepository';
 
 export function createFirebaseRepositories(): Repositories {
@@ -18,5 +19,6 @@ export function createFirebaseRepositories(): Repositories {
     operations: new FirestoreOperationsRepository(),
     people: new FirestorePeopleRepository(),
     support: new FirestoreSupportRepository(),
+    revenue: new FirestoreRevenueRepository(),
   };
 }

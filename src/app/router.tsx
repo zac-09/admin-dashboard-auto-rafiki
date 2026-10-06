@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
 
 import { JobDetailPage } from '@/features/operations/JobDetailPage';
 import { OperationsPage } from '@/features/operations/OperationsPage';
+import { RevenuePage } from '@/features/revenue/RevenuePage';
 import { PersonPage } from '@/features/support/PersonPage';
 import { SupportPage } from '@/features/support/SupportPage';
 import { MechanicDetailPage } from '@/features/vetting/MechanicDetailPage';
@@ -64,6 +65,14 @@ export const routes: RouteObject[] = [
         ),
       },
       {
+        path: '/revenue',
+        element: (
+          <RequirePermission permission="revenue.view">
+            <RevenuePage />
+          </RequirePermission>
+        ),
+      },
+      {
         path: '/support/people/:userId',
         element: (
           <RequirePermission permission="support.view">
@@ -72,16 +81,16 @@ export const routes: RouteObject[] = [
         ),
       },
       // Modules not built yet.
-      ...NAV_ITEMS.filter((item) => !['/vetting', '/operations', '/support'].includes(item.to)).map(
-        (item) => ({
-          path: item.to,
-          element: (
-            <RequirePermission permission={item.permission}>
-              <ModulePlaceholder item={item} />
-            </RequirePermission>
-          ),
-        }),
-      ),
+      ...NAV_ITEMS.filter(
+        (item) => !['/vetting', '/operations', '/support', '/revenue'].includes(item.to),
+      ).map((item) => ({
+        path: item.to,
+        element: (
+          <RequirePermission permission={item.permission}>
+            <ModulePlaceholder item={item} />
+          </RequirePermission>
+        ),
+      })),
       { path: '*', element: <Navigate to="/vetting" replace /> },
     ],
   },
