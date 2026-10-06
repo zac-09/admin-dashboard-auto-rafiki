@@ -43,6 +43,10 @@ export class MockAuthRepository implements AuthRepository {
     this.set(null);
   }
 
+  async sendPasswordReset(_email: string): Promise<void> {
+    // Mock: nothing to send.
+  }
+
   subscribe(onChange: (session: AdminSession | null) => void): Unsubscribe {
     this.listeners.add(onChange);
     onChange(this.session);

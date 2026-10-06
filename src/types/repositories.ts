@@ -12,6 +12,7 @@ export interface AuthRepository {
   /** Email + password sign-in (staff never use phone OTP). */
   signIn(email: string, password: string): Promise<AdminSession>;
   signOut(): Promise<void>;
+  sendPasswordReset(email: string): Promise<void>;
   /** Emits the current session immediately (or once known), then on every change. */
   subscribe(onChange: (session: AdminSession | null) => void): Unsubscribe;
 }

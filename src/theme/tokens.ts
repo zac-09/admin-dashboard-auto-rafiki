@@ -1,9 +1,24 @@
 /**
- * AutoRafiki design tokens (same identity as the app; the ops tool is dark throughout).
- * Tailwind reads the same values from `src/index.css` (@theme); a unit test keeps the two
- * in sync. App code uses Tailwind classes (bg-surface, text-muted, …), never these hexes.
+ * AutoRafiki palettes, exactly as in the app repo (src/theme/palettes/autorafiki.ts) plus
+ * `warning`, which the dashboard adds. Light is the default; dark is a per-browser setting.
+ * `src/index.css` carries the same values as CSS variables on :root and [data-theme="dark"]
+ * (a unit test keeps them in sync). App code uses Tailwind classes, never these hexes.
  */
-export const colors = {
+export const lightColors = {
+  background: '#FFFFFF',
+  surface: '#F3F5F7',
+  hairline: '#D9DEE3',
+  textPrimary: '#101215',
+  textMuted: '#5B6570',
+  accent: '#0E8FA3', // darker cyan: works as both fill and text on white (4.6:1)
+  onAccent: '#FFFFFF',
+  accentText: '#0B6875',
+  success: '#1E8E63',
+  danger: '#C62828',
+  warning: '#9A6200',
+} as const;
+
+export const darkColors = {
   background: '#101215',
   surface: '#17191C',
   hairline: '#333C47',
@@ -17,7 +32,11 @@ export const colors = {
   warning: '#DFAD4C',
 } as const;
 
-export type ColorToken = keyof typeof colors;
+export type ColorToken = keyof typeof lightColors;
+export type Palette = Record<ColorToken, string>;
+export type ThemeMode = 'light' | 'dark';
+
+export const palettes: Record<ThemeMode, Palette> = { light: lightColors, dark: darkColors };
 
 /** Tailwind colour name for each token (`bg-<name>`, `text-<name>`, `border-<name>`). */
 export const tailwindColorNames: Record<ColorToken, string> = {

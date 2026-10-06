@@ -3,22 +3,56 @@
 
 /*
  * Design tokens. Mirrors src/theme/tokens.ts (a unit test keeps them in sync).
- * The default Tailwind palette is cleared so only AutoRafiki colours exist.
+ * Palettes are CSS variables so the light/dark switch is instant: light on :root (default),
+ * dark on [data-theme='dark'] (set on <html> by src/theme/themeMode.ts).
  */
-@theme {
-  --color-*: initial;
-  --color-background: #101215;
-  --color-surface: #17191c;
-  --color-hairline: #333c47;
-  --color-primary: #f4f6f8;
-  --color-muted: #b7c0c9;
-  --color-accent: #19c2d8;
-  --color-on-accent: #101215;
-  --color-accent-text: #0b6875;
-  --color-success: #34c08b;
-  --color-danger: #ff7b72;
-  --color-warning: #dfad4c;
+:root {
+  color-scheme: light;
+  --ar-background: #ffffff;
+  --ar-surface: #f3f5f7;
+  --ar-hairline: #d9dee3;
+  --ar-primary: #101215;
+  --ar-muted: #5b6570;
+  --ar-accent: #0e8fa3;
+  --ar-on-accent: #ffffff;
+  --ar-accent-text: #0b6875;
+  --ar-success: #1e8e63;
+  --ar-danger: #c62828;
+  --ar-warning: #9a6200;
+}
 
+[data-theme='dark'] {
+  color-scheme: dark;
+  --ar-background: #101215;
+  --ar-surface: #17191c;
+  --ar-hairline: #333c47;
+  --ar-primary: #f4f6f8;
+  --ar-muted: #b7c0c9;
+  --ar-accent: #19c2d8;
+  --ar-on-accent: #101215;
+  --ar-accent-text: #0b6875;
+  --ar-success: #34c08b;
+  --ar-danger: #ff7b72;
+  --ar-warning: #dfad4c;
+}
+
+/* The default Tailwind palette is cleared so only AutoRafiki colours exist. */
+@theme inline {
+  --color-*: initial;
+  --color-background: var(--ar-background);
+  --color-surface: var(--ar-surface);
+  --color-hairline: var(--ar-hairline);
+  --color-primary: var(--ar-primary);
+  --color-muted: var(--ar-muted);
+  --color-accent: var(--ar-accent);
+  --color-on-accent: var(--ar-on-accent);
+  --color-accent-text: var(--ar-accent-text);
+  --color-success: var(--ar-success);
+  --color-danger: var(--ar-danger);
+  --color-warning: var(--ar-warning);
+}
+
+@theme {
   --radius-*: initial;
   --radius-control: 3px;
   --radius-panel: 6px;
@@ -31,9 +65,6 @@
 }
 
 @layer base {
-  html {
-    color-scheme: dark;
-  }
   body {
     @apply bg-background text-primary font-sans text-sm antialiased;
   }
