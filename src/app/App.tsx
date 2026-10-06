@@ -1,4 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
+import { MotionConfig } from 'motion/react';
 import { useState } from 'react';
 import { RouterProvider } from 'react-router';
 
@@ -12,8 +13,10 @@ export function App() {
   const [router] = useState(createRouter);
   useSessionSync();
   return (
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
+    <MotionConfig reducedMotion="user">
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    </MotionConfig>
   );
 }

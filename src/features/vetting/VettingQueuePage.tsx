@@ -1,7 +1,10 @@
 import { Link, useSearchParams } from 'react-router';
 
+import { motion } from 'motion/react';
+
 import { PageHeader } from '@/app/pages/PageHeader';
-import { Notice } from '@/components/ui';
+import { AnimatedNumber, Reveal, springs, staggerDelay } from '@/components/motion';
+import { Notice, Skeleton, SkeletonTable } from '@/components/ui';
 import { daysSince, formatDate } from '@/lib/format';
 import type { VettingStatus } from '@/lib/vetting';
 import type { AuditEntry, MechanicDoc } from '@/types';
@@ -107,7 +110,13 @@ export function VettingQueuePage() {
               }`}
             >
               {q.label}
-              <span className="text-xs text-muted">{loading ? '…' : rowsFor(q.id).length}</span>
+              {loading ? (
+                <Skeleton className="h-2.5 w-4" />
+              ) : (
+                <span className="text-xs text-muted">
+                  <AnimatedNumber value={rowsFor(q.id).length} />
+                </span>
+              )}
             </button>
           );
         })}
@@ -115,13 +124,17 @@ export function VettingQueuePage() {
 
       {error ? <Notice tone="error">Could not load mechanics: {error.message}</Notice> : null}
       {loading ? (
-        <p role="status" className="text-sm text-muted">
-          Loading…
-        </p>
+        <SkeletonTable rows={5} columns={6} label="Loading mechanics" />
       ) : rows.length === 0 ? (
-        <p className="panel p-6 text-sm text-muted">{current.empty}</p>
+        <Reveal
+          key={`empty-${queue}`}
+          className="panel flex items-center gap-3 p-6 text-sm text-muted"
+        >
+          <span aria-hidden className="diamond text-accent" />
+          {current.empty}
+        </Reveal>
       ) : (
-        <div className="panel overflow-x-auto">
+        <Reveal key={queue} from="fade" className="panel overflow-x-auto">
           <table className="w-full min-w-[46rem] text-left text-sm">
             <caption className="sr-only">{current.label} mechanics</caption>
             <thead className="border-b border-hairline">
@@ -134,8 +147,14 @@ export function VettingQueuePage() {
               </tr>
             </thead>
             <tbody>
-              {rows.map(({ mechanic, note }) => (
-                <tr key={mechanic.userId} className="border-b border-hairline last:border-0">
+              {rows.map(({ mechanic, note }, index) => (
+                <motion.tr
+                  key={mechanic.userId}
+                  className="border-b border-hairline last:border-0"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ ...springs.settle, delay: staggerDelay(index, rows.length) / 1000 }}
+                >
                   <td className="px-3 py-2.5 align-top">
                     <Link to={`/vetting/${mechanic.userId}`} className="font-semibold underline">
                       {mechanic.businessName || 'Unnamed business'}
@@ -151,11 +170,11 @@ export function VettingQueuePage() {
                   </td>
                   <td className="px-3 py-2.5 align-top">{mechanic.jobsCompleted}</td>
                   <td className="max-w-xs px-3 py-2.5 align-top text-muted">{note}</td>
-                </tr>
+                </motion.tr>
               ))}
             </tbody>
           </table>
-        </div>
+        </Reveal>
       )}
     </>
   );

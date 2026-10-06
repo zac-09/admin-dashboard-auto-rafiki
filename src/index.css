@@ -87,3 +87,43 @@
     @apply inline-block size-2 shrink-0 rotate-45 bg-current;
   }
 }
+
+/*
+ * Skeleton placeholder (the app's Skeleton): a hairline-coloured bar with a slow accent sweep.
+ * Static under reduced motion.
+ */
+@keyframes skeleton-sweep {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.22;
+  }
+  100% {
+    transform: translateX(200%);
+    opacity: 0;
+  }
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--ar-hairline);
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 50%;
+  background-color: var(--ar-accent);
+  animation: skeleton-sweep 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: none;
+    opacity: 0;
+  }
+}

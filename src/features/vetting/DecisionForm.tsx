@@ -11,6 +11,7 @@ import {
 } from '@/lib/vetting';
 import type { MechanicDoc } from '@/types';
 
+import { decisionOutcome } from './decisionOutcome';
 import { useDecideVetting } from './hooks';
 
 function consequence(decision: VettingDecision, mechanic: MechanicDoc): string {
@@ -24,14 +25,23 @@ function consequence(decision: VettingDecision, mechanic: MechanicDoc): string {
   return 'Verified mechanics receive job broadcasts whenever they are online.';
 }
 
+export interface DecisionCallbacks {
+  /** The decision was sent; show the pending moment. */
+  onStart: () => void;
+  /** Saved: play the success moment, then show `message`. */
+  onSaved: (outcome: { title: string; subtitle: string; message: string }) => void;
+  /** Failed: close the moment; the form shows the error. */
+  onFailed: () => void;
+}
+
 export function DecisionForm({
   mechanic,
+  onStart,
   onSaved,
+  onFailed,
 }: {
   mechanic: MechanicDoc;
-  /** Called with a confirmation line; the parent shows it (this form remounts on status change). */
-  onSaved: (message: string) => void;
-}) {
+} & DecisionCallbacks) {
   const options = allowedDecisions(mechanic.vetting);
   const [decision, setDecision] = useState<VettingDecision | null>(null);
   const [checklist, setChecklist] = useState<string[]>([]);
@@ -48,6 +58,8 @@ export function DecisionForm({
     event.preventDefault();
     if (!decision || !valid) return;
     const label = decisionLabel(decision, mechanic.vetting);
+    const outcome = decisionOutcome(decision, mechanic);
+    onStart();
     try {
       await mutation.mutateAsync({
         mechanicId: mechanic.userId,
@@ -56,9 +68,10 @@ export function DecisionForm({
         ...(needsChecklist ? { checklist } : {}),
       });
     } catch {
+      onFailed();
       return; // Shown from mutation.error below.
     }
-    onSaved(`${label}: saved and recorded in the audit log.`);
+    onSaved({ ...outcome, message: `${label}: saved and recorded in the audit log.` });
     setDecision(null);
     setChecklist([]);
     setReason('');

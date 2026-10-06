@@ -5,6 +5,7 @@ import { can, type Permission } from '@/lib/permissions';
 import { useSession, useSessionStore } from '@/lib/session';
 
 import { NoAccessPage } from './pages/NoAccessPage';
+import { Splash } from './pages/Splash';
 import { NotPermittedPage } from './pages/NotPermittedPage';
 import { AppShell } from './shell/AppShell';
 
@@ -12,13 +13,7 @@ import { AppShell } from './shell/AppShell';
 export function ProtectedShell() {
   const { status, session } = useSessionStore();
   const location = useLocation();
-  if (status === 'loading') {
-    return (
-      <p role="status" className="p-8 text-sm text-muted">
-        Loading…
-      </p>
-    );
-  }
+  if (status === 'loading') return <Splash />;
   if (status === 'signedOut') {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }

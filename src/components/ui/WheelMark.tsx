@@ -3,7 +3,8 @@ export interface WheelMarkProps {
   size?: number;
   /** Hide the thin accent ring. */
   ring?: boolean;
-  label?: string;
+  /** Accessible name; `null` hides the mark from assistive tech (decorative use). */
+  label?: string | null;
 }
 
 /**
@@ -12,7 +13,12 @@ export interface WheelMarkProps {
  */
 export function WheelMark({ size = 44, ring = true, label = 'AutoRafiki' }: WheelMarkProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 44 44" role="img" aria-label={label}>
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 44 44"
+      {...(label === null ? { 'aria-hidden': true } : { role: 'img', 'aria-label': label })}
+    >
       {ring ? (
         <circle cx={22} cy={22} r={20} fill="none" className="stroke-accent" strokeWidth={1.1} />
       ) : null}

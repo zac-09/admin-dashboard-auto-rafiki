@@ -1,7 +1,8 @@
 import { useState, type ReactNode } from 'react';
 import { Link, useParams } from 'react-router';
 
-import { Notice } from '@/components/ui';
+import { Reveal, staggerDelay, SuccessMoment } from '@/components/motion';
+import { Notice, SkeletonLines, SkeletonDetail } from '@/components/ui';
 import { formatDateTime, formatUgx } from '@/lib/format';
 import { can } from '@/lib/permissions';
 import { useSession } from '@/lib/session';
@@ -63,15 +64,20 @@ function History({ mechanicId }: { mechanicId: string }) {
   const audit = useMechanicAudit();
   if (audit.error)
     return <Notice tone="error">Could not load history: {audit.error.message}</Notice>;
-  if (audit.isPending) return <p className="text-sm text-muted">Loading…</p>;
+  if (audit.isPending) return <SkeletonLines lines={3} />;
   const entries = audit.data.filter((e) => e.targetId === mechanicId);
   if (entries.length === 0) {
     return <p className="text-sm text-muted">No decisions recorded in the dashboard yet.</p>;
   }
   return (
     <ol className="flex flex-col gap-4">
-      {entries.map((e) => (
-        <li key={e.id} className="flex gap-3 text-sm">
+      {entries.map((e, index) => (
+        <Reveal
+          as="li"
+          key={e.id}
+          delay={staggerDelay(index, entries.length)}
+          className="flex gap-3 text-sm"
+        >
           <span aria-hidden className="mt-1.5 diamond text-muted" />
           <div className="flex flex-col gap-0.5">
             <span>
@@ -88,7 +94,7 @@ function History({ mechanicId }: { mechanicId: string }) {
               </span>
             ) : null}
           </div>
-        </li>
+        </Reveal>
       ))}
     </ol>
   );
@@ -99,6 +105,11 @@ export function MechanicDetailPage() {
   const session = useSession();
   const live = useMechanic(mechanicId);
   const [saved, setSaved] = useState<{ mechanicId: string; message: string } | null>(null);
+  const [moment, setMoment] = useState<
+    | { status: 'pending' }
+    | { status: 'success'; title: string; subtitle: string; message: string; mechanicId: string }
+    | null
+  >(null);
 
   const back = (
     <Link to="/vetting" className="mb-4 inline-block text-sm underline">
@@ -109,9 +120,7 @@ export function MechanicDetailPage() {
     return (
       <>
         {back}
-        <p role="status" className="text-sm text-muted">
-          Loading…
-        </p>
+        <SkeletonDetail label="Loading mechanic" />
       </>
     );
   }
@@ -135,6 +144,20 @@ export function MechanicDetailPage() {
 
   return (
     <>
+      {moment ? (
+        <SuccessMoment
+          status={moment.status}
+          pendingTitle="Saving the decision…"
+          title={moment.status === 'success' ? moment.title : ''}
+          subtitle={moment.status === 'success' ? moment.subtitle : undefined}
+          onDone={() => {
+            if (moment.status === 'success') {
+              setSaved({ mechanicId: moment.mechanicId, message: moment.message });
+            }
+            setMoment(null);
+          }}
+        />
+      ) : null}
       {back}
       <header className="mb-6 flex flex-col gap-2">
         <span className="micro-label">Mechanic</span>
@@ -192,7 +215,11 @@ export function MechanicDetailPage() {
             <DecisionForm
               key={m.vetting}
               mechanic={m}
-              onSaved={(message) => setSaved({ mechanicId: m.userId, message })}
+              onStart={() => setMoment({ status: 'pending' })}
+              onFailed={() => setMoment(null)}
+              onSaved={(outcome) =>
+                setMoment({ status: 'success', ...outcome, mechanicId: m.userId })
+              }
             />
           ) : (
             <p className="text-sm text-muted">Your role can view vetting but not decide.</p>
