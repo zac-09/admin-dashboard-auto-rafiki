@@ -21,6 +21,19 @@ export default defineConfig({
           setupFiles: ['src/test/setup.ts'],
         },
       },
+      {
+        // Firestore rules against the emulator. Run via `npm run test:rules`, which starts it.
+        extends: true,
+        test: {
+          name: 'rules',
+          environment: 'node',
+          globals: true,
+          include: ['tests/rules/**/*.test.ts'],
+          fileParallelism: false,
+          testTimeout: 15_000,
+          hookTimeout: 30_000,
+        },
+      },
     ],
   },
 });

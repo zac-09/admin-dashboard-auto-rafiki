@@ -1,0 +1,181 @@
+rules_version = '2';
+
+// RoadsideApp Phase 1 rules. Collections mirror src/lib/firebase/collections.ts.
+// Deploy: firebase deploy --only firestore:rules (see README → Firestore setup).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isSelf(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+    function isVerifiedMechanic() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/mechanics/$(request.auth.uid))
+        && get(/databases/$(database)/documents/mechanics/$(request.auth.uid)).data.vetting == 'verified';
+    }
+    function jobStatuses() {
+      return ['requested', 'matched', 'enroute', 'arrived', 'working', 'complete', 'cancelled'];
+    }
+
+    // users/{uid}: a user reads/writes only their own record; roles can be added, not id/phone changed.
+    match /users/{userId} {
+      allow read: if isSelf(userId);
+      allow create: if isSelf(userId)
+        && request.resource.data.id == userId
+        && request.resource.data.roles.hasOnly(['customer', 'mechanic']);
+      allow update: if isSelf(userId)
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.phone == resource.data.phone;
+      allow delete: if false;
+    }
+
+    // profiles/{uid}: public display name, readable by any signed-in user, written by its owner.
+    // ratingAverage / ratingCount (how mechanics rated this customer) are set by Cloud Functions only.
+    match /profiles/{userId} {
+      function validName() {
+        return request.resource.data.id == userId
+          && request.resource.data.displayName is string
+          && request.resource.data.displayName.size() <= 60;
+      }
+      allow read: if signedIn();
+      allow create: if isSelf(userId) && validName()
+        && request.resource.data.keys().hasOnly(['id', 'displayName']);
+      allow update: if isSelf(userId) && validName()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['id', 'displayName']);
+      allow delete: if false;
+    }
+
+    // presence/{uid}: app-open heartbeat shown in the chat header ("Online", "Last seen …").
+    // Anyone signed in may read; only the owner writes, with the server's clock as lastSeen.
+    match /presence/{userId} {
+      allow read: if signedIn();
+      allow write: if isSelf(userId)
+        && request.resource.data.userId == userId
+        && request.resource.data.online is bool
+        && request.resource.data.lastSeen == request.time
+        && (request.resource.data.viewingJobId == null || request.resource.data.viewingJobId is string)
+        && request.resource.data.keys().hasOnly(['userId', 'online', 'lastSeen', 'viewingJobId']);
+    }
+
+    // mechanics/{uid}: public profile (customers see who is coming); only the owner edits;
+    // vetting is set by admins (Console / Admin SDK), never by the app.
+    match /mechanics/{userId} {
+      allow read: if signedIn();
+      allow create: if isSelf(userId)
+        && request.resource.data.userId == userId
+        && request.resource.data.vetting == 'pending';
+      allow update: if isSelf(userId)
+        && request.resource.data.userId == userId
+        && request.resource.data.vetting == resource.data.vetting;
+      allow delete: if false;
+    }
+
+    // jobs/{jobId}
+    match /jobs/{jobId} {
+      function isJobCustomer() {
+        return signedIn() && resource.data.request.customerId == request.auth.uid;
+      }
+      function isJobMechanic() {
+        return signedIn() && resource.data.mechanicId == request.auth.uid;
+      }
+      function isOpenRequest() {
+        return resource.data.status == 'requested' && !('mechanicId' in resource.data);
+      }
+
+      // Customers see their own jobs; the assigned mechanic sees theirs;
+      // verified mechanics can browse open requests (findNearby / listOpenRequests).
+      allow read: if isJobCustomer() || isJobMechanic()
+        || (isVerifiedMechanic() && isOpenRequest());
+
+      // Customer creates a request for themselves in 'requested'.
+      allow create: if signedIn()
+        && request.resource.data.request.customerId == request.auth.uid
+        && request.resource.data.status == 'requested'
+        && !('mechanicId' in request.resource.data);
+
+      // Verified mechanic accepts an open request (acceptJob): sets mechanicId = self, status matched.
+      allow update: if isVerifiedMechanic() && isOpenRequest()
+        && resource.data.request.customerId != request.auth.uid
+        && request.resource.data.mechanicId == request.auth.uid
+        && request.resource.data.status == 'matched'
+        && request.resource.data.request == resource.data.request;
+
+      // Assigned mechanic advances status; customer may only cancel before work starts.
+      allow update: if isJobMechanic()
+        && request.resource.data.status in jobStatuses()
+        && request.resource.data.mechanicId == resource.data.mechanicId
+        && request.resource.data.request == resource.data.request;
+      allow update: if isJobCustomer()
+        && request.resource.data.status == 'cancelled'
+        && resource.data.status in ['requested', 'matched', 'enroute']
+        && request.resource.data.request == resource.data.request;
+
+      // Bookkeeping write right after addDoc (createRequest sets id fields).
+      allow update: if isJobCustomer()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['id', 'request']);
+
+      // Customer widens / renews the broadcast while the job is still open.
+      allow update: if isJobCustomer() && isOpenRequest()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['radiusKm', 'expiresAt'])
+        && request.resource.data.radiusKm in [5, 8];
+
+      allow delete: if false;
+
+      // jobs/{jobId}/messages/{messageId}: only the two parties on the job read and write;
+      // a message is immutable and must be sent as yourself with the role you hold on the job.
+      match /messages/{messageId} {
+        function job() {
+          return get(/databases/$(database)/documents/jobs/$(jobId)).data;
+        }
+        function isParty() {
+          return signedIn()
+            && (job().request.customerId == request.auth.uid || job().mechanicId == request.auth.uid);
+        }
+        allow read: if isParty();
+        allow create: if isParty()
+          && request.resource.data.jobId == jobId
+          && request.resource.data.senderId == request.auth.uid
+          && request.resource.data.senderRole in ['customer', 'mechanic']
+          && (request.resource.data.senderRole == 'customer') == (job().request.customerId == request.auth.uid)
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 500;
+        allow update: if isParty()
+          && resource.data.senderId == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['id']);
+        allow delete: if false;
+      }
+    }
+
+    // ratings/{ratingId}: once a job is complete, either party rates the other. `ratedBy` says who;
+    // absent means customer → mechanic (the only kind that existed before mechanics could rate).
+    match /ratings/{ratingId} {
+      function ratedJob() {
+        return get(/databases/$(database)/documents/jobs/$(request.resource.data.jobId)).data;
+      }
+      function partiesMatchJob() {
+        return ratedJob().status == 'complete'
+          && ratedJob().request.customerId == request.resource.data.customerId
+          && ratedJob().mechanicId == request.resource.data.mechanicId;
+      }
+      function ratedByCustomer() {
+        return !('ratedBy' in request.resource.data) || request.resource.data.ratedBy == 'customer';
+      }
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.stars in [1, 2, 3, 4, 5]
+        && partiesMatchJob()
+        && (
+          (ratedByCustomer() && request.resource.data.customerId == request.auth.uid)
+          || (request.resource.data.ratedBy == 'mechanic' && request.resource.data.mechanicId == request.auth.uid)
+        );
+      allow update: if signedIn()
+        && (resource.data.customerId == request.auth.uid || resource.data.mechanicId == request.auth.uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['id']);
+      allow delete: if false;
+    }
+  }
+}

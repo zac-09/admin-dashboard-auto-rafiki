@@ -4,3 +4,5 @@ coverage
 functions/lib
 package-lock.json
 claude.md
+firebase/firestore.rules
+firebase/firestore.indexes.json
