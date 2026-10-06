@@ -42,7 +42,7 @@ export function AlertRail({ alerts }: { alerts: readonly Alert[] }) {
       {alerts.length === 0 ? (
         <p className="text-sm text-muted">Nothing needs you right now.</p>
       ) : (
-        <ul className="flex flex-col gap-3 text-sm">
+        <ul className="grid gap-3 text-sm sm:grid-cols-2 xl:grid-cols-3">
           {alerts.map((alert) => (
             <li key={alert.key} className="flex gap-3">
               <span aria-hidden className="mt-1.5 diamond text-warning" />

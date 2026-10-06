@@ -2,10 +2,11 @@
  * Shared setup for tests that drive the dashboard's own Firestore operations repository on
  * the emulators. One identity per test file: each file gets a fresh Firebase client.
  *
- * Node-only quirk this works around: the web SDK's gRPC Listen stream desyncs against the
- * emulator (no updates, bogus RESOURCE_EXHAUSTED "message larger than max") when a Listen is
- * the client's first Firestore RPC, or is reopened after a user switch. So: sign in once, make
- * a one-off read, then listen. Browsers use WebChannel instead and are unaffected.
+ * Node-only quirk: the web SDK's gRPC Listen stream intermittently desyncs against the
+ * emulator (no updates, bogus RESOURCE_EXHAUSTED "message larger than max"), mostly when a
+ * listener is open while a write lands. So these tests sign in once, make a one-off read, and
+ * write BEFORE subscribing. Browsers use WebChannel and are unaffected; live updates are
+ * verified in real Chrome by `npm run test:e2e`.
  */
 import { deleteApp, initializeApp } from 'firebase-admin/app';
 import { getAuth as adminAuth } from 'firebase-admin/auth';

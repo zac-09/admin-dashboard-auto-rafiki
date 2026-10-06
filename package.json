@@ -20,7 +20,8 @@
     "emulators": "npm --prefix functions run build && firebase emulators:start --only auth,firestore,functions --project demo-autorafiki",
     "test:emulator": "npm --prefix functions run build && firebase emulators:exec --only auth,firestore,functions --project demo-autorafiki \"vitest run --project rules --project integration\"",
     "seed:emulator": "FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 tsx --tsconfig tsconfig.test.json scripts/seed-emulator.ts",
-    "bootstrap-admin": "tsx --tsconfig tsconfig.test.json scripts/bootstrap-admin.ts"
+    "bootstrap-admin": "tsx --tsconfig tsconfig.test.json scripts/bootstrap-admin.ts",
+    "test:e2e": "firebase emulators:exec --only auth,firestore --project demo-autorafiki \"tsx --tsconfig tsconfig.test.json tests/e2e/liveBoard.ts\""
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.3.0",
@@ -53,16 +54,12 @@
     "globals": "^17.13.0",
     "jsdom": "^29.1.1",
     "prettier": "^3.9.9",
+    "puppeteer-core": "^24.43.1",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.23.15",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.71.1",
     "vite": "^8.3.3",
     "vitest": "^4.1.11"
-  },
-  "overrides": {
-    "@firebase/firestore": {
-      "@grpc/grpc-js": "^1.14.5"
-    }
   }
 }

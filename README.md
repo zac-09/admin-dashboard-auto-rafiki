@@ -48,15 +48,20 @@ npm run lint
 npm test                # web unit tests + functions unit tests
 npm run test:rules      # Firestore rules on the emulator (fast)
 npm run test:emulator   # rules + callables end to end (auth, firestore, functions emulators)
+npm run test:e2e        # real Chrome against the emulators: sign-in, live job board, alert rail
 ```
+
+`test:e2e` uses your installed Google Chrome (override with `CHROME_PATH`) via puppeteer-core,
+starts its own dev server on port 5199 with mocks off and emulators on, fails if the page
+sends any request to a real Google API, and saves screenshots to `test-results/`.
 
 Tests never read `.env*` files (`envDir` is off under Vitest), so a `.env.local` pointed at
 production cannot leak into a test run.
 
-`tests/integration/operations.*.test.ts` drive the dashboard's real Firestore listeners. Under
-Node the web SDK's gRPC listen stream desyncs against the emulator if a listener is its first
-request, so `opsHarness.ts` signs in once per file and makes a one-off read first. Browsers use
-a different transport and are unaffected.
+`tests/integration/operations.*.test.ts` drive the dashboard's real Firestore repository. Under
+Node, the web SDK's gRPC listen stream intermittently desyncs against the emulator when a
+listener is open while a write lands, so those tests write first and subscribe second (see
+`opsHarness.ts`). Live updates are proven in a real browser by `test:e2e` instead.
 
 The rules tests in `tests/rules/app.*.test.ts` drive a call-for-call port of the app's
 Firestore writes (`tests/rules/appClient.ts`). They cover every app access path. A rules

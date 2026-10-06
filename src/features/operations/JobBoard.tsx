@@ -28,7 +28,7 @@ export function JobBoard({
   );
   return (
     <div className="overflow-x-auto pb-2">
-      <div className="grid min-w-max auto-cols-[15rem] grid-flow-col gap-3">
+      <div className="grid min-w-max auto-cols-[13.5rem] grid-flow-col gap-3">
         {JOB_STATUSES.map((status) => (
           <section key={status} aria-label={STATUS_LABELS[status]} className="flex flex-col gap-2">
             <h3 className="micro-label flex items-center justify-between border-b border-hairline pb-2">

@@ -21,7 +21,8 @@ export function UserMenu({ session }: { session: AdminSession }) {
           {session.displayName ?? session.email}
         </span>
         <span className="truncate text-xs text-muted">
-          {session.role ? ROLE_LABELS[session.role] : 'No role'} · {session.email}
+          {session.role ? ROLE_LABELS[session.role] : 'No role'}
+          {session.displayName ? ` · ${session.email}` : ''}
         </span>
       </button>
       {open ? (

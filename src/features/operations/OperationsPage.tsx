@@ -69,7 +69,10 @@ export function OperationsPage() {
           </Notice>
         </div>
       ))}
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem] xl:items-start">
+      <div className="flex flex-col gap-4">
+        {/* Alerts first and full width: they are the operator's to-do list; the board gets
+            the whole width below so more status columns fit. */}
+        <AlertRail alerts={alerts} />
         <div className="min-w-0">
           <nav aria-label="Operations views" className="mb-4 flex gap-1 border-b border-hairline">
             {VIEWS.map((v) => (
@@ -99,7 +102,6 @@ export function OperationsPage() {
             </Suspense>
           )}
         </div>
-        <AlertRail alerts={alerts} />
       </div>
     </>
   );

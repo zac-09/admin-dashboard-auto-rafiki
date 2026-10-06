@@ -28,3 +28,6 @@ serviceAccount*.json
 .vscode/*
 !.vscode/extensions.json
 node_modules
+
+# e2e screenshots
+test-results/
