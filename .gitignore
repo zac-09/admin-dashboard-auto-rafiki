@@ -1,0 +1,30 @@
+# dependencies
+node_modules/
+
+# build
+dist/
+functions/lib/
+*.tsbuildinfo
+
+# test / coverage
+coverage/
+
+# Firebase emulator and debug logs
+*-debug.log
+.firebase/
+emulator-data/
+
+# env (all variants except the template)
+.env
+.env.*
+!.env.example
+
+# Admin SDK service-account keys (never commit)
+serviceAccount*.json
+*-firebase-adminsdk-*.json
+
+# macOS / editors
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+node_modules

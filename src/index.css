@@ -1,0 +1,58 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter';
+
+/*
+ * Design tokens. Mirrors src/theme/tokens.ts (a unit test keeps them in sync).
+ * The default Tailwind palette is cleared so only AutoRafiki colours exist.
+ */
+@theme {
+  --color-*: initial;
+  --color-background: #101215;
+  --color-surface: #17191c;
+  --color-hairline: #333c47;
+  --color-primary: #f4f6f8;
+  --color-muted: #b7c0c9;
+  --color-accent: #19c2d8;
+  --color-on-accent: #101215;
+  --color-accent-text: #0b6875;
+  --color-success: #34c08b;
+  --color-danger: #ff7b72;
+  --color-warning: #dfad4c;
+
+  --radius-*: initial;
+  --radius-control: 3px;
+  --radius-panel: 6px;
+
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+
+  /* No text below 12px anywhere in the ops tool. */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-background text-primary font-sans text-sm antialiased;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-accent;
+  }
+}
+
+@layer components {
+  /* Letterspaced sentence-case micro-label. */
+  .micro-label {
+    @apply text-xs font-semibold tracking-[0.16em] text-muted;
+  }
+  /* Hairline-bordered panel (preferred over filled cards). */
+  .panel {
+    @apply rounded-panel border border-hairline;
+  }
+  /* The diamond motif: a 45°-rotated square used as bullet / step marker. */
+  .diamond {
+    @apply inline-block size-2 shrink-0 rotate-45 bg-current;
+  }
+}
