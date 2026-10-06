@@ -19,13 +19,13 @@ password `autorafiki`. `customer@autorafiki.test` shows the "no dashboard access
 
 ## Env vars (`.env.local`)
 
-| Var | Meaning |
-| --- | --- |
-| `VITE_USE_MOCKS` | `true` (default): mock repositories and fixtures. `false`: real Firebase. |
-| `VITE_USE_EMULATORS` | With mocks off, dev builds use the local emulators unless `false`. Production builds never do. |
+| Var                                                                                                                                      | Meaning                                                                                                                                          |
+| ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `VITE_USE_MOCKS`                                                                                                                         | `true` (default): mock repositories and fixtures. `false`: real Firebase.                                                                        |
+| `VITE_USE_EMULATORS`                                                                                                                     | With mocks off, dev builds use the local emulators unless `false`. Production builds never do.                                                   |
 | `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_APP_ID`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_STORAGE_BUCKET` | Web app config from Console → Project settings → Your apps → Web app. Public by design; rules enforce access. Not needed for mocks or emulators. |
-| `VITE_FUNCTIONS_REGION` | `europe-west1`. |
-| `VITE_MAPS_API_KEY` | Maps JavaScript API key for the ops map (module 2). Its own key, HTTP-referrer restricted. Not the app's keys. |
+| `VITE_FUNCTIONS_REGION`                                                                                                                  | `europe-west1`.                                                                                                                                  |
+| `VITE_MAPS_API_KEY`                                                                                                                      | Maps JavaScript API key for the ops map (module 2). Its own key, HTTP-referrer restricted. Not the app's keys.                                   |
 
 ## Emulator workflow
 

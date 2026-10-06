@@ -8,7 +8,15 @@
       "source": "functions",
       "codebase": "admin",
       "runtime": "nodejs22",
-      "ignore": ["node_modules", ".git", "src", "test", "*.log", "tsconfig*.json", "vitest.config.*"],
+      "ignore": [
+        "node_modules",
+        ".git",
+        "src",
+        "test",
+        "*.log",
+        "tsconfig*.json",
+        "vitest.config.*"
+      ],
       "predeploy": ["npm --prefix \"$RESOURCE_DIR\" run build"]
     }
   ],
