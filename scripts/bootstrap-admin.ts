@@ -11,6 +11,7 @@
  *     npm run bootstrap-admin -- --project auto-rafiki --email you@example.com --name "Your Name"
  *   Prints a password-setup link; the new admin opens it and chooses a password.
  *
+ * Production never falls back to gcloud Application Default Credentials.
  * Refuses when an admin already exists (pass --force to add another this way), when the
  * email belongs to an app (phone) account, and when --project is missing.
  */
@@ -45,6 +46,11 @@ if (emulator !== Boolean(process.env.FIRESTORE_EMULATOR_HOST)) {
   fail('Set both FIREBASE_AUTH_EMULATOR_HOST and FIRESTORE_EMULATOR_HOST, or neither.');
 }
 if (!emulator && projectId.startsWith('demo-')) fail('demo-* projects only exist on the emulator.');
+if (!emulator && !process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+  // Never fall back to gcloud Application Default Credentials: on a shared machine they can
+  // belong to a different Google account (and bill another project).
+  fail('set GOOGLE_APPLICATION_CREDENTIALS to an auto-rafiki service-account key file.');
+}
 if (!emulator && values.password) {
   fail('--password is for the emulator only. In production the admin sets it via the link.');
 }
