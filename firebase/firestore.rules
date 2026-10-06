@@ -1,12 +1,22 @@
 rules_version = '2';
 
-// RoadsideApp Phase 1 rules. Collections mirror src/lib/firebase/collections.ts.
-// Deploy: firebase deploy --only firestore:rules (see README → Firestore setup).
+// AutoRafiki Firestore rules. Owned by the admin dashboard repo since its first rules deploy;
+// started as a verbatim copy of the app repo's firebase/firestore.rules. App collections mirror
+// the app's src/lib/firebase/collections.ts. Every app access path is pinned by emulator tests
+// (tests/rules/app.*.test.ts): a change that breaks one does not ship.
+// Deploy: firebase deploy --only firestore:rules (see README → Deploying).
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Two populations share this Auth instance. App users (phone sign-in) carry no `role`
+    // claim; dashboard staff (email sign-in) carry role admin | ops | support. App-user paths
+    // below go through signedIn(), so staff accounts can never act as customers or mechanics.
     function signedIn() {
-      return request.auth != null;
+      return request.auth != null && !('role' in request.auth.token);
+    }
+    function isStaff() {
+      return request.auth != null
+        && request.auth.token.role in ['admin', 'ops', 'support'];
     }
     function isSelf(userId) {
       return signedIn() && request.auth.uid == userId;
@@ -176,6 +186,20 @@ service cloud.firestore {
         && (resource.data.customerId == request.auth.uid || resource.data.mechanicId == request.auth.uid)
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['id']);
       allow delete: if false;
+    }
+
+    // ---- Dashboard ---------------------------------------------------------------------
+
+    // Staff read everything (support search, job timelines, vetting). Staff have NO write
+    // rules anywhere: sensitive mutations (vetting, job interventions, payments, settings,
+    // roles) go through audited Cloud Functions, which use the Admin SDK.
+    match /{document=**} {
+      allow read: if isStaff();
+    }
+
+    // auditLog/{id}: append-only trail written by Cloud Functions. Immutable from clients.
+    match /auditLog/{entryId} {
+      allow write: if false;
     }
   }
 }

@@ -1,0 +1,24 @@
+{
+  "name": "autorafiki-admin-functions",
+  "private": true,
+  "description": "AutoRafiki dashboard Cloud Functions (codebase \"admin\"): privileged, audited mutations",
+  "main": "lib/index.js",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node20 --format=cjs --packages=external --sourcemap --outfile=lib/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.10.0",
+    "firebase-functions": "^7.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.43",
+    "esbuild": "^0.28.2",
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.11"
+  }
+}

@@ -43,6 +43,18 @@ export function appUser(uid: string, phone = '+256700000000'): Firestore {
     .firestore() as unknown as Firestore;
 }
 
+/** Dashboard staff as the dashboard signs them in: email/password with a `role` claim. */
+export function staff(role: string, uid = `staff_${role}`): Firestore {
+  return rulesEnv()
+    .authenticatedContext(uid, {
+      email: `${role}@autorafiki.test`,
+      email_verified: true,
+      firebase: { sign_in_provider: 'password' },
+      role,
+    } as Record<string, unknown>)
+    .firestore() as unknown as Firestore;
+}
+
 export function anonymous(): Firestore {
   return rulesEnv().unauthenticatedContext().firestore() as unknown as Firestore;
 }

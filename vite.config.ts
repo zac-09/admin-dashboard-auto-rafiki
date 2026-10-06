@@ -34,6 +34,19 @@ export default defineConfig({
           hookTimeout: 30_000,
         },
       },
+      {
+        // Callables end to end on the Auth + Firestore + Functions emulators. `npm run test:emulator`.
+        extends: true,
+        test: {
+          name: 'integration',
+          environment: 'node',
+          globals: true,
+          include: ['tests/integration/**/*.test.ts'],
+          fileParallelism: false,
+          testTimeout: 30_000,
+          hookTimeout: 30_000,
+        },
+      },
     ],
   },
 });

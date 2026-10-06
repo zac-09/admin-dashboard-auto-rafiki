@@ -50,32 +50,41 @@ Desktop-first (ops staff on laptops), responsive enough to triage from a phone.
   repository interfaces, fixtures shaped exactly like the data contract below,
   no Firebase needed to run the UI
 
-## Design system (same identity as the app)
+## Design system (same identity as the app: light by default, dark as a setting)
+
+Two palettes, exactly as in the app repo (`src/theme/palettes/autorafiki.ts`),
+plus `warning`, which the dashboard adds. Components read semantic tokens only,
+never hex values.
 
 ```ts
-export const colors = {
-  background: "#101215",
-  surface: "#17191C",
-  hairline: "#333C47",
-  textPrimary: "#F4F6F8",
-  textMuted: "#B7C0C9",
-  accent: "#19C2D8",
-  onAccent: "#101215",
-  accentText: "#0B6875", // the only accent allowed as text on light surfaces
-  success: "#34C08B",
-  danger: "#FF7B72",
-  warning: "#DFAD4C",
+export const lightColors = {            // DEFAULT
+  background: '#FFFFFF', surface: '#F3F5F7', hairline: '#D9DEE3',
+  textPrimary: '#101215', textMuted: '#5B6570',
+  accent: '#0E8FA3',     // darker cyan: works as both fill and text on white (4.6:1)
+  onAccent: '#FFFFFF', accentText: '#0B6875',
+  success: '#1E8E63', danger: '#C62828', warning: '#9A6200',
+};
+
+export const darkColors = {
+  background: '#101215', surface: '#17191C', hairline: '#333C47',
+  textPrimary: '#F4F6F8', textMuted: '#B7C0C9',
+  accent: '#19C2D8', onAccent: '#101215', accentText: '#0B6875',
+  success: '#34C08B', danger: '#FF7B72', warning: '#DFAD4C',
 };
 ```
 
-Dark theme throughout (the app defaults to light with a dark option; the ops
-tool stays dark). Sharp radii (3 for controls, 6 for panels); hairline-bordered
-panels over filled cards; letterspaced sentence-case micro-labels; the diamond
-(45°-rotated square) as bullet/step motif; one accent moment per region.
-Sidebar navigation with the wheel monogram (smiling steering wheel) in an
-accent ring at the top. Dense data tables are fine, since this is an ops tool,
-but keep row height ≥ 40px and all text ≥ 12px at ≥ 4.5:1 contrast. Never
-convey state by colour alone. Money is UGX, formatted `UGX 35,000`.
+- Light is the default. A dark-mode switch lives in the user menu, persisted per
+  browser (localStorage). Implement the tokens as CSS variables on `:root` and
+  `[data-theme="dark"]`, mapped into Tailwind, so the switch is instant.
+- The Google map follows the mode: port both of the app's map styles
+  (`src/lib/maps/lightStyle.ts` and `darkStyle.ts`) to Maps JS.
+- Sharp radii (3 for controls, 6 for panels); hairline-bordered panels over filled
+  cards; letterspaced sentence-case micro-labels; the diamond (45°-rotated square)
+  as bullet/step motif; one accent moment per region. Sidebar navigation with the
+  wheel monogram (smiling steering wheel) in an accent ring at the top.
+- Dense data tables are fine, since this is an ops tool, but keep row height ≥ 40px
+  and all text ≥ 12px at ≥ 4.5:1 contrast in BOTH modes. Never convey state by
+  colour alone. Money is UGX, formatted `UGX 35,000`.
 
 ## Data contract with the mobile app (read before touching data)
 
@@ -88,7 +97,6 @@ All dates are ISO-8601 strings, except `presence.lastSeen`, which is a Firestore
 server Timestamp. Phone numbers are E.164 Ugandan (`+2567…`).
 
 ### Collections
-
 - `users/{uid}` (private to the user): `phone`, `displayName`, `roles[]`
   (`'customer' | 'mechanic'`, a user can hold both), `activeRole`, `createdAt`,
   `fcmToken` (customer pushes).
@@ -103,7 +111,7 @@ server Timestamp. Phone numbers are E.164 Ugandan (`+2567…`).
   mechanic from ever changing `vetting`. Only `verified` + `isOnline` mechanics
   receive job broadcasts.
 - `jobs/{jobId}`: `request {customerId, location {latitude, longitude, label},
-vehicle, service, description, createdAt}`, `status`, `radiusKm` (5, widened
+  vehicle, service, description, createdAt}`, `status`, `radiusKm` (5, widened
   once to 8), `expiresAt`, `mechanicId`, `fee` (UGX, fixed when requested),
   `etaMinutes?`, `distanceKm?` (km actually driven, written on arrival),
   `timeline [{status, at}]`, `cancelledBy` (`'customer' | 'mechanic' | 'system'`).
@@ -118,7 +126,6 @@ vehicle, service, description, createdAt}`, `status`, `radiusKm` (5, widened
   is stale.
 
 ### Job state machine
-
 `requested → matched → enroute → arrived → working → complete`, with
 `cancelled` reachable from `requested`, `matched` and `enroute`. Matching is
 broadcast, first-accept-wins, via a Firestore transaction in the app.
@@ -128,9 +135,7 @@ transitions (port the app's `assertTransition` and its tests) and append to
 `timeline` exactly as the app does.
 
 ### Cross-repo requests (the app doesn't have these yet; don't fake them)
-
 Raise each with Isaac as an app-repo change before building on it:
-
 - **Vetting documents**: the app does not use Firebase Storage and mechanics
   cannot upload ID, certification or riding permit yet. Agree the Storage path
   layout and an application/documents schema first.
@@ -168,7 +173,6 @@ Raise each with Isaac as an app-repo change before building on it:
 ## Modules, in build order
 
 ### 1. Mechanic vetting (the trust product)
-
 - Queue views over `mechanics` by `vetting`: Pending / Verified / Suspended.
   Detail page shows the profile (business name, phone, services, vehicles,
   rating, jobs completed, last-known location) and the practical-assessment
@@ -186,14 +190,14 @@ Raise each with Isaac as an app-repo change before building on it:
   audit log).
 
 ### 2. Live operations (the control room)
-
 - Realtime job board: columns by status (requested → matched → enroute →
   arrived → working → complete / cancelled), Firestore listeners, newest
   first, each card showing service, vehicle, location label, fee and elapsed
   time in the current state (from `timeline`).
-- Live map (port the app's `src/lib/maps/darkStyle.ts` to Maps JS): job pins by
-  status, online mechanics' `lastKnownLocation`, click-through to the job
-  detail. Listen only to non-terminal jobs and online mechanics to keep reads down.
+- Live map (port the app's light and dark map styles to Maps JS; the map
+  follows the dashboard's mode): job pins by status, online mechanics'
+  `lastKnownLocation`, click-through to the job detail. Listen only to
+  non-terminal jobs and online mechanics to keep reads down.
 - Alert rail: jobs `requested` for more than 2 min with no acceptance, `enroute`
   for more than 30 min (the north-star metric breached), any rating of 2 or
   fewer stars. These are the operator's to-do list.
@@ -201,7 +205,6 @@ Raise each with Isaac as an app-repo change before building on it:
   wider radius, suspend a mechanic. Every intervention is audited.
 
 ### 3. Customer support
-
 - Universal search: phone number, job id, mechanic business name (plate search
   waits for the cross-repo plate field).
 - Job timeline view: every status change with timestamps, the chat transcript,
@@ -212,7 +215,6 @@ Raise each with Isaac as an app-repo change before building on it:
   sanctions), one-click `tel:` links to call either party.
 
 ### 4. Revenue & analytics (the business model lives here)
-
 - **Phase-1 subscription tracker** (dashboard-owned collection): active
   mechanics with weekly UGX 15,000 status (paid / due / overdue), and a manual
   "mark paid" (Cloud Function, audited), since v1 has no payment rails. Weekly
@@ -225,7 +227,6 @@ Raise each with Isaac as an app-repo change before building on it:
 - CSV export of jobs and subscriptions for the team's reporting.
 
 ### 5. Settings & admin
-
 - Upfront price table per service, broadcast radius and timeout: built against
   the cross-repo `settings` doc; until the app reads it, show the current
   compiled values read-only and say so in the UI.
@@ -257,6 +258,8 @@ it, but don't embed this map anywhere public.
 ## Definition of done
 
 - Role-gated login; a `support` user cannot approve mechanics or change roles
+- Light mode by default with a working dark-mode switch; both modes pass the
+  contrast rules, and the map style follows the mode
 - Vetting flow works end to end on the emulator against real-shaped
   `mechanics` docs, the audit trail is written, and documents render once the
   cross-repo upload exists
