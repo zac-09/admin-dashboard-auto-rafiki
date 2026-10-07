@@ -67,6 +67,8 @@ export interface MechanicProfile {
   lastKnownLocation?: Place;
   /** Standard call-out fee in UGX; final price is agreed on site in v1. */
   calloutFee: Ugx;
+  /** When the mechanics doc was first created (ISO). Set once, never overwritten. */
+  createdAt?: IsoDate;
 }
 
 export interface JobRequest {
@@ -98,6 +100,40 @@ export interface JobTimelineEntry {
 }
 
 /** Broadcast dispatch (CLAUDE.md v2): first mechanic to accept wins. */
+/**
+ * settings/app: ops-tunable values the dashboard writes (through an audited admin Cloud
+ * Function) and the app only reads. See lib/settings for the schema and the fallback.
+ */
+export interface AppSettings {
+  version: 1;
+  /** Upfront call-out price per fault, whole UGX. */
+  prices: Record<ServiceType, Ugx>;
+  broadcast: {
+    /** First broadcast radius. */
+    initialRadiusKm: number;
+    /** The one widening after a window passes. */
+    expandedRadiusKm: number;
+    /** Length of each broadcast window. */
+    windowMs: number;
+  };
+  updatedAt?: IsoDate;
+  updatedBy?: string;
+}
+
+/** Where the active settings came from: the validated document, or the compiled defaults. */
+export type SettingsSource = 'remote' | 'default';
+
+/**
+ * The price and broadcast terms a request is created with, taken from ONE settings snapshot
+ * (the one the customer was shown), so the stored fee always equals the displayed price.
+ */
+export interface RequestTerms {
+  fee: Ugx;
+  radiusKm: number;
+  windowMs: number;
+}
+
+/** Compiled defaults (settings fallback). Read through lib/settings, never directly. */
 export const BROADCAST = {
   initialRadiusKm: 5,
   expandedRadiusKm: 8,
@@ -121,8 +157,11 @@ export interface Job {
   /** Kilometres the mechanic actually drove to the customer, recorded on arrival. */
   distanceKm?: number;
   timeline: JobTimelineEntry[];
-  /** 'system' when the broadcast expired server-side. */
-  cancelledBy?: UserRole | 'system';
+  /**
+   * Who cancelled: either party, 'system' when the broadcast expired server-side, or
+   * 'admin' when AutoRafiki operations cancelled it from the dashboard.
+   */
+  cancelledBy?: UserRole | 'system' | 'admin';
 }
 
 export interface Rating {

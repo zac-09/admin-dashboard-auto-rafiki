@@ -22,9 +22,11 @@ export type AuditAction =
   | 'job.dispute.open'
   | 'job.dispute.resolve'
   /** markSubscriptionPaid: a weekly subscription payment was recorded. */
-  | 'subscription.paid';
+  | 'subscription.paid'
+  /** updateSettings: prices / broadcast values the app reads were published. */
+  | 'settings.update';
 
-export type AuditTargetType = 'staff' | 'mechanic' | 'job' | 'subscription';
+export type AuditTargetType = 'staff' | 'mechanic' | 'job' | 'subscription' | 'settings';
 
 export interface AuditEntry {
   id: string;

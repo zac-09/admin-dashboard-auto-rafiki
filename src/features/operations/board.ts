@@ -28,4 +28,5 @@ export const CANCELLED_BY_LABELS: Record<NonNullable<Job['cancelledBy']>, string
   customer: 'by the customer',
   mechanic: 'by the mechanic',
   system: 'no mechanic accepted in time',
+  admin: 'by AutoRafiki support',
 };

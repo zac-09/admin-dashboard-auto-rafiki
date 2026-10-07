@@ -59,10 +59,22 @@ function buildRows(
         : 'No verification on record (verified before the dashboard)',
     }));
   }
-  return [...lists[queue]].sort(byBusinessName).map((mechanic) => {
+  // Pending: oldest application first (the app stamps createdAt on new mechanic profiles;
+  // older profiles without it sort after, by name).
+  const sorted =
+    queue === 'pending'
+      ? [...lists.pending].sort(
+          (a, b) =>
+            (a.createdAt ?? '\uffff').localeCompare(b.createdAt ?? '\uffff') ||
+            byBusinessName(a, b),
+        )
+      : [...lists[queue]].sort(byBusinessName);
+  return sorted.map((mechanic) => {
     const entry = latest.get(mechanic.userId);
     const fallback = {
-      pending: 'New application',
+      pending: mechanic.createdAt
+        ? `New application · applied ${formatDate(mechanic.createdAt)}`
+        : 'New application',
       verified: 'No verification on record',
       suspended: 'No suspension on record',
     }[queue];

@@ -140,10 +140,13 @@ average rating, jobs per mechanic per week. Both tabs export CSV (formula-safe).
 
 ## Settings
 
-`/settings` shows the app's upfront prices, broadcast radius and broadcast window read-only:
-they are compiled into the app and become editable once the app reads a shared `settings`
-document (a cross-repo change). It also shows the dashboard's subscription rules and a dark-mode
-switch.
+`/settings` shows the prices and broadcast values the app is actually using, live: the
+published `settings/app` document, or the app's built-in defaults until one is published.
+Admins edit and publish them through the audited `updateSettings` callable, which validates
+with exactly the app's rules (`src/lib/appSettings.ts` mirrors the app's schema). New requests
+use published values within seconds; existing jobs keep their fee. App users can read
+`settings/app` and nothing else under `settings/`; nobody writes it directly. A customer's own
+re-broadcast may use any radius from 1 to 30 km (the settings bounds).
 
 ## Motion and loading states
 

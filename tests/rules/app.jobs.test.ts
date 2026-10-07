@@ -68,9 +68,19 @@ describe('app path: job request (customer)', () => {
     await assertSucceeds(rebroadcast(appUser(UID.customer), 'j1', 5));
   });
 
-  it('rejects other radii, rebroadcasting a matched job, or rebroadcasting as a non-customer', async () => {
+  it('allows any settings radius (1–30 km), rejects others, matched jobs and non-customers', async () => {
     await seed({ 'jobs/j1': jobDoc('j1', 'requested'), 'jobs/j2': jobDoc('j2', 'matched') });
-    await assertFails(rebroadcast(appUser(UID.customer), 'j1', 12));
+    // Ops set the radii in settings/app (validated to 1–30 km); the app sends those values.
+    await assertSucceeds(rebroadcast(appUser(UID.customer), 'j1', 12));
+    await assertSucceeds(rebroadcast(appUser(UID.customer), 'j1', 4.5));
+    await assertFails(rebroadcast(appUser(UID.customer), 'j1', 0));
+    await assertFails(rebroadcast(appUser(UID.customer), 'j1', 31));
+    await assertFails(
+      updateDoc(doc(appUser(UID.customer), 'jobs', 'j1'), {
+        radiusKm: '8',
+        expiresAt: new Date().toISOString(),
+      }),
+    );
     await assertFails(rebroadcast(appUser(UID.customer), 'j2', 8));
     await assertFails(rebroadcast(appUser(UID.mechanic), 'j1', 8));
   });

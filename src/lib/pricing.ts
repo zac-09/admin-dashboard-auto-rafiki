@@ -1,4 +1,4 @@
-import type { ServiceType, Ugx } from '@/types';
+import type { ServiceType, Ugx } from '../types/domain';
 
 /**
  * Upfront call-out prices (UGX) as COMPILED INTO THE APP (its src/lib/pricing.ts). Read-only

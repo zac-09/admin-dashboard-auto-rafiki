@@ -2,7 +2,7 @@ import type { DecideVettingInput, DecideVettingResult, VettingStatus } from '../
 
 import type { AdminSession } from './admin';
 import type { AuditEntry } from './audit';
-import type { ChatMessage, Job, Rating, UgPhone } from './domain';
+import type { AppSettings, ChatMessage, Job, Rating, UgPhone } from './domain';
 import type { MechanicDoc, UserDoc } from './firestore';
 import type { AdminRole } from './admin';
 import type { InviteStaffInput, InviteStaffResult, StaffMember } from './staff';
@@ -153,6 +153,12 @@ export interface StaffRepository {
   setRole(input: { uid: string; role: AdminRole | null; reason: string }): Promise<void>;
 }
 
+/** settings/app: live read of the raw document (null when absent) and the audited publish. */
+export interface SettingsRepository {
+  subscribe(onChange: (raw: unknown | null) => void, onError: (e: Error) => void): Unsubscribe;
+  publish(settings: AppSettings, reason: string): Promise<{ changes: string[] }>;
+}
+
 export interface Repositories {
   auth: AuthRepository;
   mechanics: MechanicRepository;
@@ -163,4 +169,5 @@ export interface Repositories {
   support: SupportRepository;
   revenue: RevenueRepository;
   staff: StaffRepository;
+  settings: SettingsRepository;
 }

@@ -8,6 +8,7 @@ import {
 } from './firestoreRepositories';
 import { FirestoreOperationsRepository, FirestorePeopleRepository } from './operationsRepository';
 import { FirestoreRevenueRepository } from './revenueRepository';
+import { FirestoreSettingsRepository } from './settingsRepository';
 import { CallableStaffRepository } from './staffRepository';
 import { FirestoreSupportRepository } from './supportRepository';
 
@@ -22,5 +23,6 @@ export function createFirebaseRepositories(): Repositories {
     support: new FirestoreSupportRepository(),
     revenue: new FirestoreRevenueRepository(),
     staff: new CallableStaffRepository(),
+    settings: new FirestoreSettingsRepository(),
   };
 }

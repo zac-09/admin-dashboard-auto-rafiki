@@ -127,10 +127,15 @@ service cloud.firestore {
       allow update: if isJobCustomer()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['id', 'request']);
 
-      // Customer widens / renews the broadcast while the job is still open.
+      // Customer widens / renews the broadcast while the job is still open. The radius comes
+      // from settings/app (ops-tunable, validated to 1–30 km), so any value in that range is
+      // allowed rather than only today's 5 / 8: a hardcoded list would reject every widen the
+      // moment ops changed the radii.
       allow update: if isJobCustomer() && isOpenRequest()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['radiusKm', 'expiresAt'])
-        && request.resource.data.radiusKm in [5, 8];
+        && request.resource.data.radiusKm is number
+        && request.resource.data.radiusKm >= 1
+        && request.resource.data.radiusKm <= 30;
 
       allow delete: if false;
 
@@ -217,6 +222,18 @@ service cloud.firestore {
     // (not even the mechanic, until the app has a subscriptions screen agreed with Isaac).
     match /subscriptions/{paymentId} {
       allow read, write: if false;
+    }
+
+    // settings/app: prices and broadcast values the app reads live (falling back to its
+    // compiled defaults when missing). Any signed-in app user may read this one document;
+    // only the audited updateSettings callable writes it. Nothing else under settings/ is
+    // readable by app users.
+    match /settings/app {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+    match /settings/{other} {
+      allow write: if false;
     }
   }
 }

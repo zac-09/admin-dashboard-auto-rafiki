@@ -6,6 +6,7 @@
  * - setUserRole:   admin-only callable that sets a staff member's `role` claim (audited)
  * - listStaff, inviteStaff: admin-only staff management (invite audited)
  * - decideVetting: approve / reject / suspend a mechanic (admin, ops; audited)
+ * - updateSettings: publish prices / broadcast values the app reads (admin; audited)
  * - markSubscriptionPaid: record a mechanic's weekly UGX 15,000 (admin, ops; audited)
  * - addSupportNote, flagDispute, resolveDispute: customer support on a job (all roles;
  *   suspending a mechanic as a dispute outcome needs admin or ops; audited)
@@ -16,6 +17,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { setGlobalOptions } from 'firebase-functions/v2';
 import { onCall } from 'firebase-functions/v2/https';
 
+import { SETTINGS_COLLECTION, SETTINGS_DOC } from '../../src/lib/appSettings';
 import { SERVICE_LABELS } from '../../src/lib/labels';
 import { AUDIT_COLLECTION } from '../../src/types/audit';
 import { COLLECTIONS } from '../../src/types/firestore';
@@ -24,6 +26,7 @@ import { DISPUTES, SUPPORT_NOTES, type Dispute } from '../../src/types/support';
 
 import { decideVetting as decideVettingHandler, type VettingDeps } from './decideVetting';
 import { markSubscriptionPaid as markPaidHandler, type MarkPaidDeps } from './markPaid';
+import { updateSettings as updateSettingsHandler, type SettingsDeps } from './updateSettings';
 import { setUserRole as setUserRoleHandler, type Caller, type RoleDeps } from './setUserRole';
 import {
   inviteStaff as inviteStaffHandler,
@@ -216,6 +219,25 @@ const staffDeps: StaffDeps = {
   now: () => new Date(),
 };
 
+const settingsDeps: SettingsDeps = {
+  async transact(run) {
+    const db = getFirestore();
+    const ref = db.collection(SETTINGS_COLLECTION).doc(SETTINGS_DOC);
+    await db.runTransaction(async (tx) => {
+      await run({
+        get: async () => (await tx.get(ref)).data() ?? null,
+        set: (settings) => {
+          tx.set(ref, settings);
+        },
+        audit: (entry) => {
+          tx.create(db.collection(AUDIT_COLLECTION).doc(), entry);
+        },
+      });
+    });
+  },
+  now: () => new Date(),
+};
+
 type CallableRequest = { auth?: { uid: string; token: Record<string, unknown> } };
 
 function callerOf(request: CallableRequest): Caller | null {
@@ -255,4 +277,8 @@ export const listStaff = onCall((request) => listStaffHandler(callerOf(request),
 
 export const inviteStaff = onCall((request) =>
   inviteStaffHandler(callerOf(request), request.data, staffDeps),
+);
+
+export const updateSettings = onCall((request) =>
+  updateSettingsHandler(callerOf(request), request.data, settingsDeps),
 );

@@ -82,28 +82,3 @@ describe('staff & roles', () => {
     ).toBeInTheDocument();
   });
 });
-
-describe('settings', () => {
-  it('shows the app-compiled values read-only, and the subscription rules', async () => {
-    await openAs('support', '/settings');
-    expect(await screen.findByText(/Read-only for now/)).toBeInTheDocument();
-    const prices = screen.getByRole('region', { name: 'Upfront prices (set in the app)' });
-    expect(prices).toHaveTextContent('Dead batteryUGX 35,000');
-    expect(prices).toHaveTextContent('TowingUGX 80,000');
-    expect(screen.getByRole('region', { name: 'Broadcast (set in the app)' })).toHaveTextContent(
-      /5 km.*8 km.*90 seconds/,
-    );
-    expect(screen.getByRole('region', { name: 'Subscriptions (dashboard)' })).toHaveTextContent(
-      /UGX 15,000.*Monday to Sunday.*Thursday/,
-    );
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
-  });
-
-  it('switches dark mode from settings', async () => {
-    const user = await openAs('ops', '/settings');
-    const toggle = await screen.findByRole('switch', { name: 'Dark mode' });
-    await user.click(toggle);
-    expect(document.documentElement.dataset.theme).toBe('dark');
-    await user.click(toggle);
-  });
-});
