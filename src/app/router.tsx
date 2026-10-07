@@ -1,14 +1,16 @@
 import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
 
-import { JobDetailPage } from '@/features/operations/JobDetailPage';
-import { OperationsPage } from '@/features/operations/OperationsPage';
-import { RevenuePage } from '@/features/revenue/RevenuePage';
-import { SettingsPage } from '@/features/settings/SettingsPage';
-import { StaffPage } from '@/features/staff/StaffPage';
-import { PersonPage } from '@/features/support/PersonPage';
-import { SupportPage } from '@/features/support/SupportPage';
-import { MechanicDetailPage } from '@/features/vetting/MechanicDetailPage';
-import { VettingQueuePage } from '@/features/vetting/VettingQueuePage';
+import {
+  JobDetailPage,
+  MechanicDetailPage,
+  OperationsPage,
+  PersonPage,
+  RevenuePage,
+  SettingsPage,
+  StaffPage,
+  SupportPage,
+  VettingQueuePage,
+} from './pages';
 
 import { RequirePermission, ProtectedShell } from './guards';
 import { LegacyJobRedirect } from './pages/LegacyJobRedirect';

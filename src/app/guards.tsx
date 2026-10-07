@@ -1,6 +1,7 @@
-import type { ReactNode } from 'react';
+import { Suspense, type ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router';
 
+import { SkeletonDetail } from '@/components/ui';
 import { can, type Permission } from '@/lib/permissions';
 import { useSession, useSessionStore } from '@/lib/session';
 
@@ -30,5 +31,7 @@ export function RequirePermission({
   children: ReactNode;
 }) {
   const session = useSession();
-  return can(session?.role, permission) ? children : <NotPermittedPage />;
+  if (!can(session?.role, permission)) return <NotPermittedPage />;
+  // Pages are lazy chunks: a skeleton while one downloads (usually a few frames).
+  return <Suspense fallback={<SkeletonDetail label="Loading page" />}>{children}</Suspense>;
 }

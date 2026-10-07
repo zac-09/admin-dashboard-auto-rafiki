@@ -20,7 +20,17 @@ export default defineConfig({
       output: {
         // The Firebase SDK changes rarely: its own chunk caches across dashboard deploys.
         advancedChunks: {
-          groups: [{ name: 'firebase', test: /node_modules[\\/](@firebase|firebase)[\\/]/ }],
+          groups: [
+            { name: 'firebase', test: /node_modules[\\/](@firebase|firebase)[\\/]/ },
+            {
+              name: 'motion',
+              test: /node_modules[\\/](motion|framer-motion|motion-dom|motion-utils)[\\/]/,
+            },
+            {
+              name: 'react',
+              test: /node_modules[\\/](react|react-dom|react-router|scheduler|@tanstack|zustand)[\\/]/,
+            },
+          ],
         },
       },
     },
