@@ -42,7 +42,7 @@ describe('role-gated shell', () => {
       'aria-current',
       'page',
     );
-    expect(screen.getByRole('heading', { name: 'Mechanic vetting' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Mechanic vetting' })).toBeInTheDocument();
   });
 
   it('support sees no Revenue or Staff, and is stopped at /staff', async () => {

@@ -1,4 +1,4 @@
-import { act, screen, within } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { createMockRepositories, MOCK_PASSWORD, MockOperationsStore } from '@/lib/mocks';
@@ -152,7 +152,12 @@ describe('job detail and interventions', () => {
 
     await user.click(within(people).getByRole('link', { name: 'Vetting record' }));
     const history = await screen.findByRole('region', { name: 'Vetting history' });
-    expect(history).toHaveTextContent(/Suspended.*Abandoned the customer \(job job_enroute_late\)/);
+    // The page and its history load on demand: wait for the entry, not just the panel.
+    await waitFor(() =>
+      expect(history).toHaveTextContent(
+        /Suspended.*Abandoned the customer \(job job_enroute_late\)/,
+      ),
+    );
   });
 
   it('support sees the job but cannot intervene', async () => {

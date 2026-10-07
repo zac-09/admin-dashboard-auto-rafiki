@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { createMockRepositories, MOCK_PASSWORD } from '@/lib/mocks';
@@ -137,8 +137,10 @@ describe('disputes', () => {
     expect(await screen.findByText('Resolved')).toBeInTheDocument();
     await user.click(screen.getByRole('link', { name: 'Vetting record' }));
     expect(await screen.findByRole('heading', { name: 'Okello Auto Rescue' })).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'Vetting history' })).toHaveTextContent(
-      /Suspended.*Dispute on job job_complete: Third complaint this month/,
+    await waitFor(() =>
+      expect(screen.getByRole('region', { name: 'Vetting history' })).toHaveTextContent(
+        /Suspended.*Dispute on job job_complete: Third complaint this month/,
+      ),
     );
   });
 });

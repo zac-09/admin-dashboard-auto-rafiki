@@ -1,4 +1,4 @@
-import { act, screen, within } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { createMockRepositories, MOCK_PASSWORD, MockOperationsStore } from '@/lib/mocks';
@@ -41,7 +41,7 @@ describe('shell polish', () => {
   it('puts the live alert count in the operations tab title', async () => {
     await openAs('/operations');
     await screen.findByRole('region', { name: 'Alerts' });
-    expect(document.title).toBe('(3) Live operations · AutoRafiki Ops');
+    await waitFor(() => expect(document.title).toBe('(3) Live operations · AutoRafiki Ops'));
   });
 
   it('opens the phone menu as a dialog that Escape closes', async () => {
