@@ -89,7 +89,7 @@ admin already exists (unless `--force`) and when the email belongs to a phone ac
 it on the emulator, set `FIREBASE_AUTH_EMULATOR_HOST` and `FIRESTORE_EMULATOR_HOST`, then use
 `--project demo-autorafiki --password …`.
 
-**After that**, admins change roles with the `setUserRole` callable (codebase `admin`). It is
+**After that**, admins manage staff on the **Staff** page (`/staff`): `listStaff` lists every email account with its role and last sign-in; `inviteStaff` creates an account with a role and returns a single-use password-setup link (copy it, or have Firebase email it); role changes and removal go through the `setUserRole` callable (codebase `admin`). It is
 admin only, needs a mandatory reason, writes to `auditLog`, and revokes the target's refresh
 tokens. It refuses to change your own role and refuses phone accounts. A role change reaches
 the target's dashboard at their next token refresh (at most an hour), or immediately if they
@@ -137,6 +137,13 @@ audited `markSubscriptionPaid` callable); dues are computed from the rules in
 `src/lib/subscriptions.ts` and the vetting history. **KPIs**: request → arrival median (target
 < 30 min), jobs/day, active mechanics (≥ 3 completed jobs in 7 days), acceptance, completion,
 average rating, jobs per mechanic per week. Both tabs export CSV (formula-safe).
+
+## Settings
+
+`/settings` shows the app's upfront prices, broadcast radius and broadcast window read-only:
+they are compiled into the app and become editable once the app reads a shared `settings`
+document (a cross-repo change). It also shows the dashboard's subscription rules and a dark-mode
+switch.
 
 ## Motion and loading states
 

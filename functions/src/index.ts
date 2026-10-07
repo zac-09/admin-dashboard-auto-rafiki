@@ -11,7 +11,7 @@
  *   suspending a mechanic as a dispute outcome needs admin or ops; audited)
  */
 import { initializeApp } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
+import { getAuth, type UserRecord } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import { setGlobalOptions } from 'firebase-functions/v2';
 import { onCall } from 'firebase-functions/v2/https';
@@ -177,7 +177,7 @@ const markPaidDeps: MarkPaidDeps = {
   now: () => new Date(),
 };
 
-function toAccount(user: import('firebase-admin/auth').UserRecord): AuthAccount {
+function toAccount(user: UserRecord): AuthAccount {
   const iso = (s?: string) => (s ? new Date(s).toISOString() : null);
   return {
     uid: user.uid,
