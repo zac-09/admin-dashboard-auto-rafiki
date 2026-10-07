@@ -59,3 +59,10 @@ export const ROLE_LABELS: Record<AdminRole, string> = {
   ops: 'Operations',
   support: 'Support',
 };
+
+/** What each role can do, in words, for invites and role changes. */
+export const ROLE_SUMMARIES: Record<AdminRole, string> = {
+  admin: 'Everything, including staff, roles and settings.',
+  ops: 'Runs the marketplace: vetting decisions, interventions, disputes, payments.',
+  support: 'Helps callers: search, job records, notes and disputes. Cannot suspend or see revenue.',
+};

@@ -12,6 +12,8 @@ export type AuditAction =
   | 'staff.role.set'
   /** bootstrap-admin script: the first admin was created outside the dashboard. */
   | 'staff.bootstrap'
+  /** inviteStaff: a new staff account was created (or an email account given a role). */
+  | 'staff.invite'
   /** decideVetting: approve (incl. reinstate / re-verify), reject, suspend. */
   | 'mechanic.vetting.approve'
   | 'mechanic.vetting.reject'

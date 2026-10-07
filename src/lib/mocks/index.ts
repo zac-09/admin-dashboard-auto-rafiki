@@ -7,6 +7,7 @@ import {
   MockPeopleRepository,
 } from './mockOperationsRepository';
 import { MockRevenueRepository } from './mockRevenueRepository';
+import { MockStaffRepository } from './mockStaffRepository';
 import { MockSupportRepository } from './mockSupportRepository';
 import {
   MockAuditRepository,
@@ -33,5 +34,6 @@ export function createMockRepositories(
     people: new MockPeopleRepository(store),
     support: new MockSupportRepository(ops, store, auth),
     revenue: new MockRevenueRepository(ops, store, auth),
+    staff: new MockStaffRepository(auth),
   };
 }

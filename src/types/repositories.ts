@@ -4,6 +4,8 @@ import type { AdminSession } from './admin';
 import type { AuditEntry } from './audit';
 import type { ChatMessage, Job, Rating, UgPhone } from './domain';
 import type { MechanicDoc, UserDoc } from './firestore';
+import type { AdminRole } from './admin';
+import type { InviteStaffInput, InviteStaffResult, StaffMember } from './staff';
 import type { PaymentMethod, SubscriptionPayment } from './subscriptions';
 import type { Dispute, DisputeOutcome, SupportNote } from './support';
 
@@ -143,6 +145,14 @@ export interface RevenueRepository {
   }): Promise<void>;
 }
 
+/** Dashboard accounts (admin only): Auth via callables, never Firestore. */
+export interface StaffRepository {
+  list(): Promise<StaffMember[]>;
+  invite(input: InviteStaffInput): Promise<InviteStaffResult>;
+  /** setUserRole: null removes dashboard access. */
+  setRole(input: { uid: string; role: AdminRole | null; reason: string }): Promise<void>;
+}
+
 export interface Repositories {
   auth: AuthRepository;
   mechanics: MechanicRepository;
@@ -152,4 +162,5 @@ export interface Repositories {
   people: PeopleRepository;
   support: SupportRepository;
   revenue: RevenueRepository;
+  staff: StaffRepository;
 }

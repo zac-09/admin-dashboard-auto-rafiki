@@ -4,6 +4,7 @@
  * expireStaleRequests); never deploy into it.
  *
  * - setUserRole:   admin-only callable that sets a staff member's `role` claim (audited)
+ * - listStaff, inviteStaff: admin-only staff management (invite audited)
  * - decideVetting: approve / reject / suspend a mechanic (admin, ops; audited)
  * - markSubscriptionPaid: record a mechanic's weekly UGX 15,000 (admin, ops; audited)
  * - addSupportNote, flagDispute, resolveDispute: customer support on a job (all roles;
@@ -24,6 +25,12 @@ import { DISPUTES, SUPPORT_NOTES, type Dispute } from '../../src/types/support';
 import { decideVetting as decideVettingHandler, type VettingDeps } from './decideVetting';
 import { markSubscriptionPaid as markPaidHandler, type MarkPaidDeps } from './markPaid';
 import { setUserRole as setUserRoleHandler, type Caller, type RoleDeps } from './setUserRole';
+import {
+  inviteStaff as inviteStaffHandler,
+  listStaff as listStaffHandler,
+  type AuthAccount,
+  type StaffDeps,
+} from './staff';
 import {
   addSupportNote as addSupportNoteHandler,
   flagDispute as flagDisputeHandler,
@@ -170,6 +177,45 @@ const markPaidDeps: MarkPaidDeps = {
   now: () => new Date(),
 };
 
+function toAccount(user: import('firebase-admin/auth').UserRecord): AuthAccount {
+  const iso = (s?: string) => (s ? new Date(s).toISOString() : null);
+  return {
+    uid: user.uid,
+    email: user.email ?? null,
+    phoneNumber: user.phoneNumber ?? null,
+    displayName: user.displayName ?? null,
+    customClaims: user.customClaims ?? {},
+    disabled: user.disabled,
+    createdAt: iso(user.metadata.creationTime),
+    lastSignInAt: iso(user.metadata.lastSignInTime),
+  };
+}
+
+const staffDeps: StaffDeps = {
+  async listPage(pageToken) {
+    const page = await getAuth().listUsers(1000, pageToken);
+    return { accounts: page.users.map(toAccount), next: page.pageToken };
+  },
+  async findByEmail(email) {
+    try {
+      return toAccount(await getAuth().getUserByEmail(email));
+    } catch (error) {
+      if (isAuthError(error, 'user-not-found')) return null;
+      throw error;
+    }
+  },
+  async createUser({ email, displayName }) {
+    // No password: the new staff member sets one through the setup link.
+    return toAccount(await getAuth().createUser({ email, displayName }));
+  },
+  setClaims: (uid, claims) => getAuth().setCustomUserClaims(uid, claims),
+  passwordSetupLink: (email) => getAuth().generatePasswordResetLink(email),
+  async writeAudit(entry) {
+    await getFirestore().collection(AUDIT_COLLECTION).add(entry);
+  },
+  now: () => new Date(),
+};
+
 type CallableRequest = { auth?: { uid: string; token: Record<string, unknown> } };
 
 function callerOf(request: CallableRequest): Caller | null {
@@ -203,4 +249,10 @@ export const resolveDispute = onCall((request) =>
 
 export const markSubscriptionPaid = onCall((request) =>
   markPaidHandler(callerOf(request), request.data, markPaidDeps),
+);
+
+export const listStaff = onCall((request) => listStaffHandler(callerOf(request), staffDeps));
+
+export const inviteStaff = onCall((request) =>
+  inviteStaffHandler(callerOf(request), request.data, staffDeps),
 );
