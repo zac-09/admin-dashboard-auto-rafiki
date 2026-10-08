@@ -132,6 +132,12 @@ export class MockSupportRepository implements SupportRepository {
     );
   }
 
+  /** Notes written by other mock callables (interventions), as the real functions do. */
+  pushNote(note: Omit<SupportNote, 'id'>) {
+    this.notes.push({ ...note, id: `note_${this.notes.length + 1}` });
+    this.changed();
+  }
+
   private note(jobId: string, kind: SupportNote['kind'], text: string) {
     const a = this.actor();
     this.notes.push({

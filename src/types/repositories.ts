@@ -81,6 +81,9 @@ export interface OperationsRepository {
     onChange: (job: Job | null) => void,
     onError: (e: Error) => void,
   ): Unsubscribe;
+  /** Audited callables (admin, ops). */
+  cancelJob(jobId: string, reason: string): Promise<void>;
+  rebroadcastJob(jobId: string, radiusKm: number, reason: string): Promise<void>;
 }
 
 export interface PeopleRepository {

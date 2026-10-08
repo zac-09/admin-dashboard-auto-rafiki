@@ -1,9 +1,13 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { MotionGlobalConfig } from 'motion/react';
 import { afterEach } from 'vitest';
 
 import { setMotionScaleForTesting } from '@/components/motion';
+
+// Pages load on demand (lazy chunks); under a full parallel run the first load of a page can
+// take over a second, so findBy* waits up to 3 s instead of 1 s.
+configure({ asyncUtilTimeout: 3000 });
 
 // Animations complete instantly and moments never hold, so tests assert outcomes, not timing.
 MotionGlobalConfig.skipAnimations = true;

@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes } from 'react';
 
-type Variant = 'primary' | 'secondary' | 'ghost';
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
 const VARIANTS: Record<Variant, string> = {
   // Ink fill, not accent: white on the light accent is below 4.5:1 (see tokens.test.ts).
@@ -11,6 +11,9 @@ const VARIANTS: Record<Variant, string> = {
   secondary:
     'border border-hairline text-primary hover:bg-surface active:scale-[0.98] disabled:text-muted disabled:hover:bg-transparent',
   ghost: 'text-primary hover:bg-surface disabled:text-muted',
+  // Destructive and irreversible: outlined in danger, the label says exactly what happens.
+  danger:
+    'border border-danger text-danger hover:bg-surface active:scale-[0.98] disabled:border-hairline disabled:text-muted',
 };
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

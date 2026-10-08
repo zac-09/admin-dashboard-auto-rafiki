@@ -12,7 +12,8 @@ export const DISPUTES = 'disputes';
 
 export const MAX_NOTE = 1000;
 
-export type SupportNoteKind = 'note' | 'dispute-opened' | 'dispute-resolved';
+/** `intervention`: written by cancelJob / rebroadcastJob so the job record shows what ops did. */
+export type SupportNoteKind = 'note' | 'dispute-opened' | 'dispute-resolved' | 'intervention';
 
 export interface SupportNote {
   id: string;

@@ -21,6 +21,9 @@ export type AuditAction =
   /** flagDispute / resolveDispute (customer support). */
   | 'job.dispute.open'
   | 'job.dispute.resolve'
+  /** cancelJob / rebroadcastJob: control-room interventions on a job. */
+  | 'job.cancel'
+  | 'job.rebroadcast'
   /** markSubscriptionPaid: a weekly subscription payment was recorded. */
   | 'subscription.paid'
   /** updateSettings: prices / broadcast values the app reads were published. */

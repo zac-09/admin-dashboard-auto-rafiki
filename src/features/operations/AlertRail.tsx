@@ -5,6 +5,9 @@ import { AnimatedNumber, Pop, springs, timings } from '@/components/motion';
 
 import { SERVICE_LABELS } from '@/lib/labels';
 
+import { can } from '@/lib/permissions';
+import { useSession } from '@/lib/session';
+
 import { ratingDirection, type Alert } from './alerts';
 import { formatDuration } from './jobTime';
 
@@ -31,6 +34,20 @@ function AlertItem({ alert }: { alert: Alert }) {
       <span className="text-muted">
         {SERVICE_LABELS[job.request.service]}, {job.request.location.label}
       </span>
+    </Link>
+  );
+}
+
+/** One-click next step for an alert (the alert text itself opens the job). */
+function AlertAction({ alert }: { alert: Alert }) {
+  const session = useSession();
+  if (alert.kind !== 'stale-request' || !can(session?.role, 'operations.intervene')) return null;
+  return (
+    <Link
+      to={`/jobs/${alert.job.id}#rebroadcast`}
+      className="mt-1 inline-flex min-h-8 items-center self-start rounded-control border border-hairline px-2 text-xs font-semibold hover:border-primary"
+    >
+      Widen search
     </Link>
   );
 }
@@ -63,7 +80,10 @@ export function AlertRail({ alerts }: { alerts: readonly Alert[] }) {
                 transition={springs.settle}
               >
                 <span aria-hidden className="mt-1.5 diamond sonar text-warning" />
-                <AlertItem alert={alert} />
+                <span className="flex flex-col">
+                  <AlertItem alert={alert} />
+                  <AlertAction alert={alert} />
+                </span>
               </motion.li>
             ))}
           </AnimatePresence>

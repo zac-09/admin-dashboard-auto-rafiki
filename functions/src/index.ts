@@ -6,6 +6,7 @@
  * - setUserRole:   admin-only callable that sets a staff member's `role` claim (audited)
  * - listStaff, inviteStaff: admin-only staff management (invite audited)
  * - decideVetting: approve / reject / suspend a mechanic (admin, ops; audited)
+ * - cancelJob, rebroadcastJob: control-room interventions (admin, ops; audited, noted)
  * - updateSettings: publish prices / broadcast values the app reads (admin; audited)
  * - markSubscriptionPaid: record a mechanic's weekly UGX 15,000 (admin, ops; audited)
  * - addSupportNote, flagDispute, resolveDispute: customer support on a job (all roles;
@@ -25,6 +26,11 @@ import { SUBSCRIPTIONS } from '../../src/types/subscriptions';
 import { DISPUTES, SUPPORT_NOTES, type Dispute } from '../../src/types/support';
 
 import { decideVetting as decideVettingHandler, type VettingDeps } from './decideVetting';
+import {
+  cancelJob as cancelJobHandler,
+  rebroadcastJob as rebroadcastJobHandler,
+  type InterventionDeps,
+} from './interventions';
 import { markSubscriptionPaid as markPaidHandler, type MarkPaidDeps } from './markPaid';
 import { updateSettings as updateSettingsHandler, type SettingsDeps } from './updateSettings';
 import { setUserRole as setUserRoleHandler, type Caller, type RoleDeps } from './setUserRole';
@@ -238,6 +244,46 @@ const settingsDeps: SettingsDeps = {
   now: () => new Date(),
 };
 
+const interventionDeps: InterventionDeps = {
+  async transact(run) {
+    const db = getFirestore();
+    await db.runTransaction(async (tx) => {
+      await run({
+        async getJob(jobId) {
+          const snap = await tx.get(db.collection(COLLECTIONS.jobs).doc(jobId));
+          const job = snap.data();
+          if (!snap.exists || !job) return null;
+          const service = SERVICE_LABELS[job.request?.service as keyof typeof SERVICE_LABELS];
+          return {
+            status: job.status,
+            mechanicId: typeof job.mechanicId === 'string' ? job.mechanicId : undefined,
+            radiusKm: Number(job.radiusKm),
+            expiresAt: String(job.expiresAt ?? ''),
+            timeline: Array.isArray(job.timeline) ? job.timeline : [],
+            label: `${service ?? 'Job'}, ${job.request?.location?.label ?? 'unknown location'}`,
+          };
+        },
+        getSettings: async () =>
+          (await tx.get(db.collection(SETTINGS_COLLECTION).doc(SETTINGS_DOC))).data() ?? null,
+        // Only the fields the app's own cancel / rebroadcast write.
+        updateJob: (jobId, fields) => {
+          tx.update(db.collection(COLLECTIONS.jobs).doc(jobId), fields);
+        },
+        addNote: (jobId, note) => {
+          tx.create(
+            db.collection(COLLECTIONS.jobs).doc(jobId).collection(SUPPORT_NOTES).doc(),
+            note,
+          );
+        },
+        audit: (entry) => {
+          tx.create(db.collection(AUDIT_COLLECTION).doc(), entry);
+        },
+      });
+    });
+  },
+  now: () => new Date(),
+};
+
 type CallableRequest = { auth?: { uid: string; token: Record<string, unknown> } };
 
 function callerOf(request: CallableRequest): Caller | null {
@@ -281,4 +327,12 @@ export const inviteStaff = onCall((request) =>
 
 export const updateSettings = onCall((request) =>
   updateSettingsHandler(callerOf(request), request.data, settingsDeps),
+);
+
+export const cancelJob = onCall((request) =>
+  cancelJobHandler(callerOf(request), request.data, interventionDeps),
+);
+
+export const rebroadcastJob = onCall((request) =>
+  rebroadcastJobHandler(callerOf(request), request.data, interventionDeps),
 );

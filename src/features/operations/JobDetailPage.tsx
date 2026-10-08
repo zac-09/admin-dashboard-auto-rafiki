@@ -18,7 +18,7 @@ import { CANCELLED_BY_LABELS, STATUS_LABELS } from './board';
 import { useJob, useMechanic, useUser } from './hooks';
 import { formatDuration, msInStatus } from './jobTime';
 import { StepTrack } from './StepTrack';
-import { SuspendMechanicForm } from './SuspendMechanicForm';
+import { InterventionsPanel } from './InterventionsPanel';
 
 function Panel({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -192,13 +192,7 @@ export function JobDetailPage() {
           </Panel>
           <Panel title="Interventions">
             {can(session?.role, 'operations.intervene') ? (
-              <div className="flex flex-col gap-5">
-                {m ? <SuspendMechanicForm mechanic={m} jobId={job.id} /> : null}
-                <p className="text-xs text-muted">
-                  Cancel and re-broadcast arrive once the app understands an admin cancellation and
-                  re-sends alerts when a broadcast widens.
-                </p>
-              </div>
+              <InterventionsPanel job={job} mechanic={m} />
             ) : (
               <p className="text-sm text-muted">Your role can view jobs but not intervene.</p>
             )}

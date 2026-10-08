@@ -9,8 +9,10 @@ import {
   where,
   type QuerySnapshot,
 } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 import { ACTIVE_STATUSES, CLOSED_STATUSES } from '@/features/operations/constants';
+import { env } from '@/lib/env';
 import {
   COLLECTIONS,
   type FeedMeta,
@@ -102,6 +104,22 @@ export class FirestoreOperationsRepository implements OperationsRepository {
       (s) => onChange(s.exists() ? { ...(s.data() as Job), id: s.id } : null),
       onError,
     );
+  }
+
+  cancelJob(jobId: string, reason: string) {
+    return call('cancelJob', { jobId, reason });
+  }
+
+  rebroadcastJob(jobId: string, radiusKm: number, reason: string) {
+    return call('rebroadcastJob', { jobId, radiusKm, reason });
+  }
+}
+
+async function call(name: string, data: object): Promise<void> {
+  try {
+    await httpsCallable(getFunctions(getFirebaseApp(), env.functionsRegion), name)(data);
+  } catch (error) {
+    throw new Error((error as Error).message || 'That could not be done.', { cause: error });
   }
 }
 

@@ -86,6 +86,7 @@ function pass(what: string) {
 }
 
 async function main() {
+  // The cancel check calls the dashboard's real Cloud Function on the functions emulator.
   process.env.VITE_USE_MOCKS = 'false';
   process.env.VITE_USE_EMULATORS = 'true';
   const server = await createServer({
@@ -164,6 +165,20 @@ async function main() {
     await page.waitForSelector('section[aria-label="Timeline"]');
     await page.screenshot({ path: `${OUT}/job-detail-dark.png`, fullPage: true });
     pass('job detail opens');
+
+    // Cancel from the job page through the real cancelJob callable; the board must follow.
+    await page.click('xpath/.//button[contains(., "Cancel this job")]');
+    await page.type(
+      'form[aria-label="Cancel this job"] textarea',
+      'E2E: customer called to cancel',
+    );
+    await page.click('xpath/.//button[contains(., "Cancel job for the customer")]');
+    await page.waitForFunction(() => document.body.textContent?.includes('Job cancelled'), {
+      timeout: 15_000,
+    });
+    await page.goto(`${base}/operations`);
+    await waitForRegionText(page, 'Cancelled', 'Cancelled by AutoRafiki support');
+    pass('ops cancels a job; the board shows it cancelled by AutoRafiki support');
 
     if (production.length > 0) {
       throw new Error(`Page reached real Google APIs: ${production.slice(0, 3).join(', ')}`);

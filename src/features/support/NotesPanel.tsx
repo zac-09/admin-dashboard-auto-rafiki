@@ -13,6 +13,7 @@ const KIND: Record<SupportNote['kind'], string> = {
   note: 'Note',
   'dispute-opened': 'Dispute opened',
   'dispute-resolved': 'Dispute resolved',
+  intervention: 'Ops action',
 };
 
 /** Internal notes on a job (never visible to app users), newest last like a log. */
@@ -46,7 +47,13 @@ export function NotesPanel({ jobId }: { jobId: string }) {
             <Reveal as="li" key={n.id} className="flex gap-3">
               <span
                 aria-hidden
-                className={`mt-1.5 diamond ${n.kind === 'note' ? 'text-muted' : 'text-warning'}`}
+                className={`mt-1.5 diamond ${
+                  n.kind === 'note'
+                    ? 'text-muted'
+                    : n.kind === 'intervention'
+                      ? 'text-accent'
+                      : 'text-warning'
+                }`}
               />
               <span className="flex flex-col gap-0.5">
                 <span className="text-xs text-muted">

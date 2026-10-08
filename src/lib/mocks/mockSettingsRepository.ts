@@ -14,6 +14,11 @@ export class MockSettingsRepository implements SettingsRepository {
     this.auth = auth;
   }
 
+  /** What the app would use right now (for other mocks, e.g. the broadcast window). */
+  current() {
+    return effectiveSettings(this.doc).settings;
+  }
+
   subscribe(onChange: (raw: unknown | null) => void): Unsubscribe {
     this.listeners.add(onChange);
     onChange(structuredClone(this.doc));
