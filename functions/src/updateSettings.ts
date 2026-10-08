@@ -1,6 +1,11 @@
 import { HttpsError } from 'firebase-functions/v2/https';
 
-import { checkAppSettings, effectiveSettings, settingsChanges } from '../../src/lib/appSettings';
+import {
+  checkAppSettings,
+  effectiveSettings,
+  removedCatalogueIds,
+  settingsChanges,
+} from '../../src/lib/appSettings';
 import { SERVICE_LABELS } from '../../src/lib/labels';
 import { can } from '../../src/lib/permissions';
 import { MAX_REASON } from '../../src/lib/vetting';
@@ -48,6 +53,15 @@ export async function updateSettings(caller: Caller | null, data: unknown, deps:
   let changes: string[] = [];
   await deps.transact(async (tx) => {
     const current = effectiveSettings(await tx.get());
+    // Catalogue ids live on jobs (request.items): a published id can be relabelled but never
+    // removed, or old jobs would show bare ids and the app's cart would lose a key.
+    const removed = removedCatalogueIds(current.settings.catalogue, check.settings.catalogue);
+    if (removed.length > 0) {
+      throw new HttpsError(
+        'failed-precondition',
+        `Catalogue items cannot be removed once published (${removed.join(', ')}). Relabel them instead.`,
+      );
+    }
     changes = settingsChanges(current.settings, check.settings, SERVICE_LABELS);
     // Publishing the defaults for the first time is a real change: it creates the document.
     if (changes.length === 0 && current.source === 'remote') {

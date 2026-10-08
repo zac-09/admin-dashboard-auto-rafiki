@@ -1,0 +1,42 @@
+rules_version = '2';
+
+// AutoRafiki Storage rules, owned by the admin dashboard repo. The only use today is vetting
+// documents (contract shared with the app, 2026-10-08): a mechanic uploads their national ID,
+// certification and riding permit under their own uid; ops read them in the dashboard.
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // App users carry no `role` claim; dashboard staff carry admin | ops | support.
+    function appUser() {
+      return request.auth != null && !('role' in request.auth.token);
+    }
+    function isStaff() {
+      return request.auth != null
+        && 'role' in request.auth.token
+        && request.auth.token.role in ['admin', 'ops', 'support'];
+    }
+
+    // vetting/{mechanicId}/{docType}/{fileId}
+    // The mechanic creates objects under their own uid only: a fresh object per upload (never
+    // an overwrite, so a review always refers to one specific file), the three document types,
+    // images or PDFs up to 10 MB, metadata naming the uploader. Nobody updates or deletes.
+    match /vetting/{mechanicId}/{docType}/{fileId} {
+      allow read: if isStaff();
+      allow create: if appUser()
+        && request.auth.uid == mechanicId
+        && docType in ['national-id', 'certification', 'riding-permit']
+        && resource == null
+        && request.resource.size <= 10 * 1024 * 1024
+        && request.resource.contentType in ['image/jpeg', 'image/png', 'application/pdf']
+        && 'mechanicId' in request.resource.metadata
+        && 'docType' in request.resource.metadata
+        && request.resource.metadata.mechanicId == mechanicId
+        && request.resource.metadata.docType == docType;
+      allow update, delete: if false;
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

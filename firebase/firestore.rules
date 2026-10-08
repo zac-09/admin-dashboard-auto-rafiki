@@ -16,6 +16,7 @@ service cloud.firestore {
     }
     function isStaff() {
       return request.auth != null
+        && 'role' in request.auth.token
         && request.auth.token.role in ['admin', 'ops', 'support'];
     }
     function isSelf(userId) {
@@ -80,6 +81,37 @@ service cloud.firestore {
       allow update: if isSelf(userId)
         && request.resource.data.userId == userId
         && request.resource.data.vetting == resource.data.vetting;
+      allow delete: if false;
+    }
+
+    // mechanics/{uid}/vettingDocuments/{docType}: the mechanic's record of their CURRENT file
+    // of each type (contract shared with the app, 2026-10-08). The mechanic writes exactly the
+    // six contract fields for their own uid; the document id is the type. No status or review
+    // field can ever land here: reviews are the dashboard's, in a collection the app cannot
+    // read. Staff read via the dashboard rule below; nobody deletes.
+    match /mechanics/{userId}/vettingDocuments/{docType} {
+      function validDocument() {
+        return request.resource.data.keys().hasOnly(
+            ['docType', 'storagePath', 'contentType', 'sizeBytes', 'uploadedAt', 'version'])
+          && request.resource.data.keys().hasAll(
+            ['docType', 'storagePath', 'contentType', 'sizeBytes', 'uploadedAt', 'version'])
+          && request.resource.data.docType == docType
+          && docType in ['national-id', 'certification', 'riding-permit']
+          && request.resource.data.storagePath is string
+          && request.resource.data.storagePath.matches('^vetting/' + userId + '/' + docType + '/[^/]+$')
+          && request.resource.data.contentType in ['image/jpeg', 'image/png', 'application/pdf']
+          && request.resource.data.sizeBytes is int
+          && request.resource.data.sizeBytes > 0
+          && request.resource.data.sizeBytes <= 10 * 1024 * 1024
+          && request.resource.data.uploadedAt is string
+          && request.resource.data.version is int
+          && request.resource.data.version >= 1;
+      }
+      allow create: if isSelf(userId) && validDocument()
+        && request.resource.data.version == 1;
+      // A re-upload: a new object and the next version, never a rollback.
+      allow update: if isSelf(userId) && validDocument()
+        && request.resource.data.version == resource.data.version + 1;
       allow delete: if false;
     }
 
@@ -214,6 +246,13 @@ service cloud.firestore {
       allow read, write: if false;
     }
     match /disputes/{jobId} {
+      allow read, write: if false;
+    }
+
+    // vettingReviews/{mechanicId}: per-document decisions (verified / rejected, by whom, why),
+    // written by the reviewDocument callable only. App users never read it; the app sees only
+    // the single mechanics.vetting flag.
+    match /vettingReviews/{mechanicId} {
       allow read, write: if false;
     }
 

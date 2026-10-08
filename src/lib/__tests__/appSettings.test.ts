@@ -4,6 +4,7 @@ import {
   checkAppSettings,
   DEFAULT_APP_SETTINGS,
   effectiveSettings,
+  removedCatalogueIds,
   settingsChanges,
 } from '../appSettings';
 
@@ -85,6 +86,93 @@ describe('settings/app contract (mirrors the app schema)', () => {
     expect(settingsChanges(DEFAULT_APP_SETTINGS, after, SERVICE_LABELS)).toEqual([
       'Dead battery: UGX 35,000 → UGX 40,000',
       'Broadcast window: 90 s → 120 s',
+    ]);
+  });
+});
+
+describe('support and catalogue (added 2026-10-08, optional in the document)', () => {
+  it('absent sections mean the app defaults, including the placeholder emergency line', () => {
+    const doc = { version: 1, prices: valid().prices, broadcast: valid().broadcast };
+    const r = checkAppSettings(doc);
+    expect(r.ok && r.settings.support.emergencyPhone).toBe('+256700000000');
+    expect(r.ok && r.settings.catalogue.length).toBe(34);
+  });
+
+  it.each([
+    [
+      'a non-Ugandan emergency number',
+      { emergencyPhone: '+254712345678', email: 'a@b.co' },
+      'support.emergencyPhone',
+    ],
+    [
+      'a local-format number',
+      { emergencyPhone: '0772123456', email: 'a@b.co' },
+      'support.emergencyPhone',
+    ],
+    ['a bad email', { emergencyPhone: '+256772123456', email: 'nope' }, 'support.email'],
+  ])('rejects %s', (_, support, field) => {
+    const r = checkAppSettings({ ...valid(), support });
+    expect(r.ok).toBe(false);
+    expect(r.ok ? {} : r.errors).toHaveProperty([field]);
+  });
+
+  it.each([
+    [
+      'an id that is not a slug',
+      [{ id: 'Tyre Puncture', label: 'x', service: 'flat-tyre' }],
+      'catalogue.0.id',
+    ],
+    [
+      'a duplicate id',
+      [
+        { id: 'a-b', label: 'x', service: 'fuel' },
+        { id: 'a-b', label: 'y', service: 'fuel' },
+      ],
+      'catalogue.1.id',
+    ],
+    ['an empty label', [{ id: 'a-b', label: '  ', service: 'fuel' }], 'catalogue.0.label'],
+    [
+      'a label over 40 chars',
+      [{ id: 'a-b', label: 'x'.repeat(41), service: 'fuel' }],
+      'catalogue.0.label',
+    ],
+    ['an unknown service', [{ id: 'a-b', label: 'x', service: 'painting' }], 'catalogue.0.service'],
+  ])('rejects %s', (_, catalogue, field) => {
+    const r = checkAppSettings({ ...valid(), catalogue });
+    expect(r.ok).toBe(false);
+    expect(r.ok ? {} : r.errors).toHaveProperty([field]);
+  });
+
+  it('rejects more than 200 items', () => {
+    const catalogue = Array.from({ length: 201 }, (_, i) => ({
+      id: `item-${i}`,
+      label: 'x',
+      service: 'other',
+    }));
+    expect(checkAppSettings({ ...valid(), catalogue }).ok).toBe(false);
+  });
+
+  it('names catalogue ids a publish would lose', () => {
+    const next = DEFAULT_APP_SETTINGS.catalogue.filter((c) => c.id !== 'tyre-valve');
+    expect(removedCatalogueIds(DEFAULT_APP_SETTINGS.catalogue, next)).toEqual(['tyre-valve']);
+    expect(
+      removedCatalogueIds(DEFAULT_APP_SETTINGS.catalogue, DEFAULT_APP_SETTINGS.catalogue),
+    ).toEqual([]);
+  });
+
+  it('describes support and catalogue changes in words', () => {
+    const after = valid();
+    after.support = { emergencyPhone: '+256772000111', email: 'help@autorafiki.app' };
+    after.catalogue = [
+      ...after.catalogue,
+      { id: 'tyre-rim', label: 'Rim repair', service: 'flat-tyre' },
+    ];
+    after.catalogue[0] = { ...after.catalogue[0]!, label: 'Puncture fix' };
+    expect(settingsChanges(DEFAULT_APP_SETTINGS, after, SERVICE_LABELS)).toEqual([
+      'Emergency line: +256700000000 → +256772000111',
+      'Support email: support@autorafiki.app → help@autorafiki.app',
+      'Catalogue: 1 new item (Rim repair)',
+      'Catalogue "tyre-puncture": Puncture repair → Puncture fix',
     ]);
   });
 });

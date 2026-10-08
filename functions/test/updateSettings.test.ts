@@ -105,3 +105,37 @@ describe('updateSettings', () => {
     });
   });
 });
+
+describe('catalogue ids are permanent once published', () => {
+  it('refuses a publish that drops an id, naming it', async () => {
+    const w = world({ ...DEFAULT_APP_SETTINGS, updatedAt: 'x', updatedBy: 'y' });
+    const next = structuredClone(DEFAULT_APP_SETTINGS);
+    next.catalogue = next.catalogue.filter((c) => c.id !== 'battery-jump');
+    await expect(
+      updateSettings(ADMIN, { settings: next, reason: 'tidy' }, w.deps),
+    ).rejects.toMatchObject({
+      code: 'failed-precondition',
+      message: expect.stringMatching(/battery-jump/),
+    });
+    expect(w.audit).toHaveLength(0);
+  });
+
+  it('allows adding and relabelling', async () => {
+    const w = world({ ...DEFAULT_APP_SETTINGS, updatedAt: 'x', updatedBy: 'y' });
+    const next = structuredClone(DEFAULT_APP_SETTINGS);
+    next.catalogue[0]!.label = 'Puncture fix';
+    next.catalogue.push({ id: 'tyre-rim', label: 'Rim repair', service: 'flat-tyre' });
+    next.support.emergencyPhone = '+256772000111';
+    const r = await updateSettings(
+      ADMIN,
+      { settings: next, reason: 'Real line, new item' },
+      w.deps,
+    );
+    expect(r.changes).toEqual([
+      'Emergency line: +256700000000 → +256772000111',
+      'Catalogue: 1 new item (Rim repair)',
+      'Catalogue "tyre-puncture": Puncture repair → Puncture fix',
+    ]);
+    expect(w.state.doc?.catalogue).toHaveLength(35);
+  });
+});

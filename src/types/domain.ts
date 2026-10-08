@@ -77,6 +77,8 @@ export interface JobRequest {
   location: Place;
   vehicle: VehicleCategory;
   service: ServiceType;
+  /** Catalogue item ids the customer tapped (the cart); absent on older jobs. */
+  items?: string[];
   description: string;
   createdAt: IsoDate;
 }
@@ -100,10 +102,61 @@ export interface JobTimelineEntry {
 }
 
 /** Broadcast dispatch (CLAUDE.md v2): first mechanic to accept wins. */
+/** Vetting documents (contract shared with the ops dashboard, 2026-10-08). */
+export const VETTING_DOC_TYPES = ['national-id', 'certification', 'riding-permit'] as const;
+export type VettingDocType = (typeof VETTING_DOC_TYPES)[number];
+export type VettingContentType = 'image/jpeg' | 'image/png' | 'application/pdf';
+
+/**
+ * mechanics/{uid}/vettingDocuments/{docType}: the mechanic's CURRENT file of that type. The
+ * app writes exactly these fields for its own uid and never any review/status field (those
+ * are the dashboard's, in a collection the app cannot read).
+ */
+export interface VettingDocument {
+  docType: VettingDocType;
+  /** vetting/{uid}/{docType}/{fileId}; a re-upload points at a NEW object. */
+  storagePath: string;
+  contentType: VettingContentType;
+  sizeBytes: number;
+  uploadedAt: IsoDate;
+  /** 1 on first upload, +1 on each re-upload. */
+  version: number;
+}
+
+/** A file chosen (and, for images, compressed) on the device, ready to upload. */
+export interface PickedFile {
+  uri: string;
+  contentType: VettingContentType;
+  sizeBytes: number;
+}
+
+/** What a new mechanic submits; becomes mechanics/{uid} with vetting 'pending'. */
+export interface MechanicApplication {
+  businessName: string;
+  services: ServiceType[];
+  vehicles: VehicleCategory[];
+}
+
 /**
  * settings/app: ops-tunable values the dashboard writes (through an audited admin Cloud
  * Function) and the app only reads. See lib/settings for the schema and the fallback.
  */
+/** One tappable part or job in the request cart (lib/catalogue). */
+export interface CatalogueItem {
+  /** Stable key stored on jobs (slug). */
+  id: string;
+  label: string;
+  /** The fault it belongs to; offered only when that fault is picked. */
+  service: ServiceType;
+}
+
+/** How customers and mechanics reach AutoRafiki. Ops-tunable (settings/app → support). */
+export interface SupportSettings {
+  /** E.164; the number every job screen offers to call. */
+  emergencyPhone: UgPhone;
+  email: string;
+}
+
 export interface AppSettings {
   version: 1;
   /** Upfront call-out price per fault, whole UGX. */
@@ -116,6 +169,10 @@ export interface AppSettings {
     /** Length of each broadcast window. */
     windowMs: number;
   };
+  /** Absent in older documents: the app fills the compiled defaults. */
+  support: SupportSettings;
+  /** Parts-and-jobs catalogue for the cart; absent → compiled DEFAULT_CATALOGUE. */
+  catalogue: CatalogueItem[];
   updatedAt?: IsoDate;
   updatedBy?: string;
 }
