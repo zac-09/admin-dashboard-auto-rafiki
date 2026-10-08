@@ -26,6 +26,8 @@ export type AuditAction =
   | 'job.rebroadcast'
   /** markSubscriptionPaid: a weekly subscription payment was recorded. */
   | 'subscription.paid'
+  /** voidSubscriptionPayment: a recorded payment was marked as a mistake. */
+  | 'subscription.void'
   /** updateSettings: prices / broadcast values the app reads were published. */
   | 'settings.update';
 

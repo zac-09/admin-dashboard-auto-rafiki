@@ -6,6 +6,7 @@ import {
   WEEKLY_FEE,
 } from '@/lib/subscriptions';
 import {
+  isVoided,
   paymentId,
   type Job,
   type PaymentMethod,
@@ -60,6 +61,37 @@ export class MockRevenueRepository implements RevenueRepository {
     return this.ops.ratings.filter((r) => r.createdAt >= sinceIso);
   }
 
+  async voidPayment({ paymentId: id, reason }: { paymentId: string; reason: string }) {
+    const actor = this.auth.current();
+    if (!actor?.role || actor.role === 'support')
+      throw new Error('Your role cannot void payments.');
+    if (!reason.trim()) throw new Error('A reason is required.');
+    const payment = this.payments.find((p) => p.id === id);
+    if (!payment) throw new Error('No payment with that id.');
+    if (isVoided(payment)) throw new Error('Already voided.');
+    Object.assign(payment, {
+      voidedAt: new Date().toISOString(),
+      voidedBy: actor.uid,
+      voidedByEmail: actor.email,
+      voidReason: reason.trim(),
+    });
+    this.vetting.audit.push({
+      id: `audit_mock_${this.vetting.audit.length + 1}`,
+      action: 'subscription.void',
+      actorUid: actor.uid,
+      actorEmail: actor.email,
+      actorRole: actor.role,
+      targetType: 'subscription',
+      targetId: id,
+      targetLabel:
+        this.vetting.mechanics.get(payment.mechanicId)?.businessName ?? payment.mechanicId,
+      before: 'paid',
+      after: 'voided',
+      reason: reason.trim(),
+      at: new Date().toISOString(),
+    });
+  }
+
   async markPaid(input: {
     mechanicId: string;
     weekStart: string;
@@ -73,9 +105,11 @@ export class MockRevenueRepository implements RevenueRepository {
     const mechanic = this.vetting.mechanics.get(input.mechanicId);
     if (!mechanic) throw new Error('No mechanic with that id.');
     const id = paymentId(input.mechanicId, input.weekStart);
-    if (this.payments.some((p) => p.id === id)) {
+    if (this.payments.some((p) => p.id === id && !isVoided(p))) {
       throw new Error('That week is already recorded as paid.');
     }
+    // A voided record is replaced by the new one (the real store keys by id too).
+    this.payments = this.payments.filter((p) => p.id !== id);
     if (!isBillable(verifiedIntervals(mechanic, this.vetting.audit), input.weekStart)) {
       throw new Error(`${mechanic.businessName} did not owe that week.`);
     }

@@ -56,3 +56,13 @@ export function useMarkPaid() {
     onSettled: () => client.invalidateQueries({ queryKey: revenueKeys.payments }),
   });
 }
+
+/** Voiding changes what counts as paid, so the tracker refetches like it does after a payment. */
+export function useVoidPayment() {
+  const repos = useRepositories();
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { paymentId: string; reason: string }) => repos.revenue.voidPayment(input),
+    onSettled: () => client.invalidateQueries({ queryKey: revenueKeys.payments }),
+  });
+}

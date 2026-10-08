@@ -24,9 +24,10 @@ import { PAYMENT_METHOD_LABELS } from '@/types';
 import { subscriptionsCsv } from './exports';
 import { useSubscriptionInputs } from './hooks';
 import { MarkPaidForm } from './MarkPaidForm';
+import { VoidPaymentForm } from './VoidPaymentForm';
 import { SubscriptionStatus } from './StatusBadge';
 
-type Moment = { status: 'pending' | 'success'; subtitle: string } | null;
+type Moment = { status: 'pending' | 'success'; title: string; subtitle: string } | null;
 
 function Row({
   row,
@@ -43,7 +44,7 @@ function Row({
   canMark: boolean;
   onMoment: (m: Moment) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState<'pay' | 'void' | null>(null);
   const { mechanic, payment, status, unpaidEarlier } = row;
   return (
     <Reveal
@@ -69,12 +70,43 @@ function Row({
               : 'No arrears'}
         </span>
         {canMark && !payment && !open ? (
-          <Button variant="secondary" onClick={() => setOpen(true)}>
+          <Button variant="secondary" onClick={() => setOpen('pay')}>
             Mark paid
           </Button>
         ) : null}
+        {canMark && payment && !open ? (
+          <button
+            type="button"
+            onClick={() => setOpen('void')}
+            className="min-h-10 text-xs text-muted underline hover:text-primary"
+          >
+            Void…
+          </button>
+        ) : null}
       </div>
-      {open ? (
+      {open === 'void' && payment ? (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          transition={springs.settle}
+        >
+          <VoidPaymentForm
+            payment={payment}
+            onCancel={() => setOpen(null)}
+            onStart={() => onMoment({ status: 'pending', subtitle: '', title: 'Payment voided' })}
+            onFailed={() => onMoment(null)}
+            onDone={() => {
+              setOpen(null);
+              onMoment({
+                status: 'success',
+                title: 'Payment voided',
+                subtitle: `${mechanic.businessName} · ${weekLabel(weekStart)} is unpaid again`,
+              });
+            }}
+          />
+        </motion.div>
+      ) : null}
+      {open === 'pay' ? (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
@@ -83,13 +115,14 @@ function Row({
           <MarkPaidForm
             mechanic={mechanic}
             weekStart={weekStart}
-            onCancel={() => setOpen(false)}
-            onStart={() => onMoment({ status: 'pending', subtitle: '' })}
+            onCancel={() => setOpen(null)}
+            onStart={() => onMoment({ status: 'pending', subtitle: '', title: 'Payment recorded' })}
             onFailed={() => onMoment(null)}
             onDone={() => {
-              setOpen(false);
+              setOpen(null);
               onMoment({
                 status: 'success',
+                title: 'Payment recorded',
                 subtitle: `${formatUgx(WEEKLY_FEE)} · ${mechanic.businessName} · ${weekLabel(weekStart)}`,
               });
             }}
@@ -141,8 +174,8 @@ export function SubscriptionsTab() {
       {moment ? (
         <SuccessMoment
           status={moment.status}
-          pendingTitle="Recording the payment…"
-          title="Payment recorded"
+          pendingTitle="Saving…"
+          title={moment.title}
           subtitle={moment.subtitle}
           onDone={() => setMoment(null)}
         />

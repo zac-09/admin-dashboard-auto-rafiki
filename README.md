@@ -147,6 +147,9 @@ audited `markSubscriptionPaid` callable); dues are computed from the rules in
 `src/lib/subscriptions.ts` and the vetting history. **KPIs**: request → arrival median (target
 < 30 min), jobs/day, active mechanics (≥ 3 completed jobs in 7 days), acceptance, completion,
 average rating, jobs per mechanic per week. Both tabs export CSV (formula-safe).
+A payment recorded by mistake is **voided** (`voidSubscriptionPayment`, admin/ops, audited): the
+record is kept with who voided it and why, the week counts as unpaid again, and a correct
+payment can be recorded over it. Nothing in the audit trail is ever deleted.
 
 ## Settings
 

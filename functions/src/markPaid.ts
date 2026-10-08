@@ -14,6 +14,7 @@ import { isAdminRole } from '../../src/types/admin';
 import type { AuditEntry } from '../../src/types/audit';
 import type { MechanicDoc } from '../../src/types/firestore';
 import {
+  isVoided,
   PAYMENT_METHODS,
   paymentId,
   type PaymentMethod,
@@ -79,7 +80,10 @@ export async function markSubscriptionPaid(
     const history = await tx.getVettingHistory(mechanicId);
     const id = paymentId(mechanicId, weekStart);
     const existing = await tx.getPayment(id);
-    if (existing) throw new HttpsError('already-exists', 'That week is already recorded as paid.');
+    // A voided record may be replaced by a correct one; a live one may not.
+    if (existing && !isVoided(existing)) {
+      throw new HttpsError('already-exists', 'That week is already recorded as paid.');
+    }
     if (!isBillable(verifiedIntervals(mechanic, history), weekStart)) {
       throw new HttpsError(
         'failed-precondition',

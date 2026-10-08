@@ -32,7 +32,17 @@ export interface SubscriptionPayment {
   paidAt: IsoDate;
   recordedBy: string;
   recordedByEmail: string | null;
+  /**
+   * Set by voidSubscriptionPayment when the record was a mistake. The document stays (the
+   * history is never deleted); the week counts as unpaid again and can be re-recorded.
+   */
+  voidedAt?: IsoDate;
+  voidedBy?: string;
+  voidedByEmail?: string | null;
+  voidReason?: string;
 }
+
+export const isVoided = (p: Pick<SubscriptionPayment, 'voidedAt'>) => !!p.voidedAt;
 
 export function paymentId(mechanicId: string, weekStart: string): string {
   return `${mechanicId}_${weekStart}`;

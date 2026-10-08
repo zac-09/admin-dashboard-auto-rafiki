@@ -42,6 +42,19 @@ export class FirestoreRevenueRepository implements RevenueRepository {
     return s.docs.map((d) => ({ ...(d.data() as Rating), id: d.id }));
   }
 
+  async voidPayment(input: { paymentId: string; reason: string }): Promise<void> {
+    try {
+      await httpsCallable(
+        getFunctions(getFirebaseApp(), env.functionsRegion),
+        'voidSubscriptionPayment',
+      )(input);
+    } catch (error) {
+      throw new Error((error as Error).message || 'The payment could not be voided.', {
+        cause: error,
+      });
+    }
+  }
+
   async markPaid(input: {
     mechanicId: string;
     weekStart: string;

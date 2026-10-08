@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { createMockRepositories, MOCK_PASSWORD } from '@/lib/mocks';
@@ -112,5 +112,43 @@ describe('KPIs', () => {
     const text = await created[0]!.text();
     expect(text.split('\r\n')[0]).toMatch(/^\uFEFF?Job id,Requested at,Status/);
     expect(text).toContain('job_enroute_late');
+  });
+});
+
+describe('voiding a payment', () => {
+  it('needs a reason, keeps the audit trail, and makes the week due again', async () => {
+    const user = await openAs('ops', '/revenue');
+    const list = await screen.findByRole('list', { name: /Subscriptions for/ });
+    const paid = within(list)
+      .getAllByRole('listitem')
+      .find((li) => /Namukasa Motors/.test(li.textContent ?? ''))!;
+    await user.click(within(paid).getByRole('button', { name: 'Void…' }));
+    const form = within(paid).getByRole('form', { name: 'Void this payment' });
+    const confirm = within(form).getByRole('button', { name: 'Void this payment' });
+    expect(confirm).toBeDisabled();
+    await user.type(
+      within(form).getByLabelText(/Why it was a mistake/),
+      'Entered on the wrong mechanic',
+    );
+    await user.click(confirm);
+    expect(await screen.findByText('Payment voided')).toBeInTheDocument();
+    // Totals refetch after the void lands.
+    await waitFor(() =>
+      expect(screen.getByRole('region', { name: 'Week summary' })).toHaveTextContent(
+        'UGX 0 of UGX 30,000',
+      ),
+    );
+    const row = within(screen.getByRole('list', { name: /Subscriptions for/ }))
+      .getAllByRole('listitem')
+      .find((li) => /Namukasa Motors/.test(li.textContent ?? ''))!;
+    expect(row).toHaveTextContent('Overdue');
+    expect(within(row).getByRole('button', { name: 'Mark paid' })).toBeInTheDocument();
+  });
+
+  it('support cannot see the void control', async () => {
+    await openAs('support', '/revenue');
+    expect(
+      await screen.findByRole('heading', { name: 'Not available for your role' }),
+    ).toBeInTheDocument();
   });
 });

@@ -103,3 +103,40 @@ describe('markSubscriptionPaid (emulator)', () => {
     ).rejects.toMatchObject({ code: 'functions/permission-denied' });
   });
 });
+
+describe('voidSubscriptionPayment (emulator)', () => {
+  it('voids a recorded payment, keeps the record, audits it, and allows re-recording', async () => {
+    await signInAs('pops');
+    const id = `u_mech_okello_${WEEK}`;
+    const voidIt = httpsCallable(getFunctions(client, 'europe-west1'), 'voidSubscriptionPayment');
+    await voidIt({ paymentId: id, reason: 'Wrong mechanic' });
+    const doc = (await db.collection('subscriptions').doc(id).get()).data();
+    expect(doc).toMatchObject({ amount: 15000, voidedBy: 'pops', voidReason: 'Wrong mechanic' });
+    expect(doc?.voidedAt).toEqual(expect.any(String));
+    const audit = await db.collection('auditLog').where('action', '==', 'subscription.void').get();
+    expect(audit.size).toBe(1);
+    await expect(voidIt({ paymentId: id, reason: 'again' })).rejects.toMatchObject({
+      code: 'functions/failed-precondition',
+    });
+    // The week is open again: a correct payment can be recorded over the voided one.
+    await markPaid({
+      mechanicId: 'u_mech_okello',
+      weekStart: WEEK,
+      method: 'mobile-money',
+      reference: 'MP-OK',
+    });
+    const again = (await db.collection('subscriptions').doc(id).get()).data();
+    expect(again).toMatchObject({ method: 'mobile-money', reference: 'MP-OK' });
+    expect(again?.voidedAt).toBeUndefined();
+  });
+
+  it('support cannot void', async () => {
+    await signInAs('psupport');
+    await expect(
+      httpsCallable(
+        getFunctions(client, 'europe-west1'),
+        'voidSubscriptionPayment',
+      )({ paymentId: 'x', reason: 'x' }),
+    ).rejects.toMatchObject({ code: 'functions/permission-denied' });
+  });
+});

@@ -9,6 +9,7 @@
  * - cancelJob, rebroadcastJob: control-room interventions (admin, ops; audited, noted)
  * - updateSettings: publish prices / broadcast values the app reads (admin; audited)
  * - markSubscriptionPaid: record a mechanic's weekly UGX 15,000 (admin, ops; audited)
+ * - voidSubscriptionPayment: mark a recorded payment as a mistake (admin, ops; audited)
  * - addSupportNote, flagDispute, resolveDispute: customer support on a job (all roles;
  *   suspending a mechanic as a dispute outcome needs admin or ops; audited)
  */
@@ -33,6 +34,7 @@ import {
 } from './interventions';
 import { markSubscriptionPaid as markPaidHandler, type MarkPaidDeps } from './markPaid';
 import { updateSettings as updateSettingsHandler, type SettingsDeps } from './updateSettings';
+import { voidSubscriptionPayment as voidPaidHandler, type VoidDeps } from './voidPaid';
 import { setUserRole as setUserRoleHandler, type Caller, type RoleDeps } from './setUserRole';
 import {
   inviteStaff as inviteStaffHandler,
@@ -174,8 +176,9 @@ const markPaidDeps: MarkPaidDeps = {
           const snap = await tx.get(db.collection(SUBSCRIPTIONS).doc(id));
           return snap.exists ? (snap.data() as never) : null;
         },
+        // set, not create: a voided record is replaced whole (the void fields drop away).
         createPayment: (payment) => {
-          tx.create(db.collection(SUBSCRIPTIONS).doc(payment.id), payment);
+          tx.set(db.collection(SUBSCRIPTIONS).doc(payment.id), payment);
         },
         audit: (entry) => {
           tx.create(db.collection(AUDIT_COLLECTION).doc(), entry);
@@ -284,6 +287,31 @@ const interventionDeps: InterventionDeps = {
   now: () => new Date(),
 };
 
+const voidDeps: VoidDeps = {
+  async transact(run) {
+    const db = getFirestore();
+    await db.runTransaction(async (tx) => {
+      await run({
+        async getPayment(id) {
+          const snap = await tx.get(db.collection(SUBSCRIPTIONS).doc(id));
+          return snap.exists ? (snap.data() as never) : null;
+        },
+        async getBusinessName(mechanicId) {
+          const snap = await tx.get(db.collection(COLLECTIONS.mechanics).doc(mechanicId));
+          return String(snap.data()?.businessName ?? mechanicId);
+        },
+        updatePayment: (id, fields) => {
+          tx.update(db.collection(SUBSCRIPTIONS).doc(id), fields);
+        },
+        audit: (entry) => {
+          tx.create(db.collection(AUDIT_COLLECTION).doc(), entry);
+        },
+      });
+    });
+  },
+  now: () => new Date(),
+};
+
 type CallableRequest = { auth?: { uid: string; token: Record<string, unknown> } };
 
 function callerOf(request: CallableRequest): Caller | null {
@@ -335,4 +363,8 @@ export const cancelJob = onCall((request) =>
 
 export const rebroadcastJob = onCall((request) =>
   rebroadcastJobHandler(callerOf(request), request.data, interventionDeps),
+);
+
+export const voidSubscriptionPayment = onCall((request) =>
+  voidPaidHandler(callerOf(request), request.data, voidDeps),
 );

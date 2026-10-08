@@ -13,7 +13,7 @@
 import type { AuditEntry } from '../types/audit';
 import type { Ugx } from '../types/domain';
 import type { MechanicDoc } from '../types/firestore';
-import type { SubscriptionPayment } from '../types/subscriptions';
+import { isVoided, type SubscriptionPayment } from '../types/subscriptions';
 
 export const WEEKLY_FEE: Ugx = 15_000;
 export const OVERDUE_AFTER_DAYS = 3;
@@ -146,7 +146,10 @@ export function summarizeWeek(
   payments: readonly SubscriptionPayment[],
   now: Date,
 ): WeekSummary {
-  const paid = new Map(payments.map((p) => [`${p.mechanicId}_${p.weekStart}`, p]));
+  // Voided records stay in the collection but no longer count as payment.
+  const paid = new Map(
+    payments.filter((p) => !isVoided(p)).map((p) => [`${p.mechanicId}_${p.weekStart}`, p]),
+  );
   const current = weekStartOf(now);
   const rows: MechanicWeek[] = [];
   for (const mechanic of mechanics) {

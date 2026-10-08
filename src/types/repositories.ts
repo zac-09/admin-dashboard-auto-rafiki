@@ -146,6 +146,8 @@ export interface RevenueRepository {
     method: PaymentMethod;
     reference?: string;
   }): Promise<void>;
+  /** The audited voidSubscriptionPayment callable. */
+  voidPayment(input: { paymentId: string; reason: string }): Promise<void>;
 }
 
 /** Dashboard accounts (admin only): Auth via callables, never Firestore. */
