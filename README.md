@@ -118,6 +118,16 @@ firebase deploy --only firestore:indexes --project auto-rafiki
 One-time Console setup: enable the **Email/Password** sign-in provider (alongside Phone)
 and register a **Web app** for the config values.
 
+## Interventions
+
+On a job page, admin and ops can **widen the search** (same or wider radius up to 30 km, with a
+fresh window from the published settings; the app's `onJobRebroadcast` trigger alerts the new
+outer band, or everyone again on a renewal), **cancel** a job from requested / matched / on the
+way (the app's own state machine; written as `cancelledBy: 'admin'`, which the app shows as
+"Cancelled by AutoRafiki support") and **suspend** the mechanic. `cancelJob` and
+`rebroadcastJob` are audited callables that also leave a note on the job. Stale requests on the
+alert rail have a one-click "Widen search".
+
 ## Customer support
 
 `/support` searches by phone (any Ugandan format), job id or business name, also from anywhere
