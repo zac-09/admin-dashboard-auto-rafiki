@@ -12,6 +12,8 @@ import type { MechanicDoc } from '@/types';
 
 import { auditEntryLabel } from './auditLabels';
 import { DecisionForm } from './DecisionForm';
+import { DocumentsPanel } from './DocumentsPanel';
+import { DocumentsStanding } from './DocumentsStanding';
 import { useMechanic, useMechanicAudit } from './hooks';
 import { ratingText, servicesText, vehiclesText } from './mechanicText';
 import { PhoneLink } from './PhoneLink';
@@ -194,11 +196,7 @@ export function MechanicDetailPage() {
           </Panel>
 
           <Panel title="Documents">
-            <p className="text-sm">No documents uploaded.</p>
-            <p className="mt-1 text-xs text-muted">
-              The app cannot upload national ID, certification or riding permit yet. Check them in
-              person during the practical assessment.
-            </p>
+            <DocumentsPanel mechanic={m} />
           </Panel>
 
           <Panel title="Vetting history">
@@ -212,6 +210,7 @@ export function MechanicDetailPage() {
               <Notice tone="info">{saved.message}</Notice>
             </div>
           ) : null}
+          <DocumentsStanding mechanic={m} />
           {can(session?.role, 'vetting.decide') ? (
             // Remount on status change so a decision is never made against a stale status.
             <DecisionForm

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { AnimatedNumber, springs } from '@/components/motion';
 import { Tabs } from '@/components/ui';
 import { useIsDesktop } from '@/lib/useMediaQuery';
-import { JOB_STATUSES, type Job, type JobStatus } from '@/types';
+import { JOB_STATUSES, type CatalogueItem, type Job, type JobStatus } from '@/types';
 
 import type { Alert } from './alerts';
 import { groupByStatus, STATUS_LABELS } from './board';
@@ -30,6 +30,7 @@ interface BoardProps {
   alerts: readonly Alert[];
   now: Date;
   mechanicNames: Map<string, string | null>;
+  catalogue: readonly CatalogueItem[];
 }
 
 function Column({
@@ -39,6 +40,7 @@ function Column({
   flagged,
   now,
   mechanicNames,
+  catalogue,
 }: {
   status: JobStatus;
   jobs: Job[];
@@ -46,6 +48,7 @@ function Column({
   flagged: Map<string, string>;
   now: Date;
   mechanicNames: Map<string, string | null>;
+  catalogue: readonly CatalogueItem[];
 }) {
   return (
     <section aria-label={STATUS_LABELS[status]} className="flex flex-col gap-2">
@@ -75,6 +78,7 @@ function Column({
             fresh={fresh.has(`${job.id}:${job.status}`)}
             attention={flagged.get(job.id)}
             mechanicName={job.mechanicId ? mechanicNames.get(job.mechanicId) : undefined}
+            catalogue={catalogue}
           />
         </motion.div>
       ))}
@@ -82,7 +86,7 @@ function Column({
   );
 }
 
-export function JobBoard({ jobs, alerts, now, mechanicNames }: BoardProps) {
+export function JobBoard({ jobs, alerts, now, mechanicNames, catalogue }: BoardProps) {
   const isDesktop = useIsDesktop();
   const columns = groupByStatus(jobs);
   const fresh = useFreshKeys(jobs);
@@ -94,7 +98,7 @@ export function JobBoard({ jobs, alerts, now, mechanicNames }: BoardProps) {
   // Phones: one column at a time, starting with the first one that has work in it.
   const [picked, setPicked] = useState<JobStatus | null>(null);
   const shown = picked ?? JOB_STATUSES.find((s) => columns[s].length > 0) ?? 'requested';
-  const columnProps = { fresh, flagged, now, mechanicNames };
+  const columnProps = { fresh, flagged, now, mechanicNames, catalogue };
 
   if (!isDesktop) {
     return (

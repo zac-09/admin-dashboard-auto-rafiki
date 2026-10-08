@@ -6,7 +6,9 @@ import { ChatTranscript } from '@/features/support/ChatTranscript';
 import { DisputePanel } from '@/features/support/DisputePanel';
 import { NotesPanel } from '@/features/support/NotesPanel';
 import { RatingsList } from '@/features/support/RatingsList';
+import { useAppSettings } from '@/features/settings/hooks';
 import { PhoneLink } from '@/features/vetting/PhoneLink';
+import { DEFAULT_CATALOGUE, itemLabels } from '@/lib/catalogue';
 import { formatUgx } from '@/lib/format';
 import { SERVICE_LABELS, VEHICLE_LABELS } from '@/lib/labels';
 import { can } from '@/lib/permissions';
@@ -46,6 +48,8 @@ export function JobDetailPage() {
   useDocumentTitle(live.data ? `Job ${live.data.id}` : 'Job');
   const job = live.data ?? null;
   const customer = useUser(job?.request.customerId);
+  const appSettings = useAppSettings();
+  const catalogue = appSettings.effective?.settings.catalogue ?? DEFAULT_CATALOGUE;
   const mechanic = useMechanic(job?.mechanicId);
 
   const navigate = useNavigate();
@@ -119,6 +123,22 @@ export function JobDetailPage() {
                 >
                   Open in Google Maps
                 </a>
+              </Row>
+              <Row label="Asked for">
+                {request.items?.length ? (
+                  <ul className="flex flex-wrap gap-1.5" aria-label="Requested items">
+                    {itemLabels(request.items, catalogue).map((label, i) => (
+                      <li
+                        key={`${request.items![i]}-${i}`}
+                        className="rounded-control border border-hairline px-2 py-0.5 text-xs"
+                      >
+                        {label}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <span className="text-muted">Nothing specific</span>
+                )}
               </Row>
               <Row label="Description">
                 {request.description || <span className="text-muted">None</span>}

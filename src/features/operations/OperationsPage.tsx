@@ -4,6 +4,8 @@ import { useSearchParams } from 'react-router';
 import { PageHeader } from '@/app/pages/PageHeader';
 import { AnimatedNumber } from '@/components/motion';
 import { Notice, Skeleton, SkeletonBoard, Tabs } from '@/components/ui';
+import { useAppSettings } from '@/features/settings/hooks';
+import { DEFAULT_CATALOGUE } from '@/lib/catalogue';
 import { useDocumentTitle } from '@/lib/useDocumentTitle';
 import { useNow } from '@/lib/useLive';
 
@@ -59,6 +61,9 @@ export function OperationsPage() {
   const looked = useMechanicNames(assigned);
   const names = new Map(looked.data ?? []);
   for (const m of onlineMechanics) names.set(m.userId, m.businessName);
+  // Cart items on cards resolve through the published catalogue (the app's defaults until then).
+  const appSettings = useAppSettings();
+  const catalogue = appSettings.effective?.settings.catalogue ?? DEFAULT_CATALOGUE;
 
   const failures = [
     ['jobs', active.error],
@@ -108,7 +113,13 @@ export function OperationsPage() {
             active.status === 'loading' ? (
               <SkeletonBoard />
             ) : (
-              <JobBoard jobs={allJobs} alerts={alerts} now={now} mechanicNames={names} />
+              <JobBoard
+                jobs={allJobs}
+                alerts={alerts}
+                now={now}
+                mechanicNames={names}
+                catalogue={catalogue}
+              />
             )
           ) : (
             <Suspense

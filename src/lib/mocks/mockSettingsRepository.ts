@@ -1,4 +1,9 @@
-import { checkAppSettings, effectiveSettings, settingsChanges } from '@/lib/appSettings';
+import {
+  checkAppSettings,
+  effectiveSettings,
+  removedCatalogueIds,
+  settingsChanges,
+} from '@/lib/appSettings';
 import { SERVICE_LABELS } from '@/lib/labels';
 import type { AppSettings, SettingsRepository, Unsubscribe } from '@/types';
 
@@ -32,6 +37,10 @@ export class MockSettingsRepository implements SettingsRepository {
     const check = checkAppSettings(settings);
     if (!check.ok) throw new Error(Object.values(check.errors)[0]);
     const current = effectiveSettings(this.doc);
+    const removed = removedCatalogueIds(current.settings.catalogue, check.settings.catalogue);
+    if (removed.length > 0) {
+      throw new Error(`Catalogue items cannot be removed once published (${removed.join(', ')}).`);
+    }
     const changes = settingsChanges(current.settings, check.settings, SERVICE_LABELS);
     if (changes.length === 0 && current.source === 'remote') throw new Error('Nothing changed.');
     this.doc = { ...check.settings, updatedAt: new Date().toISOString(), updatedBy: actor.uid };

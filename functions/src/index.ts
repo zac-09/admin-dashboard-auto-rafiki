@@ -7,6 +7,7 @@
  * - listStaff, inviteStaff: admin-only staff management (invite audited)
  * - decideVetting: approve / reject / suspend a mechanic (admin, ops; audited)
  * - cancelJob, rebroadcastJob: control-room interventions (admin, ops; audited, noted)
+ * - reviewDocument: verify / reject one uploaded vetting document (admin, ops; audited)
  * - updateSettings: publish prices / broadcast values the app reads (admin; audited)
  * - markSubscriptionPaid: record a mechanic's weekly UGX 15,000 (admin, ops; audited)
  * - voidSubscriptionPayment: mark a recorded payment as a mistake (admin, ops; audited)
@@ -25,6 +26,7 @@ import { AUDIT_COLLECTION } from '../../src/types/audit';
 import { COLLECTIONS } from '../../src/types/firestore';
 import { SUBSCRIPTIONS } from '../../src/types/subscriptions';
 import { DISPUTES, SUPPORT_NOTES, type Dispute } from '../../src/types/support';
+import { VETTING_REVIEWS, type VettingReviews } from '../../src/types/vettingReviews';
 
 import { decideVetting as decideVettingHandler, type VettingDeps } from './decideVetting';
 import {
@@ -33,6 +35,7 @@ import {
   type InterventionDeps,
 } from './interventions';
 import { markSubscriptionPaid as markPaidHandler, type MarkPaidDeps } from './markPaid';
+import { reviewDocument as reviewDocumentHandler, type ReviewDeps } from './reviewDocument';
 import { updateSettings as updateSettingsHandler, type SettingsDeps } from './updateSettings';
 import { voidSubscriptionPayment as voidPaidHandler, type VoidDeps } from './voidPaid';
 import { setUserRole as setUserRoleHandler, type Caller, type RoleDeps } from './setUserRole';
@@ -312,6 +315,41 @@ const voidDeps: VoidDeps = {
   now: () => new Date(),
 };
 
+const reviewDeps: ReviewDeps = {
+  async transact(run) {
+    const db = getFirestore();
+    await db.runTransaction(async (tx) => {
+      await run({
+        async getBusinessName(id) {
+          const snap = await tx.get(db.collection(COLLECTIONS.mechanics).doc(id));
+          return snap.exists ? String(snap.data()?.businessName ?? '') : null;
+        },
+        async getDocument(id, docType) {
+          const snap = await tx.get(
+            db
+              .collection(COLLECTIONS.mechanics)
+              .doc(id)
+              .collection('vettingDocuments')
+              .doc(docType),
+          );
+          return snap.exists ? (snap.data() as never) : null;
+        },
+        async getReviews(id) {
+          const snap = await tx.get(db.collection(VETTING_REVIEWS).doc(id));
+          return (snap.data() as VettingReviews | undefined) ?? {};
+        },
+        setReview: (id, docType, review) => {
+          tx.set(db.collection(VETTING_REVIEWS).doc(id), { [docType]: review }, { merge: true });
+        },
+        audit: (entry) => {
+          tx.create(db.collection(AUDIT_COLLECTION).doc(), entry);
+        },
+      });
+    });
+  },
+  now: () => new Date(),
+};
+
 type CallableRequest = { auth?: { uid: string; token: Record<string, unknown> } };
 
 function callerOf(request: CallableRequest): Caller | null {
@@ -367,4 +405,8 @@ export const rebroadcastJob = onCall((request) =>
 
 export const voidSubscriptionPayment = onCall((request) =>
   voidPaidHandler(callerOf(request), request.data, voidDeps),
+);
+
+export const reviewDocument = onCall((request) =>
+  reviewDocumentHandler(callerOf(request), request.data, reviewDeps),
 );

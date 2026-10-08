@@ -173,3 +173,27 @@ describe('job detail and interventions', () => {
     expect(await screen.findByText('No job with id nope.')).toBeInTheDocument();
   });
 });
+
+describe('requested items (the app cart)', () => {
+  it('shows cart items on the card as catalogue labels, unknown ids as themselves', async () => {
+    await openAs('admin', '/operations');
+    const requested = await screen.findByRole('region', { name: 'Requested' });
+    expect(requested).toHaveTextContent('Jump start · legacy-item');
+    expect(column('On the way')).toHaveTextContent('Puncture repair · New tube');
+  });
+
+  it('lists them on the job page, and says so when a job has none', async () => {
+    await openAs('admin', '/jobs/job_enroute_late');
+    const items = await screen.findByRole('list', { name: 'Requested items' });
+    expect(
+      within(items)
+        .getAllByRole('listitem')
+        .map((li) => li.textContent),
+    ).toEqual(['Puncture repair', 'New tube']);
+  });
+
+  it('a job without items reads "Nothing specific"', async () => {
+    await openAs('admin', '/jobs/job_working');
+    expect(await screen.findByText('Nothing specific')).toBeInTheDocument();
+  });
+});

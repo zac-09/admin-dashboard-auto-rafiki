@@ -94,3 +94,59 @@ describe('settings', () => {
     await user.click(toggle);
   });
 });
+
+describe('support contacts and the catalogue', () => {
+  it('warns everyone while the emergency line is the placeholder, and shows the contacts', async () => {
+    await openAs('support');
+    expect(await screen.findByText(/still the app's placeholder/)).toBeInTheDocument();
+    const contacts = screen.getByRole('region', { name: 'Support contacts (shown in the app)' });
+    expect(contacts).toHaveTextContent('Emergency line+256700000000');
+    expect(contacts).toHaveTextContent(/Request catalogue34 items across 7 faults/);
+  });
+
+  it('an admin sets the real line, adds a catalogue item, cannot remove a published one', async () => {
+    const user = await openAs('admin');
+    await user.click(await screen.findByRole('button', { name: 'Edit prices & broadcast' }));
+    const form = screen.getByRole('form', { name: 'Edit settings' });
+
+    const phone = within(form).getByLabelText('Emergency line');
+    await user.clear(phone);
+    await user.type(phone, '0772 123 456');
+    expect(within(form).getByText('A Ugandan number as +2567XXXXXXXX.')).toBeInTheDocument();
+    await user.clear(phone);
+    await user.type(phone, '+256 772 123 456');
+
+    const items = within(form).getByRole('list', { name: 'Catalogue items' });
+    expect(within(items).getAllByRole('listitem')).toHaveLength(34);
+    expect(within(items).queryByRole('button', { name: 'Remove' })).not.toBeInTheDocument();
+
+    await user.type(within(form).getByLabelText('New item id'), 'Tyre Rim');
+    expect(within(form).getByText(/Lowercase letters, digits and dashes/)).toBeInTheDocument();
+    await user.clear(within(form).getByLabelText('New item id'));
+    await user.type(within(form).getByLabelText('New item id'), 'tyre-rim');
+    await user.type(within(form).getByLabelText('New item label'), 'Rim repair');
+    await user.selectOptions(within(form).getByLabelText('New item fault'), 'flat-tyre');
+    await user.click(within(form).getByRole('button', { name: 'Add item' }));
+    expect(within(items).getAllByRole('listitem')).toHaveLength(35);
+    // The new, unpublished item can still be taken back before publishing.
+    expect(within(items).getByRole('button', { name: 'Remove' })).toBeInTheDocument();
+
+    const changes = within(form).getByRole('region', { name: 'Changes' });
+    expect(
+      within(changes)
+        .getAllByRole('listitem')
+        .map((li) => li.textContent),
+    ).toEqual([
+      'Emergency line: +256700000000 → +256772123456',
+      'Catalogue: 1 new item (Rim repair)',
+    ]);
+
+    await user.type(within(form).getByLabelText(/Reason/), 'Real line; rim repairs offered');
+    await user.click(within(form).getByRole('button', { name: 'Publish to the app' }));
+    expect(await screen.findByText('Settings published')).toBeInTheDocument();
+    expect(screen.queryByText(/still the app's placeholder/)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('region', { name: 'Support contacts (shown in the app)' }),
+    ).toHaveTextContent('+256772123456');
+  });
+});

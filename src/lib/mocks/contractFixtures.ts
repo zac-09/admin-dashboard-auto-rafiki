@@ -189,6 +189,8 @@ function job(input: {
   cancelledBy?: Job['cancelledBy'];
   distanceKm?: number;
   etaMinutes?: number;
+  /** Catalogue item ids the customer tapped (the cart). */
+  items?: string[];
 }): Job {
   const createdAt = minutesAgo(input.requestedMinutesAgo);
   const timeline: JobTimelineEntry[] = [
@@ -206,6 +208,7 @@ function job(input: {
       service: input.service,
       description: input.description,
       createdAt,
+      ...(input.items ? { items: input.items } : {}),
     },
     status,
     radiusKm: input.radiusKm ?? 5,
@@ -229,6 +232,8 @@ export const JOBS: Job[] = [
     vehicle: 'car',
     service: 'battery',
     description: 'Car will not start outside the supermarket.',
+    // 'legacy-item' is not in the catalogue: the dashboard shows the raw id.
+    items: ['battery-jump', 'legacy-item'],
     requestedMinutesAgo: 4,
     radiusKm: 8,
   }),
@@ -239,6 +244,7 @@ export const JOBS: Job[] = [
     vehicle: 'car',
     service: 'flat-tyre',
     description: 'Rear left puncture, no spare.',
+    items: ['tyre-puncture', 'tyre-tube'],
     requestedMinutesAgo: 41,
     steps: [
       ['matched', 40],

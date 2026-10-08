@@ -6,4 +6,5 @@ export * from './audit';
 export * from './support';
 export * from './subscriptions';
 export * from './staff';
+export * from './vettingReviews';
 export * from './repositories';

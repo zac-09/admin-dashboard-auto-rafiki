@@ -6,6 +6,8 @@ import type { AppSettings, ChatMessage, Job, Rating, UgPhone } from './domain';
 import type { MechanicDoc, UserDoc } from './firestore';
 import type { AdminRole } from './admin';
 import type { InviteStaffInput, InviteStaffResult, StaffMember } from './staff';
+import type { VettingDocType, VettingDocument } from './domain';
+import type { ReviewDocumentInput, VettingReviews } from './vettingReviews';
 import type { PaymentMethod, SubscriptionPayment } from './subscriptions';
 import type { Dispute, DisputeOutcome, SupportNote } from './support';
 
@@ -164,6 +166,31 @@ export interface SettingsRepository {
   publish(settings: AppSettings, reason: string): Promise<{ changes: string[] }>;
 }
 
+/** A loaded document file, ready for an <img> / <iframe>; `revoke` frees any object URL. */
+export interface LoadedFile {
+  url: string;
+  contentType: string;
+  revoke: () => void;
+}
+
+/** A mechanic's uploaded vetting documents and the dashboard's reviews of them. */
+export interface VettingDocumentsRepository {
+  subscribeDocuments(
+    mechanicId: string,
+    onChange: (docs: Partial<Record<VettingDocType, VettingDocument>>) => void,
+    onError: (e: Error) => void,
+  ): Unsubscribe;
+  subscribeReviews(
+    mechanicId: string,
+    onChange: (reviews: VettingReviews) => void,
+    onError: (e: Error) => void,
+  ): Unsubscribe;
+  /** Downloads the object behind a record (staff read rule) for inline display. */
+  loadFile(storagePath: string, contentType: string): Promise<LoadedFile>;
+  /** The audited reviewDocument callable (admin, ops). */
+  review(input: ReviewDocumentInput): Promise<void>;
+}
+
 export interface Repositories {
   auth: AuthRepository;
   mechanics: MechanicRepository;
@@ -175,4 +202,5 @@ export interface Repositories {
   revenue: RevenueRepository;
   staff: StaffRepository;
   settings: SettingsRepository;
+  vettingDocuments: VettingDocumentsRepository;
 }

@@ -118,6 +118,21 @@ firebase deploy --only firestore:indexes --project auto-rafiki
 One-time Console setup: enable the **Email/Password** sign-in provider (alongside Phone)
 and register a **Web app** for the config values.
 
+## Vetting documents
+
+Mechanics upload their national ID, certification and (boda only) riding permit from the app,
+against a contract shared on 2026-10-08: objects at `vetting/{uid}/{docType}/{fileId}` (a fresh
+file per upload, never overwritten) and a record at `mechanics/{uid}/vettingDocuments/{docType}`
+with exactly six fields and no status. This repo owns both rule sets (`firebase/storage.rules`,
+`firebase/firestore.rules`): the mechanic writes only under their own uid, staff read, nobody
+deletes. The mechanic page renders each document inline (images, or a PDF frame) with version
+and upload time, flags a missing required document, and lets admin/ops **verify or reject** it
+through the audited `reviewDocument` callable. Reviews live in `vettingReviews/{uid}` (dashboard
+only; the app never reads it) and name the exact file reviewed, so a re-upload shows as
+"Re-uploaded since review" rather than inheriting the decision. The Decide panel shows how the
+required documents stand; approving remains the operator's call. Files are fetched as blobs
+under the staff member's own auth (no shareable download URLs).
+
 ## Interventions
 
 On a job page, admin and ops can **widen the search** (same or wider radius up to 30 km, with a
@@ -160,6 +175,13 @@ with exactly the app's rules (`src/lib/appSettings.ts` mirrors the app's schema)
 use published values within seconds; existing jobs keep their fee. App users can read
 `settings/app` and nothing else under `settings/`; nobody writes it directly. A customer's own
 re-broadcast may use any radius from 1 to 30 km (the settings bounds).
+
+Since 2026-10-08 the document also carries **support contacts** (the emergency line every app
+job screen offers to call, and the support email; the app's compiled number is a placeholder the
+dashboard warns about until it is replaced) and the **request catalogue** (the parts and jobs
+customers tap; ids are stored on jobs, so the editor adds and relabels items but can never remove
+a published one, and `updateSettings` refuses a publish that would). Job cards and job pages show
+a request's catalogue items as labels, falling back to the raw id for an unknown one.
 
 ## Motion and loading states
 

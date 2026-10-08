@@ -100,7 +100,7 @@ describe('vetting decisions', () => {
       await screen.findByText('Your role can view vetting but not decide.'),
     ).toBeInTheDocument();
     expect(screen.queryByRole('form', { name: 'Vetting decision' })).not.toBeInTheDocument();
-    expect(screen.getByText('No documents uploaded.')).toBeInTheDocument();
+    expect(await screen.findByRole('list', { name: 'Vetting documents' })).toBeInTheDocument();
   });
 
   it('says so when the mechanic does not exist', async () => {

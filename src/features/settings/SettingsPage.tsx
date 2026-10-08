@@ -4,6 +4,7 @@ import { PageHeader } from '@/app/pages/PageHeader';
 import { Reveal, staggerDelay, SuccessMoment } from '@/components/motion';
 import { Button, Notice, SkeletonPanel } from '@/components/ui';
 import { SERVICES } from '@/lib/appSettings';
+import { PLACEHOLDER_EMERGENCY_PHONE } from '@/lib/catalogue';
 import { formatDate, formatDateTime, formatUgx } from '@/lib/format';
 import { SERVICE_LABELS } from '@/lib/labels';
 import { can } from '@/lib/permissions';
@@ -105,6 +106,16 @@ export function SettingsPage() {
         ) : null}
       </div>
       {status}
+      {live.status === 'ready' &&
+      live.effective?.settings.support.emergencyPhone === PLACEHOLDER_EMERGENCY_PHONE ? (
+        <div className="mb-4 max-w-3xl">
+          <Notice tone="error">
+            The emergency line is still the app's placeholder ({PLACEHOLDER_EMERGENCY_PHONE}). Every
+            job screen offers to call it.{' '}
+            {canEdit ? 'Set the real number under Edit.' : 'Ask an admin to set the real number.'}
+          </Notice>
+        </div>
+      ) : null}
 
       {live.status === 'loading' ? (
         <div className="grid gap-4 lg:grid-cols-2">
@@ -151,6 +162,18 @@ export function SettingsPage() {
                   [
                     'Each broadcast window',
                     `${live.effective.settings.broadcast.windowMs / 1000} seconds`,
+                  ],
+                ]}
+              />
+            </Panel>
+            <Panel title="Support contacts (shown in the app)" index={2}>
+              <Rows
+                rows={[
+                  ['Emergency line', live.effective.settings.support.emergencyPhone],
+                  ['Support email', live.effective.settings.support.email],
+                  [
+                    'Request catalogue',
+                    `${live.effective.settings.catalogue.length} items across ${new Set(live.effective.settings.catalogue.map((c) => c.service)).size} faults`,
                   ],
                 ]}
               />

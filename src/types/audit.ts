@@ -18,6 +18,8 @@ export type AuditAction =
   | 'mechanic.vetting.approve'
   | 'mechanic.vetting.reject'
   | 'mechanic.vetting.suspend'
+  /** reviewDocument: a mechanic's uploaded document was verified or rejected. */
+  | 'mechanic.document.review'
   /** flagDispute / resolveDispute (customer support). */
   | 'job.dispute.open'
   | 'job.dispute.resolve'

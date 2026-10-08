@@ -2,6 +2,7 @@ import { initializeApp, type FirebaseApp } from 'firebase/app';
 import { connectAuthEmulator, getAuth } from 'firebase/auth';
 import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
 import { connectFunctionsEmulator, getFunctions } from 'firebase/functions';
+import { connectStorageEmulator, getStorage } from 'firebase/storage';
 
 import { env } from '@/lib/env';
 
@@ -17,10 +18,15 @@ let app: FirebaseApp | undefined;
 export function getFirebaseApp(): FirebaseApp {
   if (app) return app;
   if (env.useEmulators) {
-    app = initializeApp({ projectId: EMULATOR_PROJECT_ID, apiKey: 'demo-key' });
+    app = initializeApp({
+      projectId: EMULATOR_PROJECT_ID,
+      apiKey: 'demo-key',
+      storageBucket: `${EMULATOR_PROJECT_ID}.appspot.com`,
+    });
     connectAuthEmulator(getAuth(app), 'http://127.0.0.1:9099', { disableWarnings: true });
     connectFirestoreEmulator(getFirestore(app), '127.0.0.1', 8080);
     connectFunctionsEmulator(getFunctions(app, env.functionsRegion), '127.0.0.1', 5001);
+    connectStorageEmulator(getStorage(app), '127.0.0.1', 9199);
     return app;
   }
   if (!env.firebase.apiKey || !env.firebase.appId) {
