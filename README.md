@@ -133,6 +133,22 @@ only; the app never reads it) and name the exact file reviewed, so a re-upload s
 required documents stand; approving remains the operator's call. Files are fetched as blobs
 under the staff member's own auth (no shareable download URLs).
 
+### Storage CORS
+
+Because files are downloaded inside the browser, the bucket must allow the dashboard's origins.
+Firebase buckets ship with no CORS rule, and without one the document frames fail with "the
+browser could not download it". The rule lives in `firebase/storage.cors.json` (GET only, from
+the Hosting domains and the Vite dev server). Apply it once, as the project owner (Firebase
+deploys do not carry it):
+
+```bash
+gcloud storage buckets update gs://auto-rafiki.firebasestorage.app \
+  --cors-file=firebase/storage.cors.json --account=<owner account>
+```
+
+Check it with `gcloud storage buckets describe gs://auto-rafiki.firebasestorage.app
+--format="default(cors_config)"`. Add an origin there if the dashboard gains a custom domain.
+
 ## Interventions
 
 On a job page, admin and ops can **widen the search** (same or wider radius up to 30 km, with a

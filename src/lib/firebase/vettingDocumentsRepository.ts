@@ -54,7 +54,16 @@ export class FirebaseVettingDocumentsRepository implements VettingDocumentsRepos
    * it, while a blob is fetched under the staff member's own auth and lives only in this tab.
    */
   async loadFile(storagePath: string, contentType: string): Promise<LoadedFile> {
-    const blob = await getBlob(ref(getStorage(getFirebaseApp()), storagePath));
+    const storage = getStorage(getFirebaseApp());
+    // The SDK's default is to retry a failed download for two minutes, which shows as an
+    // endless skeleton when the browser blocks the request (bucket CORS missing).
+    storage.maxOperationRetryTime = 15_000;
+    let blob: Blob;
+    try {
+      blob = await getBlob(ref(storage, storagePath));
+    } catch (error) {
+      throw new Error(fileErrorMessage(error), { cause: error });
+    }
     const url = URL.createObjectURL(blob);
     return { url, contentType, revoke: () => URL.revokeObjectURL(url) };
   }
@@ -71,4 +80,15 @@ export class FirebaseVettingDocumentsRepository implements VettingDocumentsRepos
       });
     }
   }
+}
+
+function fileErrorMessage(error: unknown): string {
+  const code = (error as { code?: string }).code ?? '';
+  if (code === 'storage/unauthorized') return 'your account is not allowed to read this file.';
+  if (code === 'storage/object-not-found') return 'the file is missing from Storage.';
+  // A browser-blocked request surfaces as a retry timeout or an unknown error, never as CORS.
+  if (code === 'storage/retry-limit-exceeded' || code === 'storage/unknown') {
+    return 'the browser could not download it. The Storage bucket probably has no CORS rule for this site (see README → Storage CORS).';
+  }
+  return (error as Error).message || 'unknown error.';
 }

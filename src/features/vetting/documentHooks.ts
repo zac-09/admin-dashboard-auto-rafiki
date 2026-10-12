@@ -30,6 +30,8 @@ export function useDocumentFile(storagePath: string, contentType: string) {
     queryFn: () => vettingDocuments.loadFile(storagePath, contentType),
     staleTime: Infinity,
     gcTime: 0,
+    // The SDK already retries; another three rounds would hide a failure for minutes.
+    retry: false,
   });
   const revoke = query.data?.revoke;
   useEffect(() => () => revoke?.(), [revoke]);
