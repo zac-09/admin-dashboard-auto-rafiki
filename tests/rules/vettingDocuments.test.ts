@@ -124,6 +124,45 @@ describe('app path: mechanics/{uid}/vettingDocuments/{docType}', () => {
     await assertFails(deleteDoc(doc(staff('admin'), path(UID.mechanic, 'national-id'))));
   });
 
+  it('the mechanic reads their own records and lists the subcollection', async () => {
+    const db = appUser(UID.mechanic);
+    await setDoc(doc(db, path(UID.mechanic, 'national-id')), record(UID.mechanic, 'national-id'));
+    await assertSucceeds(getDoc(doc(db, path(UID.mechanic, 'national-id'))));
+    // A type not uploaded yet: the app reads it to learn there is no record.
+    await assertSucceeds(getDoc(doc(db, path(UID.mechanic, 'riding-permit'))));
+    // The app's documents screen listens on the whole subcollection.
+    await assertSucceeds(getDocs(collection(db, `mechanics/${UID.mechanic}/vettingDocuments`)));
+  });
+
+  it("other app users cannot get or list a mechanic's records; anonymous cannot either", async () => {
+    await setDoc(
+      doc(appUser(UID.mechanic), path(UID.mechanic, 'national-id')),
+      record(UID.mechanic, 'national-id'),
+    );
+    for (const other of [UID.customer, UID.otherMechanic]) {
+      const db = appUser(other);
+      await assertFails(getDoc(doc(db, path(UID.mechanic, 'national-id'))));
+      await assertFails(getDocs(collection(db, `mechanics/${UID.mechanic}/vettingDocuments`)));
+    }
+    const anon = anonymous();
+    await assertFails(getDoc(doc(anon, path(UID.mechanic, 'national-id'))));
+    await assertFails(getDocs(collection(anon, `mechanics/${UID.mechanic}/vettingDocuments`)));
+  });
+
+  it("the app's full sequence for one document: read, create v1, read, update to v2", async () => {
+    const db = appUser(UID.pendingMechanic);
+    const ref = doc(db, path(UID.pendingMechanic, 'national-id'));
+    const before = await assertSucceeds(getDoc(ref));
+    expect(before.exists()).toBe(false);
+    await assertSucceeds(setDoc(ref, record(UID.pendingMechanic, 'national-id', 1, 'f1')));
+    const current = await assertSucceeds(getDoc(ref));
+    expect(current.data()?.version).toBe(1);
+    await assertSucceeds(
+      setDoc(ref, record(UID.pendingMechanic, 'national-id', current.data()!.version + 1, 'f2')),
+    );
+    expect((await getDoc(ref)).data()?.version).toBe(2);
+  });
+
   it('staff read the records; other app users and anonymous cannot', async () => {
     await setDoc(
       doc(appUser(UID.mechanic), path(UID.mechanic, 'national-id')),

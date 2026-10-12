@@ -88,7 +88,9 @@ service cloud.firestore {
     // of each type (contract shared with the app, 2026-10-08). The mechanic writes exactly the
     // six contract fields for their own uid; the document id is the type. No status or review
     // field can ever land here: reviews are the dashboard's, in a collection the app cannot
-    // read. Staff read via the dashboard rule below; nobody deletes.
+    // read. The mechanic reads their own records (the app shows Uploaded / Not uploaded per
+    // type and reads the current version before writing the next); staff read via the
+    // dashboard rule below; nobody deletes.
     match /mechanics/{userId}/vettingDocuments/{docType} {
       function validDocument() {
         return request.resource.data.keys().hasOnly(
@@ -107,6 +109,7 @@ service cloud.firestore {
           && request.resource.data.version is int
           && request.resource.data.version >= 1;
       }
+      allow read: if isSelf(userId);
       allow create: if isSelf(userId) && validDocument()
         && request.resource.data.version == 1;
       // A re-upload: a new object and the next version, never a rollback.
