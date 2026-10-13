@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { lazy, Suspense, useState, type ReactNode } from 'react';
 import { Link, useParams } from 'react-router';
 
 import { Reveal, staggerDelay, SuccessMoment } from '@/components/motion';
@@ -9,6 +9,10 @@ import { useSession } from '@/lib/session';
 import { useDocumentTitle } from '@/lib/useDocumentTitle';
 import { ASSESSMENT_CHECKLIST } from '@/lib/vetting';
 import type { MechanicDoc } from '@/types';
+
+const MechanicScorecard = lazy(() =>
+  import('@/features/insights/MechanicScorecard').then((m) => ({ default: m.MechanicScorecard })),
+);
 
 import { auditEntryLabel } from './auditLabels';
 import { DecisionForm } from './DecisionForm';
@@ -194,6 +198,14 @@ export function MechanicDetailPage() {
               </Field>
             </dl>
           </Panel>
+
+          {m.vetting !== 'pending' || m.jobsCompleted > 0 ? (
+            <Panel title="Performance">
+              <Suspense fallback={<SkeletonLines lines={4} />}>
+                <MechanicScorecard mechanic={m} />
+              </Suspense>
+            </Panel>
+          ) : null}
 
           <Panel title="Documents">
             <DocumentsPanel mechanic={m} />

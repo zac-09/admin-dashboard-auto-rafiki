@@ -10,10 +10,11 @@ export const revenueKeys = {
 };
 
 /** Everything the tracker needs: mechanics, their vetting history, every payment so far. */
-export function useSubscriptionInputs() {
+export function useSubscriptionInputs(enabled = true) {
   const repos = useRepositories();
   return useQuery({
     queryKey: revenueKeys.payments,
+    enabled,
     queryFn: async () => {
       const current = weekStartOf(new Date());
       const [mechanics, entries, payments] = await Promise.all([

@@ -25,6 +25,9 @@ export const PersonPage = lazy(() =>
 export const RevenuePage = lazy(() =>
   import('@/features/revenue/RevenuePage').then((m) => ({ default: m.RevenuePage })),
 );
+export const InsightsPage = lazy(() =>
+  import('@/features/insights/InsightsPage').then((m) => ({ default: m.InsightsPage })),
+);
 export const SettingsPage = lazy(() =>
   import('@/features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })),
 );

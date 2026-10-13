@@ -1,6 +1,6 @@
 import { env } from '@/lib/env';
 import { createFirebaseRepositories } from '@/lib/firebase';
-import { createMockRepositories } from '@/lib/mocks';
+import { createMockRepositories, MockOperationsStore } from '@/lib/mocks';
 import type { Repositories } from '@/types';
 
 let instance: Repositories | null = null;
@@ -13,7 +13,9 @@ export function getRepositories(): Repositories {
   if (!instance) {
     // `import.meta.env.DEV` is a build-time constant, so production bundles drop the mocks.
     instance =
-      import.meta.env.DEV && env.useMocks ? createMockRepositories() : createFirebaseRepositories();
+      import.meta.env.DEV && env.useMocks
+        ? createMockRepositories(new MockOperationsStore(new Date(), { history: true }))
+        : createFirebaseRepositories();
   }
   return instance;
 }

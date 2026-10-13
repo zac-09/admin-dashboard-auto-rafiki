@@ -16,6 +16,7 @@ import type {
 } from '@/types';
 
 import { FIXTURE_NOW, JOBS, RATINGS, shiftIso, shiftJob, USERS } from './contractFixtures';
+import { generateHistory } from './historyFixtures';
 import type { MockVettingStore } from './mockVettingRepositories';
 
 type Listener = () => void;
@@ -29,11 +30,17 @@ export class MockOperationsStore {
   /** How far fixture times were moved so FIXTURE_NOW reads as "now". */
   readonly offset: number;
 
-  constructor(now: Date = new Date()) {
+  /** `history`: add ten weeks of past jobs (dev mock mode; tests opt in). */
+  constructor(now: Date = new Date(), options: { history?: boolean } = {}) {
     const offset = now.getTime() - FIXTURE_NOW.getTime();
     this.offset = offset;
     for (const job of JOBS) this.jobs.set(job.id, shiftJob(structuredClone(job), offset));
     this.ratings = RATINGS.map((r) => ({ ...r, createdAt: shiftIso(r.createdAt, offset) }));
+    if (options.history) {
+      const history = generateHistory(now);
+      for (const job of history.jobs) this.jobs.set(job.id, job);
+      this.ratings.push(...history.ratings);
+    }
   }
 
   /** Insert or replace a job and notify every live subscription (like a Firestore write). */

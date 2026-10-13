@@ -45,6 +45,9 @@ export default defineConfig({
           globals: true,
           include: ['src/**/*.test.{ts,tsx}'],
           setupFiles: ['src/test/setup.ts'],
+          // Typing-heavy UI tests take ~1 s alone but can pass 5 s when every file runs in
+          // parallel on a busy laptop. A timeout is not an assertion; outcomes are.
+          testTimeout: 15_000,
         },
       },
       {

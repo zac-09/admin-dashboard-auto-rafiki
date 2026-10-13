@@ -199,6 +199,32 @@ the weeks. Each row has a call link and a ready-made reminder (weeks and total, 
 details) as a WhatsApp link, an SMS link and a copy button. Recording a payment clears the
 row. Suggesting suspension after N unpaid weeks waits for an agreed rule.
 
+## Insights
+
+`/insights` (admin and ops) reads ten weeks of jobs, ratings, vetting history and payments
+once per visit (no live listeners, no new indexes) and answers four questions:
+
+- **Trends**: week by week (Kampala Mondays), jobs per mechanic per week, median request to
+  arrival against the 30-minute target, subscriptions collected and the share of requests
+  nobody took. The current week is drawn hollow (so far, not final); every chart has a
+  "Show the numbers" table.
+- **Coverage gaps**: requests that ended cancelled without ever being matched, grouped into
+  areas of about 2 km, ranked worst first, with the distance to the nearest verified
+  mechanic. The app keeps only each mechanic's latest location, so mechanic positions are
+  where they are now, not where they were at the time.
+- **Demand by hour**: requests and unanswered requests by weekday and hour, plus the three
+  hours that most need more mechanics online.
+- **Mechanic scorecards**: a ranked table (also a Performance panel on each mechanic's page)
+  with jobs per week, request-to-arrival, lateness, cancellations, the 30-day rating and its
+  trend, subscription arrears, and signals (top performer, often late, cancels often, rating
+  falling or low, payment overdue; thresholds in `src/features/insights/scorecard.ts`).
+  Lateness compares travel time (set off to arrival) with the app's own estimate for the
+  `distanceKm` driven (18 km/h), because the app does not store the ETA it shows. Acceptance
+  per mechanic is not measurable: the app does not record who saw a broadcast.
+
+In mock mode the dev server adds ten weeks of deterministic history
+(`src/lib/mocks/historyFixtures.ts`) so these views have something to show; tests opt in.
+
 ## Settings
 
 `/settings` shows the prices and broadcast values the app is actually using, live: the
