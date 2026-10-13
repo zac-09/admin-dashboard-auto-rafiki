@@ -4,7 +4,9 @@ import { Outlet, useLocation } from 'react-router';
 
 import { Reveal, springs, timings } from '@/components/motion';
 import { WheelMark } from '@/components/ui';
+import { AlertNotifier } from '@/features/operations/notifications/AlertNotifier';
 import { CommandPalette } from '@/features/support/CommandPalette';
+import { can } from '@/lib/permissions';
 import type { AdminSession } from '@/types';
 
 import { Sidebar } from './Sidebar';
@@ -88,6 +90,7 @@ export function AppShell({ session }: { session: AdminSession }) {
       </AnimatePresence>
 
       <CommandPalette />
+      {can(session.role, 'operations.view') ? <AlertNotifier /> : null}
 
       <main className="min-w-0 p-4 md:p-8">
         {/* Each page settles in like the app's screens; tabs within a page do not re-trigger. */}

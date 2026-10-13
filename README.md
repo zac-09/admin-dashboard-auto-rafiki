@@ -159,6 +159,15 @@ way (the app's own state machine; written as `cancelledBy: 'admin'`, which the a
 `rebroadcastJob` are audited callables that also leave a note on the job. Stale requests on the
 alert rail have a one-click "Widen search".
 
+### Desktop alerts
+
+"Desktop alerts" on the alert rail turns on browser notifications for this computer (the
+choice is remembered per browser). While any dashboard tab is open, a new stale request,
+late mechanic or low rating pops up even when the operator is on another page or another
+app; clicking it opens the job. Each alert notifies once; several at once become one
+summary; nothing pops up while the operator is looking at the control room. There is no
+push service: with every dashboard tab closed, nothing arrives.
+
 ## Customer support
 
 `/support` searches by phone (any Ugandan format), job id or business name, also from anywhere

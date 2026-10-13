@@ -9,6 +9,7 @@ import { can } from '@/lib/permissions';
 import { useSession } from '@/lib/session';
 
 import { ratingDirection, type Alert } from './alerts';
+import { DesktopAlertsToggle } from './notifications/DesktopAlertsToggle';
 import { formatDuration } from './jobTime';
 
 function AlertItem({ alert }: { alert: Alert }) {
@@ -56,10 +57,13 @@ export function AlertRail({ alerts }: { alerts: readonly Alert[] }) {
   return (
     <section aria-label="Alerts" className="panel p-4">
       <h2 className="micro-label mb-3 flex items-center justify-between">
-        <span>Alerts</span>
-        <Pop trigger={alerts.length}>
-          <AnimatedNumber value={alerts.length} />
-        </Pop>
+        <span className="flex items-center gap-3">
+          <span>Alerts</span>
+          <Pop trigger={alerts.length}>
+            <AnimatedNumber value={alerts.length} />
+          </Pop>
+        </span>
+        <DesktopAlertsToggle />
       </h2>
       {alerts.length === 0 ? (
         <p className="flex items-center gap-3 text-sm text-muted">
