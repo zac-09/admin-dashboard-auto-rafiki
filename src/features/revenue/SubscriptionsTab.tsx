@@ -21,9 +21,11 @@ import {
 } from '@/lib/subscriptions';
 import { PAYMENT_METHOD_LABELS } from '@/types';
 
+import { overdueAccounts } from './collections';
 import { subscriptionsCsv } from './exports';
 import { useSubscriptionInputs } from './hooks';
 import { MarkPaidForm } from './MarkPaidForm';
+import { OverduePanel } from './OverduePanel';
 import { VoidPaymentForm } from './VoidPaymentForm';
 import { SubscriptionStatus } from './StatusBadge';
 
@@ -254,6 +256,8 @@ export function SubscriptionsTab() {
             : `Outstanding across all weeks: ${formatUgx(arrears * WEEKLY_FEE)} (${arrears} ${arrears === 1 ? 'week' : 'weeks'}).`}
         </p>
       </section>
+
+      <OverduePanel accounts={overdueAccounts(mechanics, entries, payments, now)} />
 
       {summary.rows.length === 0 ? (
         <Reveal className="panel p-6 text-sm text-muted">

@@ -73,6 +73,43 @@ describe('subscription tracker', () => {
   });
 });
 
+describe('collecting overdue payments', () => {
+  it('lists who to chase with call, WhatsApp and SMS reminders', async () => {
+    await openAs('ops', '/revenue');
+    const panel = await screen.findByRole('region', { name: 'Overdue payments' });
+    expect(panel).toHaveTextContent('UGX 15,000 from 1 mechanic');
+    const list = within(panel).getByRole('list', { name: 'Mechanics to remind' });
+    const item = within(list).getByRole('listitem');
+    expect(item).toHaveTextContent(
+      /Okello Auto Rescue.*UGX 15,000 · 1 week overdue.*5–11 Oct 2026/,
+    );
+    expect(within(item).getByRole('link', { name: 'Call +256701987654' })).toHaveAttribute(
+      'href',
+      'tel:+256701987654',
+    );
+    const wa = within(item).getByRole('link', { name: 'WhatsApp reminder' });
+    expect(wa.getAttribute('href')).toMatch(/^https:\/\/wa\.me\/256701987654\?text=Hello%20Okello/);
+    expect(within(item).getByRole('link', { name: 'SMS reminder' })).toHaveAttribute(
+      'href',
+      expect.stringMatching(/^sms:\+256701987654\?body=/),
+    );
+  });
+
+  it('a payment clears the mechanic from the list', async () => {
+    const user = await openAs('admin', '/revenue');
+    const list = await screen.findByRole('list', { name: /Subscriptions for/ });
+    await user.click(within(list).getByRole('button', { name: 'Mark paid' }));
+    const form = screen.getByRole('form', { name: 'Record payment for Okello Auto Rescue' });
+    await user.click(within(form).getByRole('radio', { name: 'Cash' }));
+    await user.click(within(form).getByRole('button', { name: 'Record UGX 15,000 paid' }));
+    expect(
+      await within(screen.getByRole('region', { name: 'Overdue payments' })).findByText(
+        'Nobody is overdue.',
+      ),
+    ).toBeInTheDocument();
+  });
+});
+
 describe('KPIs', () => {
   it('shows the seven cards for the window', async () => {
     const user = await openAs('ops', '/revenue?view=kpis');

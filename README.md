@@ -182,6 +182,14 @@ A payment recorded by mistake is **voided** (`voidSubscriptionPayment`, admin/op
 record is kept with who voided it and why, the week counts as unpaid again, and a correct
 payment can be recorded over it. Nothing in the audit trail is ever deleted.
 
+### Collecting overdue payments
+
+The Subscriptions tab opens with a "To collect" list: every mechanic carrying overdue weeks
+(earlier unpaid weeks, plus this week from Thursday), most weeks first, with the amount and
+the weeks. Each row has a call link and a ready-made reminder (weeks and total, no payee
+details) as a WhatsApp link, an SMS link and a copy button. Recording a payment clears the
+row. Suggesting suspension after N unpaid weeks waits for an agreed rule.
+
 ## Settings
 
 `/settings` shows the prices and broadcast values the app is actually using, live: the
