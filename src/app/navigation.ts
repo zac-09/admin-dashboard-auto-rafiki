@@ -33,6 +33,11 @@ export const NAV_ITEMS: readonly NavItem[] = [
     permission: 'settings.view',
   },
   {
+    to: '/audit',
+    label: 'Audit log',
+    permission: 'audit.view',
+  },
+  {
     to: '/staff',
     label: 'Staff',
     permission: 'staff.manage',

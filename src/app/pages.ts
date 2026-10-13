@@ -28,6 +28,9 @@ export const RevenuePage = lazy(() =>
 export const SettingsPage = lazy(() =>
   import('@/features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })),
 );
+export const AuditLogPage = lazy(() =>
+  import('@/features/audit/AuditLogPage').then((m) => ({ default: m.AuditLogPage })),
+);
 export const StaffPage = lazy(() =>
   import('@/features/staff/StaffPage').then((m) => ({ default: m.StaffPage })),
 );

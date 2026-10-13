@@ -61,6 +61,17 @@ export class FirestoreAuditRepository implements AuditRepository {
     );
     return snapshot.docs.map((d) => ({ ...(d.data() as AuditEntry), id: d.id }));
   }
+
+  /** Single-field ordering on `at`: covered by Firestore's automatic index. */
+  async listEntries(sinceIso: string | null): Promise<AuditEntry[]> {
+    const log = collection(db(), AUDIT_COLLECTION);
+    const snapshot = await getDocs(
+      sinceIso === null
+        ? query(log, orderBy('at', 'desc'))
+        : query(log, where('at', '>=', sinceIso), orderBy('at', 'desc')),
+    );
+    return snapshot.docs.map((d) => ({ ...(d.data() as AuditEntry), id: d.id }));
+  }
 }
 
 export class CallableVettingRepository implements VettingRepository {

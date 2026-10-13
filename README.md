@@ -199,6 +199,15 @@ customers tap; ids are stored on jobs, so the editor adds and relabels items but
 a published one, and `updateSettings` refuses a publish that would). Job cards and job pages show
 a request's catalogue items as labels, falling back to the raw id for an unknown one.
 
+## Audit log
+
+`/audit` (admin and ops) lists every audited decision in one place: vetting, document
+reviews, interventions, disputes, payments and voids, settings and staff changes. Filter by
+action, by staff member and by free text (subject, job id, reason, before/after values) over
+the last 7, 30 or 90 days or all time; filters live in the URL, so a filtered view can be
+shared. Each entry links to its subject. The query orders `auditLog` by `at` only, which
+Firestore's automatic single-field index covers.
+
 ## Motion and loading states
 
 Ported from the app's motion system so both feel the same (`src/components/motion`):

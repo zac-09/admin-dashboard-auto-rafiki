@@ -37,7 +37,7 @@ describe('role-gated shell', () => {
       within(nav)
         .getAllByRole('link')
         .map((l) => l.textContent),
-    ).toEqual(['Vetting', 'Operations', 'Support', 'Revenue', 'Settings', 'Staff']);
+    ).toEqual(['Vetting', 'Operations', 'Support', 'Revenue', 'Settings', 'Audit log', 'Staff']);
     expect(within(nav).getByRole('link', { name: 'Vetting' })).toHaveAttribute(
       'aria-current',
       'page',

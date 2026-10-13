@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
 
 import {
+  AuditLogPage,
   JobDetailPage,
   MechanicDetailPage,
   OperationsPage,
@@ -87,6 +88,14 @@ export const routes: RouteObject[] = [
         element: (
           <RequirePermission permission="staff.manage">
             <StaffPage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: '/audit',
+        element: (
+          <RequirePermission permission="audit.view">
+            <AuditLogPage />
           </RequirePermission>
         ),
       },

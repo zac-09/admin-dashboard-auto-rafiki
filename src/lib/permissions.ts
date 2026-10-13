@@ -20,7 +20,11 @@ export type Permission =
   | 'settings.view'
   | 'settings.edit'
   /** List staff, invite, change roles. */
-  | 'staff.manage';
+  | 'staff.manage'
+  /** The full audit log page (every decision, by anyone). */
+  | 'audit.view'
+  /** Trends, coverage, demand and mechanic scorecards. */
+  | 'insights.view';
 
 const MATRIX: Record<AdminRole, readonly Permission[]> = {
   admin: [
@@ -35,6 +39,8 @@ const MATRIX: Record<AdminRole, readonly Permission[]> = {
     'settings.view',
     'settings.edit',
     'staff.manage',
+    'audit.view',
+    'insights.view',
   ],
   ops: [
     'vetting.view',
@@ -46,6 +52,8 @@ const MATRIX: Record<AdminRole, readonly Permission[]> = {
     'revenue.view',
     'revenue.markPaid',
     'settings.view',
+    'audit.view',
+    'insights.view',
   ],
   support: ['vetting.view', 'operations.view', 'support.view', 'support.annotate', 'settings.view'],
 };

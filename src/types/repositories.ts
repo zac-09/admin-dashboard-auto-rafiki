@@ -42,6 +42,8 @@ export interface MechanicRepository {
 export interface AuditRepository {
   /** Every audit entry about a mechanic, newest first. */
   listMechanicEntries(): Promise<AuditEntry[]>;
+  /** Every entry at or after `sinceIso` (all time when null), newest first. */
+  listEntries(sinceIso: string | null): Promise<AuditEntry[]>;
 }
 
 export interface VettingRepository {

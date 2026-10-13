@@ -74,6 +74,13 @@ export class MockAuditRepository implements AuditRepository {
       .sort((a, b) => b.at.localeCompare(a.at))
       .map((e) => structuredClone(e));
   }
+
+  async listEntries(sinceIso: string | null): Promise<AuditEntry[]> {
+    return this.store.audit
+      .filter((e) => sinceIso === null || e.at >= sinceIso)
+      .sort((a, b) => b.at.localeCompare(a.at))
+      .map((e) => structuredClone(e));
+  }
 }
 
 /** Mirrors the decideVetting callable's rules (functions/src/decideVetting.ts). */
