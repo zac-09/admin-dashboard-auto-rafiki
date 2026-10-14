@@ -158,6 +158,26 @@ application to first approval over the last 90 days. Applicants who still owe a 
 had one rejected) get call, WhatsApp and SMS nudges naming exactly what to upload. Documents
 and reviews are read once per visit, one mechanic at a time (fine at pilot scale).
 
+## App contract, 2026-10-14 (rules ready; the app builds against them)
+
+Rules and emulator tests (`tests/rules/appContract20261014.test.ts`) for paths agreed with the
+app, deployed with `firestore:rules` before the app ships them:
+
+- `mechanics/{uid}/availability/{eventId}`: the mechanic appends `{event: 'online' | 'offline'
+  | 'ping', at, location?}` (location required except when going offline). Append-only; staff
+  read. Feeds online hours and coverage over time.
+- `mechanics/{uid}/inbox/{messageId}`: messages from operations, written by a dashboard
+  callable (Admin SDK) as `{title, body, sentAt, readAt: null}`. The mechanic reads their own
+  and sets `readAt` once.
+- `jobs/{jobId}/offers/{mechanicId}`: who each broadcast reached, written by the app's
+  `alertMechanics` (Admin SDK). The mechanic reads their own and sets `openedAt` and
+  `declinedAt` once each; customers never see offers.
+- Existing paths, now pinned by tests: the mechanic writes `etaMinutes` when setting off; a
+  request may carry `request.vehiclePlate`.
+
+The dashboard screens that read these (messages composer, online hours, acceptance per
+mechanic, plate search) follow once the app writes them.
+
 ## Interventions
 
 On a job page, admin and ops can **widen the search** (same or wider radius up to 30 km, with a

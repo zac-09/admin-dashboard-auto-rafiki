@@ -118,6 +118,41 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // mechanics/{uid}/availability/{eventId}: the mechanic's own going-online / going-offline
+    // log, plus a position ping every 15 minutes while online (contract shared with the app,
+    // 2026-10-14). Append-only; the dashboard reads it for online hours and coverage over time.
+    match /mechanics/{userId}/availability/{eventId} {
+      function validPlace(p) {
+        return p is map
+          && p.keys().hasOnly(['latitude', 'longitude', 'label'])
+          && p.keys().hasAll(['latitude', 'longitude'])
+          && p.latitude is number && p.longitude is number
+          && (!('label' in p) || (p.label is string && p.label.size() <= 120));
+      }
+      allow create: if isSelf(userId)
+        && request.resource.data.keys().hasOnly(['event', 'at', 'location'])
+        && request.resource.data.keys().hasAll(['event', 'at'])
+        && request.resource.data.event in ['online', 'offline', 'ping']
+        && request.resource.data.at is string
+        && request.resource.data.at.size() <= 40
+        && (request.resource.data.event == 'offline'
+          ? (!('location' in request.resource.data) || validPlace(request.resource.data.location))
+          : ('location' in request.resource.data && validPlace(request.resource.data.location)));
+      allow update, delete: if false;
+    }
+
+    // mechanics/{uid}/inbox/{messageId}: messages from AutoRafiki operations, written by the
+    // dashboard's sendMechanicMessage callable (Admin SDK). The mechanic reads their own and
+    // may only mark one read, once.
+    match /mechanics/{userId}/inbox/{messageId} {
+      allow read: if isSelf(userId);
+      allow update: if isSelf(userId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readAt'])
+        && resource.data.get('readAt', null) == null
+        && request.resource.data.readAt is string;
+      allow create, delete: if false;
+    }
+
     // jobs/{jobId}
     match /jobs/{jobId} {
       function isJobCustomer() {
@@ -173,6 +208,20 @@ service cloud.firestore {
         && request.resource.data.radiusKm <= 30;
 
       allow delete: if false;
+
+      // jobs/{jobId}/offers/{mechanicId}: who the broadcast reached (written by the app's
+      // alertMechanics function, Admin SDK). The mechanic reads their own offer and records,
+      // once each, that they opened it or turned it down. Customers never see offers.
+      match /offers/{mechanicId} {
+        allow read: if signedIn() && request.auth.uid == mechanicId;
+        allow update: if signedIn() && request.auth.uid == mechanicId
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['openedAt', 'declinedAt'])
+          && (!('openedAt' in request.resource.data.diff(resource.data).affectedKeys())
+            || (resource.data.get('openedAt', null) == null && request.resource.data.openedAt is string))
+          && (!('declinedAt' in request.resource.data.diff(resource.data).affectedKeys())
+            || (resource.data.get('declinedAt', null) == null && request.resource.data.declinedAt is string));
+        allow create, delete: if false;
+      }
 
       // jobs/{jobId}/messages/{messageId}: only the two parties on the job read and write;
       // a message is immutable and must be sent as yourself with the role you hold on the job.
