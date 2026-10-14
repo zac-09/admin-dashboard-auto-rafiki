@@ -173,8 +173,13 @@ export function MechanicDetailPage() {
           <h1 className="text-xl font-semibold">{m.businessName || 'Unnamed business'}</h1>
           <VettingStatusBadge status={m.vetting} />
         </div>
-        <span className="text-sm">
+        <span className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
           <PhoneLink phone={m.phone} />
+          {can(session?.role, 'mechanics.message') ? (
+            <Link to={`/messages?to=${m.userId}`} className="underline">
+              Message this mechanic
+            </Link>
+          ) : null}
         </span>
       </header>
 

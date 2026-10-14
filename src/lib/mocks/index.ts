@@ -6,6 +6,7 @@ import {
   MockOperationsStore,
   MockPeopleRepository,
 } from './mockOperationsRepository';
+import { MockMessagesRepository } from './mockMessagesRepository';
 import { MockRevenueRepository } from './mockRevenueRepository';
 import { MockSettingsRepository } from './mockSettingsRepository';
 import { MockStaffRepository } from './mockStaffRepository';
@@ -48,5 +49,6 @@ export function createMockRepositories(
     staff: new MockStaffRepository(auth),
     settings,
     vettingDocuments: new MockVettingDocumentsRepository(store, auth),
+    messages: new MockMessagesRepository(store, auth),
   };
 }

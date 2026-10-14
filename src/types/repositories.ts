@@ -1,3 +1,4 @@
+import type { Audience, OpsMessage } from '../lib/mechanicMessages';
 import type { DecideVettingInput, DecideVettingResult, VettingStatus } from '../lib/vetting';
 
 import type { AdminSession } from './admin';
@@ -200,6 +201,24 @@ export interface VettingDocumentsRepository {
   review(input: ReviewDocumentInput): Promise<void>;
 }
 
+/** Messages from operations to mechanics (inbox + push). */
+export interface MessagesRepository {
+  /** The audited sendMechanicMessage callable. */
+  send(input: { title: string; body: string; audience: Audience }): Promise<SendMessageResult>;
+  /** What was sent, newest first (the latest 50). */
+  listSent(): Promise<OpsMessage[]>;
+  /** How many recipients have opened it (reads each inbox copy). */
+  readCount(message: Pick<OpsMessage, 'id' | 'recipientIds'>): Promise<number>;
+}
+
+export interface SendMessageResult {
+  id: string;
+  recipients: number;
+  pushed: number;
+  pushFailed: number;
+  withoutPush: number;
+}
+
 export interface Repositories {
   auth: AuthRepository;
   mechanics: MechanicRepository;
@@ -212,4 +231,5 @@ export interface Repositories {
   staff: StaffRepository;
   settings: SettingsRepository;
   vettingDocuments: VettingDocumentsRepository;
+  messages: MessagesRepository;
 }

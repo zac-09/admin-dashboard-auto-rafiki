@@ -31,6 +31,9 @@ export const InsightsPage = lazy(() =>
 export const WeeklyReportPage = lazy(() =>
   import('@/features/insights/WeeklyReportPage').then((m) => ({ default: m.WeeklyReportPage })),
 );
+export const MessagesPage = lazy(() =>
+  import('@/features/messages/MessagesPage').then((m) => ({ default: m.MessagesPage })),
+);
 export const SettingsPage = lazy(() =>
   import('@/features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })),
 );

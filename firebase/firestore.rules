@@ -315,6 +315,13 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // opsMessages/{id}: what operations sent to mechanics (who, to whom, push counts), written
+    // by the sendMechanicMessage callable. Staff read via the rule above; the mechanics' own
+    // copies live in mechanics/{uid}/inbox.
+    match /opsMessages/{messageId} {
+      allow read, write: if false;
+    }
+
     // settings/app: prices and broadcast values the app reads live (falling back to its
     // compiled defaults when missing). Any signed-in app user may read this one document;
     // only the audited updateSettings callable writes it. Nothing else under settings/ is

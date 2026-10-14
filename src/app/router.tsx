@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
 import {
   AuditLogPage,
   InsightsPage,
+  MessagesPage,
   WeeklyReportPage,
   JobDetailPage,
   MechanicDetailPage,
@@ -82,6 +83,14 @@ export const routes: RouteObject[] = [
         element: (
           <RequirePermission permission="insights.view">
             <InsightsPage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: '/messages',
+        element: (
+          <RequirePermission permission="mechanics.message">
+            <MessagesPage />
           </RequirePermission>
         ),
       },

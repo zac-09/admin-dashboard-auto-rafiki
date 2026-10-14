@@ -40,6 +40,7 @@ describe('role-gated shell', () => {
     ).toEqual([
       'Vetting',
       'Operations',
+      'Messages',
       'Support',
       'Revenue',
       'Insights',

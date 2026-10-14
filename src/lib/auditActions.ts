@@ -16,6 +16,7 @@ export const AUDIT_ACTION_LABELS: Record<AuditAction, string> = {
   'subscription.paid': 'Payment recorded',
   'subscription.void': 'Payment voided',
   'settings.update': 'Settings published',
+  'mechanic.message.send': 'Message sent to mechanics',
 };
 
 /** Groups for the filter, in the order the sidebar lists the modules. */
@@ -29,7 +30,7 @@ export const AUDIT_ACTION_GROUPS: { label: string; actions: AuditAction[] }[] = 
       'mechanic.document.review',
     ],
   },
-  { label: 'Operations', actions: ['job.cancel', 'job.rebroadcast'] },
+  { label: 'Operations', actions: ['job.cancel', 'job.rebroadcast', 'mechanic.message.send'] },
   { label: 'Support', actions: ['job.dispute.open', 'job.dispute.resolve'] },
   { label: 'Revenue', actions: ['subscription.paid', 'subscription.void'] },
   {
@@ -44,6 +45,7 @@ const TARGET_LABELS: Record<AuditTargetType, string> = {
   job: 'Job',
   subscription: 'Subscription',
   settings: 'Settings',
+  message: 'Message',
 };
 
 export function auditTargetType(type: AuditTargetType): string {
@@ -63,6 +65,8 @@ export function auditTargetPath(entry: Pick<AuditEntry, 'targetType' | 'targetId
       return '/settings';
     case 'staff':
       return '/staff';
+    case 'message':
+      return '/messages';
   }
 }
 

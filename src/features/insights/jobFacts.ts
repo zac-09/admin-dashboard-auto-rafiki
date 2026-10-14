@@ -51,16 +51,4 @@ export function kampalaSlot(iso: string): { day: number; hour: number } {
   return { day: (local.getUTCDay() + 6) % 7, hour: local.getUTCHours() };
 }
 
-/** Great-circle distance in km. */
-export function haversineKm(
-  a: { latitude: number; longitude: number },
-  b: { latitude: number; longitude: number },
-): number {
-  const toRad = (d: number) => (d * Math.PI) / 180;
-  const dLat = toRad(b.latitude - a.latitude);
-  const dLon = toRad(b.longitude - a.longitude);
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(a.latitude)) * Math.cos(toRad(b.latitude)) * Math.sin(dLon / 2) ** 2;
-  return 2 * 6371 * Math.asin(Math.sqrt(h));
-}
+export { haversineKm } from '@/lib/geo';

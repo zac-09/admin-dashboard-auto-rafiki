@@ -114,6 +114,7 @@ export const MECHANICS: MechanicDoc[] = [
     lastKnownLocation: { ...PLACES.kololo, label: 'Live location' },
     locationUpdatedAt: minutesAgo(0.1),
     calloutFee: 30_000,
+    fcmToken: 'mock-fcm-okello',
   },
   {
     userId: 'u_mech_namukasa',
@@ -129,6 +130,7 @@ export const MECHANICS: MechanicDoc[] = [
     lastKnownLocation: { ...PLACES.nakawa, label: 'Live location' },
     locationUpdatedAt: minutesAgo(0.2),
     calloutFee: 25_000,
+    fcmToken: 'mock-fcm-namukasa',
   },
   {
     userId: 'u_mech_ssempala',

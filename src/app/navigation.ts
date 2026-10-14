@@ -18,6 +18,11 @@ export const NAV_ITEMS: readonly NavItem[] = [
     permission: 'operations.view',
   },
   {
+    to: '/messages',
+    label: 'Messages',
+    permission: 'mechanics.message',
+  },
+  {
     to: '/support',
     label: 'Support',
     permission: 'support.view',

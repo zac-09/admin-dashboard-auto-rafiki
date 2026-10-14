@@ -198,6 +198,20 @@ app; clicking it opens the job. Each alert notifies once; several at once become
 summary; nothing pops up while the operator is looking at the control room. There is no
 push service: with every dashboard tab closed, nothing arrives.
 
+## Messages to mechanics
+
+`/messages` (admin and ops; "Message this mechanic" on each mechanic page) sends a message
+to verified mechanics near one of the worst coverage gaps of the last four weeks (3–15 km),
+to all verified mechanics, or to chosen mechanics of any status. The composer shows how many
+it reaches and how many get a push now. The `sendMechanicMessage` callable writes, in one
+batch, the dashboard record (`opsMessages/{id}`), each recipient's inbox copy
+(`mechanics/{uid}/inbox/{id}`, exactly `{title, body, sentAt, readAt: null}`) and the audit
+entry, then pushes to mechanics with a token on the app's `ops-messages` channel (data
+`{type: 'ops-message', messageId}`). A push outage never loses the message: the inbox copy
+is already written. At most 400 recipients per send (one batch). Dead push tokens are not
+pruned here; `fcmToken` belongs to the app. The emulator skips FCM. Sent messages list who
+sent them, to whom and the push count, and "Who has read it?" counts `readAt` on the copies.
+
 ## Customer support
 
 `/support` searches by phone (any Ugandan format), job id or business name, also from anywhere

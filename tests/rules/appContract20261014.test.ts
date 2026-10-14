@@ -182,3 +182,12 @@ describe('existing job paths the app now uses for the ETA and the plate', () => 
     );
   });
 });
+
+describe('opsMessages (dashboard-only record of messages sent)', () => {
+  it('staff read; app users never; nobody writes directly', async () => {
+    await seed({ 'opsMessages/m1': { title: 't', body: 'b', recipientIds: [UID.mechanic] } });
+    await assertSucceeds(getDoc(doc(staff('support'), 'opsMessages/m1')));
+    await assertFails(getDoc(doc(appUser(UID.mechanic), 'opsMessages/m1')));
+    await assertFails(setDoc(doc(staff('admin'), 'opsMessages/m2'), { title: 'x' }));
+  });
+});

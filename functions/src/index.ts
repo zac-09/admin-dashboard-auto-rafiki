@@ -13,15 +13,18 @@
  * - voidSubscriptionPayment: mark a recorded payment as a mistake (admin, ops; audited)
  * - addSupportNote, flagDispute, resolveDispute: customer support on a job (all roles;
  *   suspending a mechanic as a dispute outcome needs admin or ops; audited)
+ * - sendMechanicMessage: message mechanics, inbox copy + push (admin, ops; audited)
  */
 import { initializeApp } from 'firebase-admin/app';
 import { getAuth, type UserRecord } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
+import { getMessaging } from 'firebase-admin/messaging';
 import { setGlobalOptions } from 'firebase-functions/v2';
 import { onCall } from 'firebase-functions/v2/https';
 
 import { SETTINGS_COLLECTION, SETTINGS_DOC } from '../../src/lib/appSettings';
 import { SERVICE_LABELS } from '../../src/lib/labels';
+import { INBOX, OPS_MESSAGE_CHANNEL, OPS_MESSAGES } from '../../src/lib/mechanicMessages';
 import { AUDIT_COLLECTION } from '../../src/types/audit';
 import { COLLECTIONS } from '../../src/types/firestore';
 import { SUBSCRIPTIONS } from '../../src/types/subscriptions';
@@ -35,6 +38,7 @@ import {
   type InterventionDeps,
 } from './interventions';
 import { markSubscriptionPaid as markPaidHandler, type MarkPaidDeps } from './markPaid';
+import { sendMechanicMessage as sendMessageHandler, type MessageDeps } from './messages';
 import { reviewDocument as reviewDocumentHandler, type ReviewDeps } from './reviewDocument';
 import { updateSettings as updateSettingsHandler, type SettingsDeps } from './updateSettings';
 import { voidSubscriptionPayment as voidPaidHandler, type VoidDeps } from './voidPaid';
@@ -352,6 +356,67 @@ const reviewDeps: ReviewDeps = {
 
 type CallableRequest = { auth?: { uid: string; token: Record<string, unknown> } };
 
+const messageDeps: MessageDeps = {
+  async listMechanics() {
+    const snapshot = await getFirestore().collection(COLLECTIONS.mechanics).get();
+    return snapshot.docs.map((d) => {
+      const m = d.data();
+      return {
+        userId: d.id,
+        vetting: m.vetting,
+        businessName: String(m.businessName ?? ''),
+        lastKnownLocation: m.lastKnownLocation,
+        fcmToken: typeof m.fcmToken === 'string' ? m.fcmToken : undefined,
+      };
+    });
+  },
+  newId: () => getFirestore().collection(OPS_MESSAGES).doc().id,
+  async commit({ id, record, inbox, audit }) {
+    const db = getFirestore();
+    const batch = db.batch();
+    batch.create(db.collection(OPS_MESSAGES).doc(id), record);
+    for (const { mechanicId, doc } of inbox) {
+      batch.create(
+        db.collection(COLLECTIONS.mechanics).doc(mechanicId).collection(INBOX).doc(id),
+        doc,
+      );
+    }
+    batch.create(db.collection(AUDIT_COLLECTION).doc(), audit);
+    await batch.commit();
+  },
+  async push(targets, message) {
+    // No FCM in the emulator suite: inbox copies are what tests check.
+    if (process.env.FUNCTIONS_EMULATOR === 'true') return { sent: 0, failed: 0 };
+    // Same shape as the app's own pushes (auto-rafiki functions sendToTokens), so the app
+    // shows it on its "ops-messages" channel and routes a tap to the message. Dead tokens
+    // are not pruned here: mechanics.fcmToken belongs to the app.
+    const response = await getMessaging().sendEach(
+      targets.map((t) => ({
+        token: t.token,
+        notification: { title: message.title, body: message.body },
+        data: { type: 'ops-message', messageId: message.id, channelId: OPS_MESSAGE_CHANNEL },
+        android: {
+          priority: 'high' as const,
+          notification: {
+            channelId: OPS_MESSAGE_CHANNEL,
+            sound: 'default',
+            icon: 'ic_notification',
+            color: '#19C2D8',
+          },
+        },
+      })),
+    );
+    return { sent: response.successCount, failed: response.failureCount };
+  },
+  async recordPush(id, result) {
+    await getFirestore()
+      .collection(OPS_MESSAGES)
+      .doc(id)
+      .update({ pushed: result.sent, pushFailed: result.failed });
+  },
+  now: () => new Date(),
+};
+
 function callerOf(request: CallableRequest): Caller | null {
   if (!request.auth) return null;
   return {
@@ -409,4 +474,8 @@ export const voidSubscriptionPayment = onCall((request) =>
 
 export const reviewDocument = onCall((request) =>
   reviewDocumentHandler(callerOf(request), request.data, reviewDeps),
+);
+
+export const sendMechanicMessage = onCall((request) =>
+  sendMessageHandler(callerOf(request), request.data, messageDeps),
 );

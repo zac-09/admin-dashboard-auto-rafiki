@@ -31,9 +31,18 @@ export type AuditAction =
   /** voidSubscriptionPayment: a recorded payment was marked as a mistake. */
   | 'subscription.void'
   /** updateSettings: prices / broadcast values the app reads were published. */
-  | 'settings.update';
+  | 'settings.update'
+  /** sendMechanicMessage: operations messaged mechanics (inbox + push). */
+  | 'mechanic.message.send';
 
-export type AuditTargetType = 'staff' | 'mechanic' | 'job' | 'subscription' | 'settings';
+export type AuditTargetType =
+  | 'staff'
+  | 'mechanic'
+  | 'job'
+  | 'subscription'
+  | 'settings'
+  /** opsMessages/{id}: a message to one or more mechanics. */
+  | 'message';
 
 export interface AuditEntry {
   id: string;

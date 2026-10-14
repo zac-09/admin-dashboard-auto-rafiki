@@ -24,7 +24,9 @@ export type Permission =
   /** The full audit log page (every decision, by anyone). */
   | 'audit.view'
   /** Trends, coverage, demand and mechanic scorecards. */
-  | 'insights.view';
+  | 'insights.view'
+  /** Message mechanics (inbox + push) and see what was sent. */
+  | 'mechanics.message';
 
 const MATRIX: Record<AdminRole, readonly Permission[]> = {
   admin: [
@@ -41,6 +43,7 @@ const MATRIX: Record<AdminRole, readonly Permission[]> = {
     'staff.manage',
     'audit.view',
     'insights.view',
+    'mechanics.message',
   ],
   ops: [
     'vetting.view',
@@ -54,6 +57,7 @@ const MATRIX: Record<AdminRole, readonly Permission[]> = {
     'settings.view',
     'audit.view',
     'insights.view',
+    'mechanics.message',
   ],
   support: ['vetting.view', 'operations.view', 'support.view', 'support.annotate', 'settings.view'],
 };
