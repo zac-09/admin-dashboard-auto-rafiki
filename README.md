@@ -149,6 +149,15 @@ gcloud storage buckets update gs://auto-rafiki.firebasestorage.app \
 Check it with `gcloud storage buckets describe gs://auto-rafiki.firebasestorage.app
 --format="default(cors_config)"`. Add an origin there if the dashboard gains a custom domain.
 
+### Applicant pipeline
+
+The Pending tab opens with the applicant pipeline: everyone waiting, grouped by what blocks
+them (documents to review, ready for the practical assessment, waiting on the applicant),
+oldest first, with days waiting, how the required documents stand, and the median days from
+application to first approval over the last 90 days. Applicants who still owe a document (or
+had one rejected) get call, WhatsApp and SMS nudges naming exactly what to upload. Documents
+and reviews are read once per visit, one mechanic at a time (fine at pilot scale).
+
 ## Interventions
 
 On a job page, admin and ops can **widen the search** (same or wider radius up to 30 km, with a

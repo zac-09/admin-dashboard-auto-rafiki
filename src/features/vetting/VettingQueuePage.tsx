@@ -12,6 +12,7 @@ import { daysSince, formatDate } from '@/lib/format';
 import type { VettingStatus } from '@/lib/vetting';
 import type { AuditEntry, MechanicDoc } from '@/types';
 
+import { ApplicantPipeline } from './ApplicantPipeline';
 import { auditEntryLabel } from './auditLabels';
 import { useMechanicAudit, useVettingQueue } from './hooks';
 import { byBusinessName, latestEntryByMechanic, reverificationDue } from './insights';
@@ -127,6 +128,13 @@ export function VettingQueuePage() {
       />
 
       {error ? <Notice tone="error">Could not load mechanics: {error.message}</Notice> : null}
+      {queue === 'pending' && !loading && !error ? (
+        <ApplicantPipeline
+          pending={lists.pending}
+          allMechanics={[...lists.pending, ...lists.verified, ...lists.suspended]}
+          entries={audit.data ?? []}
+        />
+      ) : null}
       {loading ? (
         isDesktop ? (
           <SkeletonTable rows={5} columns={6} label="Loading mechanics" />

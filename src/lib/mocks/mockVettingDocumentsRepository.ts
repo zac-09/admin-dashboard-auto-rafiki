@@ -44,6 +44,13 @@ export class MockVettingDocumentsRepository implements VettingDocumentsRepositor
     return this.watch(() => onChange(structuredClone(this.reviews.get(mechanicId) ?? {})));
   }
 
+  async getStanding(mechanicId: string) {
+    return {
+      docs: structuredClone(this.docs[mechanicId] ?? {}),
+      reviews: structuredClone(this.reviews.get(mechanicId) ?? {}),
+    };
+  }
+
   async loadFile(_storagePath: string, contentType: string): Promise<LoadedFile> {
     // Data URLs need no object URL (and jsdom has none): nothing to revoke.
     const url = contentType === 'application/pdf' ? TINY_PDF_DATA_URL : TINY_PNG_DATA_URL;

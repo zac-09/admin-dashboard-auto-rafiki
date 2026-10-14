@@ -1,4 +1,4 @@
-import { collection, doc, getFirestore, onSnapshot } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, getFirestore, onSnapshot } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getBlob, getStorage, ref } from 'firebase/storage';
 
@@ -47,6 +47,19 @@ export class FirebaseVettingDocumentsRepository implements VettingDocumentsRepos
       (s) => onChange((s.data() as VettingReviews | undefined) ?? {}),
       onError,
     );
+  }
+
+  async getStanding(mechanicId: string) {
+    const [records, reviews] = await Promise.all([
+      getDocs(collection(db(), COLLECTIONS.mechanics, mechanicId, 'vettingDocuments')),
+      getDoc(doc(db(), VETTING_REVIEWS, mechanicId)),
+    ]);
+    return {
+      docs: Object.fromEntries(
+        records.docs.map((d) => [d.id, d.data() as VettingDocument]),
+      ) as Partial<Record<VettingDocType, VettingDocument>>,
+      reviews: (reviews.data() as VettingReviews | undefined) ?? {},
+    };
   }
 
   /**

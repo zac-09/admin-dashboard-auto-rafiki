@@ -187,6 +187,11 @@ export interface VettingDocumentsRepository {
     onChange: (reviews: VettingReviews) => void,
     onError: (e: Error) => void,
   ): Unsubscribe;
+  /** One-shot read of a mechanic's records and reviews (the applicant pipeline). */
+  getStanding(mechanicId: string): Promise<{
+    docs: Partial<Record<VettingDocType, VettingDocument>>;
+    reviews: VettingReviews;
+  }>;
   /** Downloads the object behind a record (staff read rule) for inline display. */
   loadFile(storagePath: string, contentType: string): Promise<LoadedFile>;
   /** The audited reviewDocument callable (admin, ops). */
