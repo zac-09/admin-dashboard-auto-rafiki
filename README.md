@@ -208,6 +208,16 @@ the weeks. Each row has a call link and a ready-made reminder (weeks and total, 
 details) as a WhatsApp link, an SMS link and a copy button. Recording a payment clears the
 row. Suggesting suspension after N unpaid weeks waits for an agreed rule.
 
+### Weekly pilot report
+
+`/report` (linked from Insights, admin and ops) is one printable page for the team, partners
+and investors: a week's headline numbers each compared in words with the week before, the
+mechanics picture (verified, new applicants, approvals, suspensions, most jobs, who needs
+attention), a six-week trend table and the five worst coverage gaps of the last four weeks.
+It opens on the last full week; arrows step back through the ten weeks loaded. "Print or
+save as PDF" uses the browser's print dialog; print always uses the light palette and hides
+the navigation.
+
 ### Phase 2 model
 
 Revenue → Phase 2 model replays the last 4 or 8 full weeks as if AutoRafiki had taken a

@@ -28,6 +28,9 @@ export const RevenuePage = lazy(() =>
 export const InsightsPage = lazy(() =>
   import('@/features/insights/InsightsPage').then((m) => ({ default: m.InsightsPage })),
 );
+export const WeeklyReportPage = lazy(() =>
+  import('@/features/insights/WeeklyReportPage').then((m) => ({ default: m.WeeklyReportPage })),
+);
 export const SettingsPage = lazy(() =>
   import('@/features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })),
 );

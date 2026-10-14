@@ -1,4 +1,4 @@
-import { useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 
 import { PageHeader } from '@/app/pages/PageHeader';
 import { Notice, SkeletonPanel, Tabs } from '@/components/ui';
@@ -29,7 +29,15 @@ export function InsightsPage() {
 
   return (
     <>
-      <PageHeader label="Business" title="Insights" />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader label="Business" title="Insights" />
+        <Link
+          to="/report"
+          className="inline-flex min-h-10 items-center rounded-control border border-hairline px-3 text-sm font-semibold hover:border-primary"
+        >
+          Weekly pilot report
+        </Link>
+      </div>
       <Tabs
         label="Insight views"
         value={view}

@@ -35,15 +35,15 @@ export function AppShell({ session }: { session: AdminSession }) {
   }, [drawerOpen]);
 
   return (
-    <div className="min-h-dvh md:grid md:grid-cols-[15rem_1fr]">
+    <div className="min-h-dvh md:grid md:grid-cols-[15rem_1fr] print:block">
       {/* The column carries the background for the full page height; the content sticks. */}
-      <aside className="hidden border-r border-hairline bg-surface md:block">
+      <aside className="hidden border-r border-hairline bg-surface md:block print:hidden">
         <div className="sticky top-0 h-dvh">
           <Sidebar session={session} />
         </div>
       </aside>
 
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-hairline bg-background px-4 py-2 md:hidden">
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-hairline bg-background px-4 py-2 md:hidden print:hidden">
         <div className="flex items-center gap-2">
           <WheelMark size={32} />
           <span className="text-sm font-semibold tracking-[0.2em]">AUTORAFIKI</span>
@@ -92,7 +92,7 @@ export function AppShell({ session }: { session: AdminSession }) {
       <CommandPalette />
       {can(session.role, 'operations.view') ? <AlertNotifier /> : null}
 
-      <main className="min-w-0 p-4 md:p-8">
+      <main className="min-w-0 p-4 md:p-8 print:p-0">
         {/* Each page settles in like the app's screens; tabs within a page do not re-trigger. */}
         <Reveal key={pathname} from="down">
           <Outlet />

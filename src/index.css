@@ -193,3 +193,29 @@
 input[type='search']::-webkit-search-cancel-button {
   appearance: none;
 }
+
+/*
+ * Print (the weekly pilot report): always the light palette, whatever the screen mode, so a
+ * PDF reads on paper. Placed last so the token test still finds the screen palettes first.
+ */
+@media print {
+  :root,
+  :root[data-theme='dark'] {
+    color-scheme: light;
+    --ar-background: #ffffff;
+    --ar-surface: #f3f5f7;
+    --ar-hairline: #d9dee3;
+    --ar-primary: #101215;
+    --ar-muted: #5b6570;
+    --ar-accent: #0e8fa3;
+    --ar-on-accent: #ffffff;
+    --ar-accent-text: #0b6875;
+    --ar-success: #1e8e63;
+    --ar-danger: #c62828;
+    --ar-warning: #9a6200;
+  }
+
+  @page {
+    margin: 14mm;
+  }
+}
