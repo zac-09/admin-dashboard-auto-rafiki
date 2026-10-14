@@ -1,6 +1,9 @@
 import { APP_CALLOUT_PRICES } from '@/lib/pricing';
 import type { Job, JobTimelineEntry, Place, Rating, ServiceType, VehicleCategory } from '@/types';
 
+import type { AvailabilityRecord, OfferRecord } from '@/features/insights/presence';
+import { haversineKm } from '@/lib/geo';
+
 import { AUDIT_ENTRIES } from './auditFixtures';
 import { PLACES } from './contractFixtures';
 
@@ -67,11 +70,24 @@ interface MechanicProfile {
   /** Stars given by customers: [min, max] early in the history, then late. */
   stars: { early: [number, number]; late: [number, number] };
   active: (at: number) => boolean;
+  /** Where they wait for jobs, and their usual day online (Kampala hours). */
+  home: Place;
+  shift: [number, number];
 }
 
 const DAY_MS = 86_400_000;
 
-export function generateHistory(now: Date, seed = 7): { jobs: Job[]; ratings: Rating[] } {
+export interface History {
+  jobs: Job[];
+  ratings: Rating[];
+  availability: AvailabilityRecord[];
+  offers: OfferRecord[];
+}
+
+/** Days of availability log and offers (the app began writing both on 2026-10-14). */
+const PRESENCE_DAYS = 21;
+
+export function generateHistory(now: Date, seed = 7): History {
   const rand = mulberry32(seed);
   const pick = <T>(xs: readonly T[]): T => xs[Math.floor(rand() * xs.length)]!;
   const between = (lo: number, hi: number) => lo + rand() * (hi - lo);
@@ -85,6 +101,8 @@ export function generateHistory(now: Date, seed = 7): { jobs: Job[]; ratings: Ra
       cancelRate: 0.03,
       stars: { early: [4, 5], late: [4, 5] },
       active: () => true,
+      home: PLACES.kololo,
+      shift: [7, 19],
     },
     {
       id: 'u_mech_namukasa',
@@ -92,6 +110,8 @@ export function generateHistory(now: Date, seed = 7): { jobs: Job[]; ratings: Ra
       cancelRate: 0.08,
       stars: { early: [4, 5], late: [2, 4] },
       active: (at) => at > namukasaFrom,
+      home: PLACES.nakawa,
+      shift: [9, 16],
     },
     {
       id: 'u_mech_waiswa',
@@ -99,6 +119,8 @@ export function generateHistory(now: Date, seed = 7): { jobs: Job[]; ratings: Ra
       cancelRate: 0.3,
       stars: { early: [2, 4], late: [1, 3] },
       active: (at) => at < waiswaUntil,
+      home: PLACES.kabalagala,
+      shift: [11, 15],
     },
   ];
 
@@ -208,5 +230,56 @@ export function generateHistory(now: Date, seed = 7): { jobs: Job[]; ratings: Ra
       }
     }
   }
-  return { jobs, ratings };
+  // Presence and offers come from their own sequence, so the jobs above never change.
+  const rand2 = mulberry32(seed + 1);
+  const presenceFrom = now.getTime() - PRESENCE_DAYS * DAY_MS;
+  const iso = (ms: number) => new Date(ms).toISOString();
+
+  const offers: OfferRecord[] = [];
+  for (const job of jobs) {
+    const created = Date.parse(job.request.createdAt);
+    if (created < presenceFrom) continue;
+    for (const p of profiles.filter((x) => x.active(created))) {
+      const km = Math.round(haversineKm(p.home, job.request.location) * 10) / 10;
+      const won = job.mechanicId === p.id;
+      // Far mechanics only hear about it once the search widens to 8 km.
+      if (!won && km > 8) continue;
+      const opened = won || rand2() < 0.75;
+      const declined = !won && opened && rand2() < (p.id === 'u_mech_waiswa' ? 0.6 : 0.3);
+      const sentAt = iso(created + 2_000);
+      offers.push({
+        jobId: job.id,
+        mechanicId: p.id,
+        distanceKm: km,
+        ring: km > 5 ? { innerKm: 5, outerKm: 8 } : { innerKm: 0, outerKm: 5 },
+        sentAt,
+        lastSentAt: sentAt,
+        rounds: km > 5 ? 2 : 1,
+        openedAt: opened ? iso(created + 20_000) : null,
+        declinedAt: declined ? iso(created + 40_000) : null,
+      });
+    }
+  }
+
+  const availability: AvailabilityRecord[] = [];
+  for (let daysBack = PRESENCE_DAYS; daysBack >= 1; daysBack--) {
+    const dayStart = now.getTime() - daysBack * DAY_MS;
+    const midnight = Math.floor((dayStart + 3 * 3_600_000) / DAY_MS) * DAY_MS - 3 * 3_600_000;
+    for (const p of profiles) {
+      if (!p.active(midnight) || rand2() < 1 / 7) continue; // a day off now and then
+      const on = midnight + (p.shift[0] + rand2() - 0.5) * 3_600_000;
+      const off = midnight + (p.shift[1] + (rand2() - 0.5) * 2) * 3_600_000;
+      const location = {
+        latitude: p.home.latitude,
+        longitude: p.home.longitude,
+        label: p.home.label,
+      };
+      availability.push({ mechanicId: p.id, event: 'online', at: iso(on), location });
+      for (let t = on + 3_600_000; t < off; t += 3_600_000) {
+        availability.push({ mechanicId: p.id, event: 'ping', at: iso(t), location });
+      }
+      availability.push({ mechanicId: p.id, event: 'offline', at: iso(off), location });
+    }
+  }
+  return { jobs, ratings, availability, offers };
 }

@@ -50,5 +50,11 @@ export function createMockRepositories(
     settings,
     vettingDocuments: new MockVettingDocumentsRepository(store, auth),
     messages: new MockMessagesRepository(store, auth),
+    insights: {
+      listAvailabilitySince: async (since) =>
+        structuredClone(ops.availability.filter((e) => e.at >= since)),
+      listOffersSince: async (since) =>
+        structuredClone(ops.offers.filter((o) => o.sentAt >= since)),
+    },
   };
 }

@@ -18,6 +18,7 @@ import type {
 import { FIXTURE_NOW, JOBS, RATINGS, shiftIso, shiftJob, USERS } from './contractFixtures';
 import { generateHistory } from './historyFixtures';
 import type { MockVettingStore } from './mockVettingRepositories';
+import type { AvailabilityRecord, OfferRecord } from '@/features/insights/presence';
 
 type Listener = () => void;
 
@@ -25,6 +26,9 @@ type Listener = () => void;
 export class MockOperationsStore {
   jobs = new Map<string, Job>();
   ratings: Rating[];
+  /** The app's availability log and broadcast offers (empty unless `history`). */
+  availability: AvailabilityRecord[] = [];
+  offers: OfferRecord[] = [];
   private listeners = new Set<Listener>();
 
   /** How far fixture times were moved so FIXTURE_NOW reads as "now". */
@@ -40,6 +44,8 @@ export class MockOperationsStore {
       const history = generateHistory(now);
       for (const job of history.jobs) this.jobs.set(job.id, job);
       this.ratings.push(...history.ratings);
+      this.availability = history.availability;
+      this.offers = history.offers;
     }
   }
 

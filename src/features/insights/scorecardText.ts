@@ -35,4 +35,21 @@ export function minutesText(v: number | null): string {
   return v === null ? '–' : `${Math.round(v)} min`;
 }
 
+export function onlineText(s: Scorecard): string {
+  if (s.onlineHoursPerWeek === null) return 'No log yet';
+  return `${Math.round(s.onlineHoursPerWeek)} h a week`;
+}
+
+/** "4 of 11 taken · 3 passed · 2 ignored". */
+export function alertsText(s: Scorecard): string {
+  const a = s.alerts;
+  if (!a) return 'No alerts recorded yet';
+  if (a.offers === 0) return 'No alerts reached them';
+  const parts = [`${a.accepted} of ${a.offers} taken`];
+  if (a.declined) parts.push(`${a.declined} passed`);
+  if (a.takenByOthers) parts.push(`${a.takenByOthers} taken by others`);
+  if (a.ignored) parts.push(`${a.ignored} ignored`);
+  return parts.join(' · ');
+}
+
 export { oneDp };

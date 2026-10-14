@@ -2,6 +2,9 @@ import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
 import {
   addDoc,
   collection,
+  collectionGroup,
+  query,
+  where,
   deleteDoc,
   doc,
   getDoc,
@@ -189,5 +192,29 @@ describe('opsMessages (dashboard-only record of messages sent)', () => {
     await assertSucceeds(getDoc(doc(staff('support'), 'opsMessages/m1')));
     await assertFails(getDoc(doc(appUser(UID.mechanic), 'opsMessages/m1')));
     await assertFails(setDoc(doc(staff('admin'), 'opsMessages/m2'), { title: 'x' }));
+  });
+});
+
+describe('collection-group reads the dashboard makes over the app logs', () => {
+  beforeEach(() =>
+    seed({
+      [`mechanics/${UID.mechanic}/availability/e1`]: { event: 'online', at: AT, location: KOLOLO },
+      'jobs/j_open': jobDoc('j_open', 'requested'),
+      [`jobs/j_open/offers/${UID.mechanic}`]: { mechanicId: UID.mechanic, sentAt: AT },
+    }),
+  );
+
+  it('staff read every availability log and every offer across jobs', async () => {
+    const db = staff('ops');
+    await assertSucceeds(
+      getDocs(query(collectionGroup(db, 'availability'), where('at', '>=', AT))),
+    );
+    await assertSucceeds(getDocs(query(collectionGroup(db, 'offers'), where('sentAt', '>=', AT))));
+  });
+
+  it('app users cannot read them across the board', async () => {
+    const db = appUser(UID.mechanic);
+    await assertFails(getDocs(collectionGroup(db, 'availability')));
+    await assertFails(getDocs(collectionGroup(db, 'offers')));
   });
 });

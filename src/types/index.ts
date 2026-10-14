@@ -8,3 +8,4 @@ export * from './subscriptions';
 export * from './staff';
 export * from './vettingReviews';
 export * from './repositories';
+export * from './appLogs';

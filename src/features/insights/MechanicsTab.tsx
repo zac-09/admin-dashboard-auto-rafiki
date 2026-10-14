@@ -6,13 +6,22 @@ import { VettingStatusBadge } from '@/features/vetting/VettingStatusBadge';
 
 import type { InsightsData } from './InsightsPage';
 import { scorecard, scoredMechanics, SIGNALS, type Scorecard } from './scorecard';
-import { cancelText, lateText, oneDp, ratingText, trendText } from './scorecardText';
+import {
+  alertsText,
+  cancelText,
+  lateText,
+  onlineText,
+  oneDp,
+  ratingText,
+  trendText,
+} from './scorecardText';
 import { Signals } from './Signals';
 
-type SortKey = 'jobs' | 'rating' | 'late' | 'cancels' | 'concerns';
+type SortKey = 'jobs' | 'online' | 'rating' | 'late' | 'cancels' | 'concerns';
 
 const SORTS: { id: SortKey; label: string }[] = [
   { id: 'jobs', label: 'Jobs per week' },
+  { id: 'online', label: 'Hours online' },
   { id: 'rating', label: 'Rating' },
   { id: 'late', label: 'Lateness' },
   { id: 'cancels', label: 'Cancellations' },
@@ -26,6 +35,8 @@ function compare(key: SortKey) {
     switch (key) {
       case 'jobs':
         return b.jobsPerWeek - a.jobsPerWeek;
+      case 'online':
+        return nullLast(a.onlineHoursPerWeek, -1) - nullLast(b.onlineHoursPerWeek, -1);
       case 'rating':
         return nullLast(a.rating.recent, -1) - nullLast(b.rating.recent, -1);
       case 'late':
@@ -53,7 +64,7 @@ export function MechanicsTab({ data }: { data: InsightsData }) {
     ]),
   );
   const cards = scoredMechanics(mechanics, jobs)
-    .map((m) => scorecard(m, jobs, ratings, now, overdue.get(m.userId) ?? 0))
+    .map((m) => scorecard(m, jobs, ratings, now, overdue.get(m.userId) ?? 0, data.presence))
     .sort(
       (a, b) =>
         compare(sort)(a, b) || a.mechanic.businessName.localeCompare(b.mechanic.businessName),
@@ -62,13 +73,16 @@ export function MechanicsTab({ data }: { data: InsightsData }) {
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm text-muted">
-        Every verified or suspended mechanic, from their jobs and customer ratings. Lateness
-        compares travel time (set off to arrival) with the app's estimate for the distance driven,
-        because the app does not store the ETA it shows. Signals: late by {SIGNALS.lateMin}+ min
-        (median), cancelling {Math.round(SIGNALS.cancelShare * 100)}%+ of accepted jobs, a rating{' '}
-        {SIGNALS.lowRating} or lower or falling by {SIGNALS.trendStars}+ stars month on month, or an
-        overdue subscription. Acceptance per mechanic is not measurable: the app does not record who
-        saw a broadcast.
+        Every verified or suspended mechanic, from their jobs, customer ratings and the app's
+        availability and job-alert logs (recorded since 14 Oct 2026; hours are averaged over the
+        days logged). Lateness compares travel time (set off to arrival) with the ETA the mechanic
+        was shown when setting off, or for older jobs the app's estimate for the distance driven.
+        Job alerts: taken, passed, taken first by another mechanic, or left unanswered. Signals:
+        late by {SIGNALS.lateMin}+ min (median), cancelling {Math.round(SIGNALS.cancelShare * 100)}
+        %+ of accepted jobs, a rating {SIGNALS.lowRating} or lower or falling by{' '}
+        {SIGNALS.trendStars}+ stars month on month, an overdue subscription, under{' '}
+        {SIGNALS.minOnlineHours} hours online a week, or leaving{' '}
+        {Math.round(SIGNALS.ignoredShare * 100)}%+ of job alerts unanswered.
       </p>
       <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Sort by">
         <span className="micro-label">Sort by</span>
@@ -88,7 +102,7 @@ export function MechanicsTab({ data }: { data: InsightsData }) {
         <p className="panel p-6 text-sm text-muted">No verified mechanics yet.</p>
       ) : (
         <div className="panel overflow-x-auto">
-          <table className="w-full min-w-[60rem] text-sm" aria-label="Mechanic scorecards">
+          <table className="w-full min-w-[64rem] text-sm" aria-label="Mechanic scorecards">
             <thead>
               <tr className="border-b border-hairline">
                 <th scope="col" className={TH}>
@@ -98,10 +112,13 @@ export function MechanicsTab({ data }: { data: InsightsData }) {
                   Jobs / week (4 wk)
                 </th>
                 <th scope="col" className={TH}>
-                  Request to arrival
+                  Online (4 wk)
                 </th>
                 <th scope="col" className={TH}>
-                  Against the estimate
+                  Job alerts
+                </th>
+                <th scope="col" className={TH}>
+                  Arrival (median)
                 </th>
                 <th scope="col" className={TH}>
                   Cancelled by them
@@ -135,10 +152,17 @@ export function MechanicsTab({ data }: { data: InsightsData }) {
                     {oneDp(s.jobsPerWeek)}
                     <span className="block text-xs text-muted">{s.completed} completed</span>
                   </td>
+                  <td className={TD}>{onlineText(s)}</td>
+                  <td className={TD}>
+                    {s.alerts?.acceptanceRate != null
+                      ? `${Math.round(s.alerts.acceptanceRate * 100)}% taken`
+                      : '–'}
+                    <span className="block text-xs text-muted">{alertsText(s)}</span>
+                  </td>
                   <td className={TD}>
                     {s.medianArrivalMin === null ? '–' : `${Math.round(s.medianArrivalMin)} min`}
+                    <span className="block text-xs text-muted">{lateText(s)}</span>
                   </td>
-                  <td className={TD}>{lateText(s)}</td>
                   <td className={TD}>{cancelText(s)}</td>
                   <td className={TD}>
                     {ratingText(s)}

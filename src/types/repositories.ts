@@ -1,3 +1,4 @@
+import type { AvailabilityRecord, OfferRecord } from './appLogs';
 import type { Audience, OpsMessage } from '../lib/mechanicMessages';
 import type { DecideVettingInput, DecideVettingResult, VettingStatus } from '../lib/vetting';
 
@@ -201,6 +202,14 @@ export interface VettingDocumentsRepository {
   review(input: ReviewDocumentInput): Promise<void>;
 }
 
+/** The app's presence and broadcast logs (contract 2026-10-14), read across all mechanics. */
+export interface InsightsRepository {
+  /** Every mechanic's availability events at or after `sinceIso`. */
+  listAvailabilitySince(sinceIso: string): Promise<AvailabilityRecord[]>;
+  /** Every broadcast offer first sent at or after `sinceIso`. */
+  listOffersSince(sinceIso: string): Promise<OfferRecord[]>;
+}
+
 /** Messages from operations to mechanics (inbox + push). */
 export interface MessagesRepository {
   /** The audited sendMechanicMessage callable. */
@@ -232,4 +241,5 @@ export interface Repositories {
   settings: SettingsRepository;
   vettingDocuments: VettingDocumentsRepository;
   messages: MessagesRepository;
+  insights: InsightsRepository;
 }

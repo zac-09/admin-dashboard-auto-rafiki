@@ -4,7 +4,13 @@ import type { AuditEntry, Job, MechanicDoc, Rating, SubscriptionPayment } from '
 
 import { coverage, type CoverageArea } from './coverage';
 import { enteredAt } from './jobFacts';
-import { CONCERNS, scorecard, scoredMechanics, type Scorecard } from './scorecard';
+import {
+  CONCERNS,
+  scorecard,
+  scoredMechanics,
+  type PresenceInputs,
+  type Scorecard,
+} from './scorecard';
 import { weeklyTrends, type WeekPoint } from './trends';
 
 const WEEK_MS = 7 * 86_400_000;
@@ -40,6 +46,8 @@ export interface ReportInputs {
   mechanics: readonly MechanicDoc[];
   entries: readonly AuditEntry[];
   payments: readonly SubscriptionPayment[];
+  /** The app's logs (absent before 2026-10-14 or in older callers). */
+  presence?: PresenceInputs;
   now: Date;
 }
 
@@ -87,8 +95,14 @@ export function weeklyReport(weekStart: string, d: ReportInputs): WeeklyReport {
   // Scorecards as they stood at the end of the week: nothing later counts.
   const asOf = d.jobs.filter((j) => Date.parse(j.request.createdAt) <= weekEnd.getTime());
   const ratingsAsOf = d.ratings.filter((r) => Date.parse(r.createdAt) <= weekEnd.getTime());
+  const presenceAsOf = d.presence
+    ? {
+        availability: d.presence.availability.filter((e) => Date.parse(e.at) <= weekEnd.getTime()),
+        offers: d.presence.offers.filter((o) => Date.parse(o.sentAt) <= weekEnd.getTime()),
+      }
+    : null;
   const cards = scoredMechanics(d.mechanics, asOf).map((m) =>
-    scorecard(m, asOf, ratingsAsOf, weekEnd),
+    scorecard(m, asOf, ratingsAsOf, weekEnd, null, presenceAsOf),
   );
   const completedInWeek = (s: Scorecard) =>
     s.weekly.find((w) => w.weekStart === weekStart)?.completed ?? 0;

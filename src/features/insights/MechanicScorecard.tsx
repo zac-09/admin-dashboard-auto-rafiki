@@ -1,16 +1,24 @@
-import { useQuery } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 
 import { Notice, SkeletonLines } from '@/components/ui';
 import { overdueAccounts } from '@/features/revenue/collections';
 import { useSubscriptionInputs } from '@/features/revenue/hooks';
 import { can } from '@/lib/permissions';
-import { useRepositories } from '@/lib/repositories';
 import { useSession } from '@/lib/session';
 import type { MechanicDoc } from '@/types';
 
+import { useInsightsInputs } from './hooks';
 import { scorecard } from './scorecard';
-import { cancelText, lateText, minutesText, oneDp, ratingText, trendText } from './scorecardText';
+import {
+  alertsText,
+  cancelText,
+  lateText,
+  minutesText,
+  onlineText,
+  oneDp,
+  ratingText,
+  trendText,
+} from './scorecardText';
 import { Signals } from './Signals';
 import { WeeklyBars } from './WeeklyBars';
 
@@ -39,18 +47,9 @@ function useOverdueWeeks(mechanic: MechanicDoc): number | null | undefined {
 
 /** How this mechanic is doing: jobs per week, timeliness, cancellations, rating, payments. */
 export function MechanicScorecard({ mechanic }: { mechanic: MechanicDoc }) {
-  const repos = useRepositories();
-  const record = useQuery({
-    queryKey: ['scorecard', mechanic.userId],
-    queryFn: async () => {
-      const since = new Date(Date.now() - 60 * 86_400_000).toISOString();
-      const [jobs, ratings] = await Promise.all([
-        repos.support.listJobsForMechanic(mechanic.userId),
-        repos.revenue.listRatingsSince(since),
-      ]);
-      return { jobs, ratings: ratings.filter((r) => r.mechanicId === mechanic.userId) };
-    },
-  });
+  // The shared insights read: offers need every job (to tell "taken by another mechanic"
+  // from "ignored"), and the availability log needs no per-mechanic query.
+  const record = useInsightsInputs();
   const overdue = useOverdueWeeks(mechanic);
 
   if (record.error) {
@@ -58,7 +57,14 @@ export function MechanicScorecard({ mechanic }: { mechanic: MechanicDoc }) {
   }
   if (record.isPending || overdue === undefined) return <SkeletonLines lines={4} />;
 
-  const s = scorecard(mechanic, record.data.jobs, record.data.ratings, new Date(), overdue);
+  const s = scorecard(
+    mechanic,
+    record.data.jobs,
+    record.data.ratings,
+    record.data.now,
+    overdue,
+    record.data.presence,
+  );
   if (s.accepted === 0) {
     return <p className="text-sm text-muted">No jobs taken yet.</p>;
   }
@@ -69,7 +75,9 @@ export function MechanicScorecard({ mechanic }: { mechanic: MechanicDoc }) {
       <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
         <Stat label="Jobs per week (last 4)">{oneDp(s.jobsPerWeek)}</Stat>
         <Stat label="Request to arrival (median)">{minutesText(s.medianArrivalMin)}</Stat>
-        <Stat label="Against the app's estimate">{lateText(s)}</Stat>
+        <Stat label="Against the promised ETA">{lateText(s)}</Stat>
+        <Stat label="Online, last 4 weeks">{onlineText(s)}</Stat>
+        <Stat label="Job alerts">{alertsText(s)}</Stat>
         <Stat label="Cancelled by them">{cancelText(s)}</Stat>
         <Stat label="Rating, last 30 days">
           {ratingText(s)}
@@ -84,9 +92,9 @@ export function MechanicScorecard({ mechanic }: { mechanic: MechanicDoc }) {
         ) : null}
       </dl>
       <p className="text-xs text-muted">
-        "Against the app's estimate" compares travel time with what the app estimates for the
-        distance driven. Acceptance per mechanic is not measurable: the app does not record who saw
-        a broadcast.
+        Lateness compares travel time with the ETA shown when setting off (older jobs: the app's
+        estimate for the distance). Online hours and job alerts come from the app's logs, kept since
+        14 Oct 2026.
       </p>
     </div>
   );

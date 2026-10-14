@@ -3,6 +3,14 @@ import { ratedBy } from '@/lib/ratings';
 import type { Job, MechanicDoc, Rating } from '@/types';
 
 import { arrivalMinutes, enteredAt, lateMinutes } from './jobFacts';
+import {
+  hoursOnline,
+  offerStats,
+  onlineStretches,
+  type AvailabilityRecord,
+  type OfferRecord,
+  type OfferStats,
+} from './presence';
 import { lastWeeks } from './trends';
 import { weekStartOf } from '@/lib/subscriptions';
 
@@ -23,10 +31,22 @@ export const SIGNALS = {
   /** Top performer: busy, well rated, on time. */
   topJobsPerWeek: 3,
   topRating: 4.5,
+  /** Fewer hours online a week than this, measured over at least a week of the log. */
+  minOnlineHours: 10,
+  /** Share of job alerts left unanswered (not opened-and-passed, not taken by anyone). */
+  ignoredShare: 0.5,
+  minOffers: 5,
 } as const;
 
 export type Signal =
-  'top' | 'often-late' | 'cancels-often' | 'rating-falling' | 'low-rating' | 'payment-overdue';
+  | 'top'
+  | 'often-late'
+  | 'cancels-often'
+  | 'rating-falling'
+  | 'low-rating'
+  | 'payment-overdue'
+  | 'rarely-online'
+  | 'ignores-alerts';
 
 export const SIGNAL_LABELS: Record<Signal, string> = {
   top: 'Top performer',
@@ -35,6 +55,8 @@ export const SIGNAL_LABELS: Record<Signal, string> = {
   'rating-falling': 'Rating falling',
   'low-rating': 'Low rating',
   'payment-overdue': 'Payment overdue',
+  'rarely-online': 'Rarely online',
+  'ignores-alerts': 'Ignores job alerts',
 };
 
 /** Signals that ask ops to act (coach, warn, chase), as opposed to praise. */
@@ -44,6 +66,8 @@ export const CONCERNS: readonly Signal[] = [
   'rating-falling',
   'low-rating',
   'payment-overdue',
+  'rarely-online',
+  'ignores-alerts',
 ];
 
 export interface Scorecard {
@@ -67,7 +91,19 @@ export interface Scorecard {
   ratingTrend: 'up' | 'down' | 'steady' | null;
   /** Overdue subscription weeks; null when not shown (no revenue access). */
   overdueWeeks: number | null;
+  /** Average hours online a week over the last 4 weeks of the log; null without a log. */
+  onlineHoursPerWeek: number | null;
+  /** Days of availability log the average covers (the app began logging 2026-10-14). */
+  presenceDays: number;
+  /** How they answered job alerts; null before offers were recorded. */
+  alerts: OfferStats | null;
   signals: Signal[];
+}
+
+/** The app's logs, when loaded (contract 2026-10-14). */
+export interface PresenceInputs {
+  availability: readonly AvailabilityRecord[];
+  offers: readonly OfferRecord[];
 }
 
 const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
@@ -83,6 +119,7 @@ export function scorecard(
   ratings: readonly Rating[],
   now: Date,
   overdueWeeks: number | null = null,
+  presence: PresenceInputs | null = null,
 ): Scorecard {
   const mine = jobs.filter((j) => j.mechanicId === mechanic.userId);
   const completedAt = mine.flatMap((j) => {
@@ -155,6 +192,42 @@ export function scorecard(
     signals.push('low-rating');
   }
   if (overdueWeeks) signals.push('payment-overdue');
+
+  // Presence: averaged over the days the log actually covers, never over days before it.
+  const t0 = now.getTime() - 28 * DAY_MS;
+  const firstLogged = presence?.availability.length
+    ? Math.min(...presence.availability.map((e) => Date.parse(e.at)))
+    : null;
+  const from = firstLogged === null ? null : Math.max(t0, firstLogged);
+  const presenceDays = from === null ? 0 : Math.max(0, (now.getTime() - from) / DAY_MS);
+  const onlineHoursPerWeek =
+    from === null || presenceDays < 1
+      ? null
+      : (hoursOnline(
+          onlineStretches(presence!.availability, mechanic.userId, now),
+          from,
+          now.getTime(),
+        ) /
+          presenceDays) *
+        7;
+  if (
+    onlineHoursPerWeek !== null &&
+    presenceDays >= 7 &&
+    onlineHoursPerWeek < SIGNALS.minOnlineHours
+  ) {
+    signals.push('rarely-online');
+  }
+  const alerts =
+    presence && presence.offers.length
+      ? offerStats(presence.offers, new Map(jobs.map((j) => [j.id, j])), mechanic.userId)
+      : null;
+  if (
+    alerts &&
+    alerts.offers >= SIGNALS.minOffers &&
+    alerts.ignored / alerts.offers >= SIGNALS.ignoredShare
+  ) {
+    signals.push('ignores-alerts');
+  }
   if (
     signals.length === 0 &&
     jobsPerWeek >= SIGNALS.topJobsPerWeek &&
@@ -178,6 +251,9 @@ export function scorecard(
     rating,
     ratingTrend,
     overdueWeeks,
+    onlineHoursPerWeek,
+    presenceDays: Math.round(presenceDays),
+    alerts,
     signals,
   };
 }

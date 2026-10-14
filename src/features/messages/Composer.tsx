@@ -29,7 +29,13 @@ function useGapPlaces() {
     places: coverage(recent, inputs.data.mechanics)
       .areas.filter((a) => a.unserved > 0)
       .slice(0, 6)
-      .map((a) => ({ key: a.key, label: a.label, ...a.center, unserved: a.unserved })),
+      .map((a) => ({
+        key: a.key,
+        label: a.label,
+        ...a.center,
+        unserved: a.unserved,
+        nearestKm: a.nearestMechanicKm,
+      })),
   };
 }
 
@@ -176,7 +182,9 @@ export function Composer({
               >
                 {gaps.places.map((p) => (
                   <option key={p.key} value={p.key}>
-                    {p.label} ({p.unserved} unanswered)
+                    {p.label} ({p.unserved} unanswered
+                    {p.nearestKm === null ? '' : `, nearest mechanic ${Math.round(p.nearestKm)} km`}
+                    )
                   </option>
                 ))}
               </select>

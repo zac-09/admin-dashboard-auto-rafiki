@@ -7,6 +7,7 @@ import {
   FirestoreMechanicRepository,
 } from './firestoreRepositories';
 import { FirestoreOperationsRepository, FirestorePeopleRepository } from './operationsRepository';
+import { FirestoreInsightsRepository } from './insightsRepository';
 import { FirebaseMessagesRepository } from './messagesRepository';
 import { FirestoreRevenueRepository } from './revenueRepository';
 import { FirestoreSettingsRepository } from './settingsRepository';
@@ -28,5 +29,6 @@ export function createFirebaseRepositories(): Repositories {
     settings: new FirestoreSettingsRepository(),
     vettingDocuments: new FirebaseVettingDocumentsRepository(),
     messages: new FirebaseMessagesRepository(),
+    insights: new FirestoreInsightsRepository(),
   };
 }

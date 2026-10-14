@@ -285,6 +285,16 @@ once per visit (no live listeners, no new indexes) and answers four questions:
   `distanceKm` driven (18 km/h), because the app does not store the ETA it shows. Acceptance
   per mechanic is not measurable: the app does not record who saw a broadcast.
 
+Since the app began logging on 2026-10-14, scorecards also show **hours online a week**
+(from online/offline events in `mechanics/{uid}/availability`; pings never open or close a
+stretch, a stretch still open runs to now, and the average covers only the days logged) and
+**job alerts** from `jobs/{jobId}/offers`: taken, passed, taken first by another mechanic, or
+left unanswered, with the share taken. Two more signals follow: under 10 hours online a week
+(over at least a week of log) and half or more of 5+ alerts left unanswered. Lateness now
+uses the `etaMinutes` the mechanic was shown when setting off, falling back to the distance
+estimate for older jobs. Both logs are read with collection-group queries, which need the
+`fieldOverrides` in `firebase/firestore.indexes.json` (deploy indexes before hosting).
+
 In mock mode the dev server adds ten weeks of deterministic history
 (`src/lib/mocks/historyFixtures.ts`) so these views have something to show; tests opt in.
 

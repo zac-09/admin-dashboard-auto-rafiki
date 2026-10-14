@@ -66,6 +66,9 @@ describe('insights', () => {
     expect(rows().map((r) => within(r).getAllByRole('link')[0]!.textContent)).toEqual(
       expect.arrayContaining(['Okello Auto Rescue', 'Namukasa Motors', 'Waiswa Heavy Recovery']),
     );
+    const okello = rows().find((r) => /Okello/.test(r.textContent ?? ''))!;
+    expect(okello).toHaveTextContent(/\d+ h a week/);
+    expect(okello).toHaveTextContent(/\d+% taken\d+ of \d+ taken/);
     const waiswa = rows().find((r) => /Waiswa/.test(r.textContent ?? ''))!;
     expect(waiswa).toHaveTextContent('Cancels often');
     await user.click(screen.getByRole('button', { name: 'Most concerns' }));

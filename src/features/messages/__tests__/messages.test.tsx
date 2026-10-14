@@ -65,7 +65,9 @@ describe('messages page', () => {
     const { repos, user } = await openAs('ops', '/messages');
     const form = await screen.findByRole('form', { name: 'New message to mechanics' });
     const area = await within(form).findByRole('combobox', { name: 'Area' });
-    expect(area).toHaveDisplayValue(/^Mukono, Jinja Road \(\d+ unanswered\)$/);
+    expect(area).toHaveDisplayValue(
+      /^Mukono, Jinja Road \(\d+ unanswered, nearest mechanic 15 km\)$/,
+    );
     await user.click(within(form).getByRole('button', { name: '15 km' }));
     expect(within(form).getByRole('button', { name: /^Send to/ })).toBeDisabled();
     // Mukono, the worst gap, has no verified mechanic within 15 km: the composer says so.
