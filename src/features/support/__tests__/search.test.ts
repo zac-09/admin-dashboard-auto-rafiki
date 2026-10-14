@@ -1,5 +1,7 @@
 import { createMockRepositories, MockOperationsStore } from '@/lib/mocks';
 
+import { normalisePlate } from '@/lib/plate';
+
 import { normalizeUgPhone, search } from '../search';
 
 describe('normalizeUgPhone', () => {
@@ -41,8 +43,28 @@ describe('search', () => {
     expect(fix.mechanics.map((m) => m.businessName)).toEqual(['Ssempala Boda Fix']);
   });
 
+  it('finds jobs by number plate however it is typed', async () => {
+    const r = await search(repos().support, 'uba 123x');
+    expect(r.jobs.map((j) => j.id)).toEqual(['job_enroute_late']);
+    expect((await search(repos().support, 'UBA999Z')).jobs).toEqual([]);
+  });
+
   it('does nothing for a one-character query', async () => {
     const r = await search(repos().support, 'o');
     expect(r).toEqual({ query: 'o', jobs: [], people: [], mechanics: [] });
+  });
+});
+
+describe('normalisePlate (mirrors the app)', () => {
+  it.each([
+    ['uba 123x', 'UBA123X'],
+    ['UG 1234A', 'UG1234A'],
+    ['  ueb123a ', 'UEB123A'],
+  ])('%s → %s', (input, out) => {
+    expect(normalisePlate(input)).toBe(out);
+  });
+
+  it.each(['', 'X', 'UBA-123X', 'ABCDEFGHIJK'])('rejects %j', (input) => {
+    expect(normalisePlate(input)).toBeUndefined();
   });
 });

@@ -1,3 +1,4 @@
+import { normalisePlate } from '@/lib/plate';
 import type { Job, MechanicDoc, SupportRepository, UgPhone, UserDoc } from '@/types';
 
 /**
@@ -25,9 +26,9 @@ export interface SearchResults {
 export const MIN_QUERY = 2;
 
 /**
- * One box for phone, job id and business name (CLAUDE.md: plate search waits for the plate
- * field). Phones match exactly on users and mechanics; anything id-shaped is tried as a job id;
- * names match anywhere in the business name.
+ * One box for phone, job id, number plate and business name. Phones match exactly on users
+ * and mechanics; anything id-shaped is tried as a job id; anything plate-shaped ("uba 123x")
+ * matches requests carrying that plate; names match anywhere in the business name.
  */
 export async function search(repo: SupportRepository, raw: string): Promise<SearchResults> {
   const q = raw.trim();
@@ -36,9 +37,11 @@ export async function search(repo: SupportRepository, raw: string): Promise<Sear
 
   const phone = normalizeUgPhone(q);
   const idShaped = /^[A-Za-z0-9_-]{4,}$/.test(q) && !phone;
-  const [byPhone, job, all] = await Promise.all([
+  const plate = phone ? undefined : normalisePlate(q);
+  const [byPhone, job, byPlate, all] = await Promise.all([
     phone ? repo.findByPhone(phone) : Promise.resolve({ users: [], mechanics: [] }),
     idShaped ? repo.findJob(q) : Promise.resolve(null),
+    plate ? repo.findJobsByPlate(plate) : Promise.resolve([] as Job[]),
     phone ? Promise.resolve([] as MechanicDoc[]) : repo.listMechanics(),
   ]);
 
@@ -49,7 +52,7 @@ export async function search(repo: SupportRepository, raw: string): Promise<Sear
 
   return {
     query: q,
-    jobs: job ? [job] : [],
+    jobs: [...new Map([...(job ? [job] : []), ...byPlate].map((j) => [j.id, j])).values()],
     people: byPhone.users,
     mechanics: [...mechanics.values()].sort((a, b) => a.businessName.localeCompare(b.businessName)),
   };

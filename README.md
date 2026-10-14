@@ -164,7 +164,7 @@ Rules and emulator tests (`tests/rules/appContract20261014.test.ts`) for paths a
 app, deployed with `firestore:rules` before the app ships them:
 
 - `mechanics/{uid}/availability/{eventId}`: the mechanic appends `{event: 'online' | 'offline'
-  | 'ping', at, location?}` (location required except when going offline). Append-only; staff
+| 'ping', at, location?}` (location required except when going offline). Append-only; staff
   read. Feeds online hours and coverage over time.
 - `mechanics/{uid}/inbox/{messageId}`: messages from operations, written by a dashboard
   callable (Admin SDK) as `{title, body, sentAt, readAt: null}`. The mechanic reads their own
@@ -175,8 +175,9 @@ app, deployed with `firestore:rules` before the app ships them:
 - Existing paths, now pinned by tests: the mechanic writes `etaMinutes` when setting off; a
   request may carry `request.vehiclePlate`.
 
-The dashboard screens that read these (messages composer, online hours, acceptance per
-mechanic, plate search) follow once the app writes them.
+The app shipped these on 2026-10-14 (app commits 9e1f624, 18fc03c, 14d86b3). Support search
+now matches number plates however they are typed ("uba 123x"), and plates show on job cards,
+the job page and search results.
 
 ## Interventions
 

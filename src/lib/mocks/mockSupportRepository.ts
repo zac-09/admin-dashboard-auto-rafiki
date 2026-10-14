@@ -78,6 +78,13 @@ export class MockSupportRepository implements SupportRepository {
     return structuredClone(this.ops.jobs.get(jobId) ?? null);
   }
 
+  async findJobsByPlate(plate: string) {
+    return [...this.ops.jobs.values()]
+      .filter((j) => j.request.vehiclePlate === plate)
+      .sort((a, b) => b.request.createdAt.localeCompare(a.request.createdAt))
+      .map((j) => structuredClone(j));
+  }
+
   async findByPhone(phone: UgPhone) {
     return {
       users: USERS.filter((u) => u.phone === phone).map((u) => structuredClone(u)),

@@ -99,6 +99,8 @@ export interface PeopleRepository {
 /** Customer support: search, a job's full record, notes and disputes. */
 export interface SupportRepository {
   findJob(jobId: string): Promise<Job | null>;
+  /** Jobs whose request carries this normalised plate, newest first. */
+  findJobsByPlate(plate: string): Promise<Job[]>;
   /** Exact E.164 match on users and mechanics (both store `phone`). */
   findByPhone(phone: UgPhone): Promise<{ users: UserDoc[]; mechanics: MechanicDoc[] }>;
   /** Every mechanic, for business-name search in the browser (fine at pilot scale). */

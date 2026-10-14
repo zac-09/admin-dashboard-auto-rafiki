@@ -50,6 +50,16 @@ export class FirestoreSupportRepository implements SupportRepository {
     return s.exists() ? { ...(s.data() as Job), id: s.id } : null;
   }
 
+  async findJobsByPlate(plate: string): Promise<Job[]> {
+    // Single-field equality: covered by Firestore's automatic index.
+    const s = await getDocs(
+      query(collection(db(), COLLECTIONS.jobs), where('request.vehiclePlate', '==', plate)),
+    );
+    return s.docs
+      .map((d) => ({ ...(d.data() as Job), id: d.id }))
+      .sort((a, b) => b.request.createdAt.localeCompare(a.request.createdAt));
+  }
+
   async findByPhone(phone: UgPhone) {
     const [users, mechanics] = await Promise.all([
       getDocs(query(collection(db(), COLLECTIONS.users), where('phone', '==', phone))),

@@ -42,6 +42,9 @@ export function JobCard({
       ) : null}
       <span className="font-semibold">
         {SERVICE_LABELS[job.request.service]} · {VEHICLE_LABELS[job.request.vehicle]}
+        {job.request.vehiclePlate ? (
+          <span className="font-normal text-muted"> · {job.request.vehiclePlate}</span>
+        ) : null}
       </span>
       <span className="text-muted">{job.request.location.label}</span>
       {job.request.items?.length ? (

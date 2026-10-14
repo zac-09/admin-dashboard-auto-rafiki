@@ -97,6 +97,12 @@ export function JobDetailPage() {
         <h1 className="text-xl font-semibold">
           {SERVICE_LABELS[request.service]} · {VEHICLE_LABELS[request.vehicle]}
         </h1>
+        {request.vehiclePlate ? (
+          <p className="text-sm">
+            <span className="text-muted">Number plate </span>
+            <span className="font-semibold tracking-wide">{request.vehiclePlate}</span>
+          </p>
+        ) : null}
         <p className="text-sm">
           <span className="font-semibold">{STATUS_LABELS[job.status]}</span>
           <span className="text-muted">

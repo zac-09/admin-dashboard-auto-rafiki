@@ -20,7 +20,7 @@ export function resultItems(r: Results): ResultItem[] {
       to: `/jobs/${j.id}`,
       kind: 'Job' as const,
       title: `${SERVICE_LABELS[j.request.service]}, ${j.request.location.label}`,
-      detail: `${STATUS_LABELS[j.status]} · ${formatUgx(j.fee)} · ${formatDate(j.request.createdAt)}`,
+      detail: `${j.request.vehiclePlate ? `${j.request.vehiclePlate} · ` : ''}${STATUS_LABELS[j.status]} · ${formatUgx(j.fee)} · ${formatDate(j.request.createdAt)}`,
     })),
     ...r.people.map((u) => ({
       key: `person:${u.id}`,

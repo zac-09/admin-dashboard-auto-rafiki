@@ -80,6 +80,11 @@ export interface JobRequest {
   /** Catalogue item ids the customer tapped (the cart); absent on older jobs. */
   items?: string[];
   description: string;
+  /**
+   * Number plate, normalised (uppercase, no spaces, ^[A-Z0-9]{2,10}$). Optional; omitted
+   * entirely when not given, and absent on older jobs. See lib/plate.
+   */
+  vehiclePlate?: string;
   createdAt: IsoDate;
 }
 
@@ -102,6 +107,59 @@ export interface JobTimelineEntry {
 }
 
 /** Broadcast dispatch (CLAUDE.md v2): first mechanic to accept wins. */
+
+/* ---- Contract shared with the ops dashboard, 2026-10-14 (rules live in that repo). ---- */
+
+export type AvailabilityEventType = 'online' | 'offline' | 'ping';
+
+export interface AvailabilityLocation {
+  latitude: number;
+  longitude: number;
+  /** ≤ 120 characters. */
+  label?: string;
+}
+
+/**
+ * mechanics/{uid}/availability/{autoId}: append-only log of going online / offline, plus a
+ * ping every 15 minutes while online. `location` is required for 'online' and 'ping'.
+ * Exactly these fields; built by lib/availability.
+ */
+export interface AvailabilityEvent {
+  event: AvailabilityEventType;
+  at: IsoDate;
+  location?: AvailabilityLocation;
+}
+
+/**
+ * mechanics/{uid}/inbox/{messageId}: a message from AutoRafiki operations (written by the
+ * dashboard). The mechanic may only set `readAt`, once.
+ */
+export interface InboxMessage {
+  id: string;
+  /** ≤ 60 characters. */
+  title: string;
+  /** ≤ 500 characters. */
+  body: string;
+  sentAt: IsoDate;
+  readAt: IsoDate | null;
+}
+
+/**
+ * jobs/{jobId}/offers/{mechanicId}: who a broadcast reached (written by alertMechanics). The
+ * mechanic may only set `openedAt` and `declinedAt`, once each. Customers never see offers.
+ */
+export interface BroadcastOffer {
+  mechanicId: string;
+  /** Straight-line km at the latest round. */
+  distanceKm: number;
+  ring: { innerKm: number; outerKm: number };
+  sentAt: IsoDate;
+  lastSentAt: IsoDate;
+  rounds: number;
+  openedAt: IsoDate | null;
+  declinedAt: IsoDate | null;
+}
+
 /** Vetting documents (contract shared with the ops dashboard, 2026-10-08). */
 export const VETTING_DOC_TYPES = ['national-id', 'certification', 'riding-permit'] as const;
 export type VettingDocType = (typeof VETTING_DOC_TYPES)[number];

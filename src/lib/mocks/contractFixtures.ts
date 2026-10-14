@@ -193,6 +193,8 @@ function job(input: {
   etaMinutes?: number;
   /** Catalogue item ids the customer tapped (the cart). */
   items?: string[];
+  /** Normalised number plate, when the customer gave one. */
+  vehiclePlate?: string;
 }): Job {
   const createdAt = minutesAgo(input.requestedMinutesAgo);
   const timeline: JobTimelineEntry[] = [
@@ -211,6 +213,7 @@ function job(input: {
       description: input.description,
       createdAt,
       ...(input.items ? { items: input.items } : {}),
+      ...(input.vehiclePlate ? { vehiclePlate: input.vehiclePlate } : {}),
     },
     status,
     radiusKm: input.radiusKm ?? 5,
@@ -247,6 +250,7 @@ export const JOBS: Job[] = [
     service: 'flat-tyre',
     description: 'Rear left puncture, no spare.',
     items: ['tyre-puncture', 'tyre-tube'],
+    vehiclePlate: 'UBA123X',
     requestedMinutesAgo: 41,
     steps: [
       ['matched', 40],
