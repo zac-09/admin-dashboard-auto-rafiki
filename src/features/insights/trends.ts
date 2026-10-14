@@ -49,7 +49,7 @@ export function lastWeeks(count: number, now: Date): string[] {
  * mechanic verified before the dashboard existed (no decision on record) counts in every
  * week: they were taking jobs.
  */
-function verifiedDuring(
+export function verifiedDuring(
   mechanic: MechanicDoc,
   entries: readonly AuditEntry[],
   weekStart: string,

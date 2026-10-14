@@ -208,6 +208,15 @@ the weeks. Each row has a call link and a ready-made reminder (weeks and total, 
 details) as a WhatsApp link, an SMS link and a copy button. Recording a payment clears the
 row. Suggesting suspension after N unpaid weeks waits for an agreed rule.
 
+### Phase 2 model
+
+Revenue → Phase 2 model replays the last 4 or 8 full weeks as if AutoRafiki had taken a
+commission (5, 10, 15, 20% or any whole percent up to 30) on each completed job instead of
+the weekly subscription: commission against subscriptions in total and week by week, the
+break-even rate, the jobs a week a mechanic needs at the average fee to match UGX 15,000,
+and who would pay more or less. Commission is on the call-out `fee` only (on-site prices are
+not recorded), so the figures are a floor. A model only; it changes nothing.
+
 ## Insights
 
 `/insights` (admin and ops) reads ten weeks of jobs, ratings, vetting history and payments
