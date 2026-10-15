@@ -12,6 +12,7 @@ import { daysSince, formatDate } from '@/lib/format';
 import type { VettingStatus } from '@/lib/vetting';
 import type { AuditEntry, MechanicDoc } from '@/types';
 
+import { AfterApproval } from './AfterApproval';
 import { ApplicantPipeline } from './ApplicantPipeline';
 import { auditEntryLabel } from './auditLabels';
 import { useMechanicAudit, useVettingQueue } from './hooks';
@@ -135,6 +136,7 @@ export function VettingQueuePage() {
           entries={audit.data ?? []}
         />
       ) : null}
+      {queue === 'verified' && !loading && !error ? <AfterApproval /> : null}
       {loading ? (
         isDesktop ? (
           <SkeletonTable rows={5} columns={6} label="Loading mechanics" />

@@ -158,6 +158,14 @@ application to first approval over the last 90 days. Applicants who still owe a 
 had one rejected) get call, WhatsApp and SMS nudges naming exactly what to upload. Documents
 and reviews are read once per visit, one mechanic at a time (fine at pilot scale).
 
+### After approval
+
+The Verified tab opens with everyone first approved in the last 60 days and how they got
+going: not seen online since approval, online but no completed job yet, or first job done
+(with the days it took and the median across them). "Not seen online" is only claimed when
+the availability log covers the whole time since approval; earlier approvals without a job
+say so instead. Each recruit still to start links to Messages.
+
 ## App contract, 2026-10-14 (rules ready; the app builds against them)
 
 Rules and emulator tests (`tests/rules/appContract20261014.test.ts`) for paths agreed with the
