@@ -26,7 +26,9 @@ export type Permission =
   /** Trends, coverage, demand and mechanic scorecards. */
   | 'insights.view'
   /** Message mechanics (inbox + push) and see what was sent. */
-  | 'mechanics.message';
+  | 'mechanics.message'
+  /** Write shift handover notes and mark them handled. */
+  | 'handover.write';
 
 const MATRIX: Record<AdminRole, readonly Permission[]> = {
   admin: [
@@ -44,6 +46,7 @@ const MATRIX: Record<AdminRole, readonly Permission[]> = {
     'audit.view',
     'insights.view',
     'mechanics.message',
+    'handover.write',
   ],
   ops: [
     'vetting.view',
@@ -58,8 +61,16 @@ const MATRIX: Record<AdminRole, readonly Permission[]> = {
     'audit.view',
     'insights.view',
     'mechanics.message',
+    'handover.write',
   ],
-  support: ['vetting.view', 'operations.view', 'support.view', 'support.annotate', 'settings.view'],
+  support: [
+    'vetting.view',
+    'operations.view',
+    'support.view',
+    'support.annotate',
+    'settings.view',
+    'handover.write',
+  ],
 };
 
 export function can(role: AdminRole | null | undefined, permission: Permission): boolean {

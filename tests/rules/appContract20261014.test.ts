@@ -218,3 +218,13 @@ describe('collection-group reads the dashboard makes over the app logs', () => {
     await assertFails(getDocs(collectionGroup(db, 'offers')));
   });
 });
+
+describe('handoverNotes (dashboard-only shift notes)', () => {
+  it('staff read; app users never; nobody writes directly', async () => {
+    await seed({ 'handoverNotes/n1': { text: 'watch job x', handledAt: null } });
+    await assertSucceeds(getDoc(doc(staff('support'), 'handoverNotes/n1')));
+    await assertFails(getDoc(doc(appUser(UID.mechanic), 'handoverNotes/n1')));
+    await assertFails(setDoc(doc(staff('ops'), 'handoverNotes/n2'), { text: 'x' }));
+    await assertFails(updateDoc(doc(staff('admin'), 'handoverNotes/n1'), { handledAt: AT }));
+  });
+});

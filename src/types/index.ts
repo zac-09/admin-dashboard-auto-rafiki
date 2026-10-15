@@ -9,3 +9,4 @@ export * from './staff';
 export * from './vettingReviews';
 export * from './repositories';
 export * from './appLogs';
+export * from './handover';

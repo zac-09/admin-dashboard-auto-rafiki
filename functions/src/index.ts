@@ -14,6 +14,7 @@
  * - addSupportNote, flagDispute, resolveDispute: customer support on a job (all roles;
  *   suspending a mechanic as a dispute outcome needs admin or ops; audited)
  * - sendMechanicMessage: message mechanics, inbox copy + push (admin, ops; audited)
+ * - addHandoverNote, markHandoverHandled: shift notes between operators (all roles)
  */
 import { initializeApp } from 'firebase-admin/app';
 import { getAuth, type UserRecord } from 'firebase-admin/auth';
@@ -27,6 +28,7 @@ import { SERVICE_LABELS } from '../../src/lib/labels';
 import { INBOX, OPS_MESSAGE_CHANNEL, OPS_MESSAGES } from '../../src/lib/mechanicMessages';
 import { AUDIT_COLLECTION } from '../../src/types/audit';
 import { COLLECTIONS } from '../../src/types/firestore';
+import { HANDOVER_NOTES } from '../../src/types/handover';
 import { SUBSCRIPTIONS } from '../../src/types/subscriptions';
 import { DISPUTES, SUPPORT_NOTES, type Dispute } from '../../src/types/support';
 import { VETTING_REVIEWS, type VettingReviews } from '../../src/types/vettingReviews';
@@ -37,6 +39,11 @@ import {
   rebroadcastJob as rebroadcastJobHandler,
   type InterventionDeps,
 } from './interventions';
+import {
+  addHandoverNote as addHandoverHandler,
+  markHandoverHandled as markHandledHandler,
+  type HandoverDeps,
+} from './handover';
 import { markSubscriptionPaid as markPaidHandler, type MarkPaidDeps } from './markPaid';
 import { sendMechanicMessage as sendMessageHandler, type MessageDeps } from './messages';
 import { reviewDocument as reviewDocumentHandler, type ReviewDeps } from './reviewDocument';
@@ -417,6 +424,25 @@ const messageDeps: MessageDeps = {
   now: () => new Date(),
 };
 
+const handoverDeps: HandoverDeps = {
+  async add(note) {
+    const ref = await getFirestore().collection(HANDOVER_NOTES).add(note);
+    return ref.id;
+  },
+  async markHandled(id, by) {
+    const db = getFirestore();
+    const ref = db.collection(HANDOVER_NOTES).doc(id);
+    return db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      if (!snap.exists) return 'missing' as const;
+      if (snap.data()?.handledAt) return 'already' as const;
+      tx.update(ref, { handledAt: by.at, handledBy: by.uid, handledByEmail: by.email });
+      return 'ok' as const;
+    });
+  },
+  now: () => new Date(),
+};
+
 function callerOf(request: CallableRequest): Caller | null {
   if (!request.auth) return null;
   return {
@@ -478,4 +504,12 @@ export const reviewDocument = onCall((request) =>
 
 export const sendMechanicMessage = onCall((request) =>
   sendMessageHandler(callerOf(request), request.data, messageDeps),
+);
+
+export const addHandoverNote = onCall((request) =>
+  addHandoverHandler(callerOf(request), request.data, handoverDeps),
+);
+
+export const markHandoverHandled = onCall((request) =>
+  markHandledHandler(callerOf(request), request.data, handoverDeps),
 );

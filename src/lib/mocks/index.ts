@@ -6,6 +6,7 @@ import {
   MockOperationsStore,
   MockPeopleRepository,
 } from './mockOperationsRepository';
+import { MockHandoverRepository } from './mockHandoverRepository';
 import { MockMessagesRepository } from './mockMessagesRepository';
 import { MockRevenueRepository } from './mockRevenueRepository';
 import { MockSettingsRepository } from './mockSettingsRepository';
@@ -50,6 +51,7 @@ export function createMockRepositories(
     settings,
     vettingDocuments: new MockVettingDocumentsRepository(store, auth),
     messages: new MockMessagesRepository(store, auth),
+    handover: new MockHandoverRepository(auth),
     insights: {
       listAvailabilitySince: async (since) =>
         structuredClone(ops.availability.filter((e) => e.at >= since)),

@@ -11,6 +11,7 @@ import { useDocumentTitle } from '@/lib/useDocumentTitle';
 import { useNow } from '@/lib/useLive';
 
 import { AlertRail } from './AlertRail';
+import { HandoverPanel } from './HandoverPanel';
 import { computeAlerts } from './alerts';
 import {
   useActiveJobs,
@@ -113,6 +114,7 @@ export function OperationsPage() {
         {/* Alerts first and full width: they are the operator's to-do list; the board gets
             the whole width below so more status columns fit. */}
         <AlertRail alerts={alerts} />
+        <HandoverPanel />
         <div className="min-w-0">
           <Tabs
             label="Operations views"

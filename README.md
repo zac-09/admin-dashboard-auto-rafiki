@@ -197,6 +197,15 @@ way (the app's own state machine; written as `cancelledBy: 'admin'`, which the a
 `rebroadcastJob` are audited callables that also leave a note on the job. Stale requests on the
 alert rail have a one-click "Widen search".
 
+### Shift handover
+
+The control room has a live "Shift handover" panel under the alerts: any staff role writes a
+note for the next shift (optionally tied to a job id, which links to the job), and anyone can
+mark it handled, once. Open notes stay on top; notes handled in the last 24 hours fold away
+below. Notes live in `handoverNotes` (dashboard-only; app users never read it), written by
+the `addHandoverNote` and `markHandoverHandled` callables. They are not audited: the notes
+are their own record, with author and handler on each.
+
 ### Live coverage
 
 The control-room map shades the broadcast radius (settings/app's first radius, 5 km by

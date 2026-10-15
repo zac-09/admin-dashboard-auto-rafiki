@@ -315,6 +315,12 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // handoverNotes/{id}: shift notes between operators, written by the addHandoverNote and
+    // markHandoverHandled callables. Staff read via the rule above; app users never.
+    match /handoverNotes/{noteId} {
+      allow read, write: if false;
+    }
+
     // opsMessages/{id}: what operations sent to mechanics (who, to whom, push counts), written
     // by the sendMechanicMessage callable. Staff read via the rule above; the mechanics' own
     // copies live in mechanics/{uid}/inbox.
