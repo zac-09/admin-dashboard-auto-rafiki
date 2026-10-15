@@ -189,6 +189,15 @@ way (the app's own state machine; written as `cancelledBy: 'admin'`, which the a
 `rebroadcastJob` are audited callables that also leave a note on the job. Stale requests on the
 alert rail have a one-click "Widen search".
 
+### Live coverage
+
+The control-room map shades the broadcast radius (settings/app's first radius, 5 km by
+default) around every mechanic receiving jobs, so ground nobody covers right now stands out.
+A request that lands where no verified mechanic online is within that radius raises a "No
+mechanic online within 5 km" alert at once (in place of the 2-minute stale-request alert for
+the same job), with "Widen search" and "Message mechanics near here", which opens Messages
+with that spot preselected. Desktop alerts include it.
+
 ### Desktop alerts
 
 "Desktop alerts" on the alert rail turns on browser notifications for this computer (the

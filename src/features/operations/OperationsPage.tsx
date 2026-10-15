@@ -6,6 +6,7 @@ import { AnimatedNumber } from '@/components/motion';
 import { Notice, Skeleton, SkeletonBoard, Tabs } from '@/components/ui';
 import { useAppSettings } from '@/features/settings/hooks';
 import { DEFAULT_CATALOGUE } from '@/lib/catalogue';
+import { BROADCAST } from '@/types';
 import { useDocumentTitle } from '@/lib/useDocumentTitle';
 import { useNow } from '@/lib/useLive';
 
@@ -49,7 +50,19 @@ export function OperationsPage() {
         ? 'reconnecting'
         : 'live';
   const onlineMechanics = useMemo(() => online.data ?? [], [online.data]);
-  const alerts = computeAlerts(activeJobs, lowRatings.data ?? [], now);
+  // Stable between ticks so the map's coverage circles redraw only when mechanics change.
+  const mechanicMarkers = useMemo(() => mechanicPins(onlineMechanics), [onlineMechanics]);
+  // Cart items and the broadcast radius come from the published settings (app defaults until then).
+  const appSettings = useAppSettings();
+  const radiusKm =
+    appSettings.effective?.settings.broadcast.initialRadiusKm ?? BROADCAST.initialRadiusKm;
+  // Coverage needs the online list: until it loads, no "nobody nearby" alert can be judged.
+  const alerts = computeAlerts(
+    activeJobs,
+    lowRatings.data ?? [],
+    now,
+    online.status === 'ready' ? { online: onlineMechanics, radiusKm } : undefined,
+  );
   // The alert count in the tab title, so staff see it from any other tab.
   useDocumentTitle(alerts.length > 0 ? `(${alerts.length}) Live operations` : 'Live operations');
 
@@ -61,8 +74,6 @@ export function OperationsPage() {
   const looked = useMechanicNames(assigned);
   const names = new Map(looked.data ?? []);
   for (const m of onlineMechanics) names.set(m.userId, m.businessName);
-  // Cart items on cards resolve through the published catalogue (the app's defaults until then).
-  const appSettings = useAppSettings();
   const catalogue = appSettings.effective?.settings.catalogue ?? DEFAULT_CATALOGUE;
 
   const failures = [
@@ -133,7 +144,8 @@ export function OperationsPage() {
             >
               <OpsMap
                 jobs={jobPins(activeJobs, alerts)}
-                mechanics={mechanicPins(onlineMechanics)}
+                mechanics={mechanicMarkers}
+                coverageKm={radiusKm}
               />
             </Suspense>
           )}

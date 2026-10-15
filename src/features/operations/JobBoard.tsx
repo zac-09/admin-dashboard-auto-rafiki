@@ -10,7 +10,8 @@ import type { Alert } from './alerts';
 import { groupByStatus, STATUS_LABELS } from './board';
 import { JobCard } from './JobCard';
 
-const ATTENTION: Record<'stale-request' | 'late-enroute', string> = {
+const ATTENTION: Record<'out-of-reach' | 'stale-request' | 'late-enroute', string> = {
+  'out-of-reach': 'No mechanic online nearby',
   'stale-request': 'No taker yet',
   'late-enroute': 'On the way over 30 min',
 };

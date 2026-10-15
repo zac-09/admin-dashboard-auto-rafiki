@@ -6,6 +6,7 @@ import { KAMPALA, mapStyleFor } from '@/lib/maps';
 import { useThemeMode } from '@/theme/themeMode';
 
 import type { JobPin, MechanicPin } from './pins';
+import { CoverageCircles } from './CoverageCircles';
 import { HtmlPin } from './HtmlPin';
 
 function JobMarker({ pin }: { pin: JobPin }) {
@@ -44,7 +45,7 @@ function MechanicMarker({ pin }: { pin: MechanicPin }) {
   );
 }
 
-function Legend() {
+function Legend({ coverageKm }: { coverageKm: number }) {
   return (
     <ul className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted">
       <li className="flex items-center gap-1.5">
@@ -59,12 +60,26 @@ function Legend() {
       <li className="flex items-center gap-1.5">
         <span aria-hidden className="size-3 rounded-full ring-2 ring-muted" /> Online, not verified
       </li>
+      <li className="flex items-center gap-1.5">
+        <span aria-hidden className="size-3 rounded-full border border-accent bg-accent/10" />{' '}
+        Shaded circle: {coverageKm} km a mechanic receiving jobs covers (outside them, a request
+        reaches nobody)
+      </li>
     </ul>
   );
 }
 
 /** Lazy-loaded: the Maps JS API only loads when someone opens the map. Never embed publicly. */
-export default function OpsMap({ jobs, mechanics }: { jobs: JobPin[]; mechanics: MechanicPin[] }) {
+export default function OpsMap({
+  jobs,
+  mechanics,
+  coverageKm,
+}: {
+  jobs: JobPin[];
+  mechanics: MechanicPin[];
+  /** Broadcast radius drawn around each mechanic receiving jobs. */
+  coverageKm: number;
+}) {
   const mode = useThemeMode((s) => s.mode);
   if (!env.mapsApiKey) {
     return (
@@ -86,6 +101,7 @@ export default function OpsMap({ jobs, mechanics }: { jobs: JobPin[]; mechanics:
             mapTypeControl={false}
             clickableIcons={false}
           >
+            <CoverageCircles pins={mechanics} radiusKm={coverageKm} />
             {mechanics.map((pin) => (
               <HtmlPin key={`m:${pin.id}`} position={pin.position}>
                 <MechanicMarker pin={pin} />
@@ -99,7 +115,7 @@ export default function OpsMap({ jobs, mechanics }: { jobs: JobPin[]; mechanics:
           </Map>
         </APIProvider>
       </div>
-      <Legend />
+      <Legend coverageKm={coverageKm} />
     </div>
   );
 }

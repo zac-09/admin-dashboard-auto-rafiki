@@ -4,7 +4,10 @@ import { useLocation, useNavigate } from 'react-router';
 import { useNow } from '@/lib/useLive';
 
 import { computeAlerts } from '../alerts';
-import { useActiveJobs, useLowRatings } from '../hooks';
+import { useAppSettings } from '@/features/settings/hooks';
+import { BROADCAST } from '@/types';
+
+import { useActiveJobs, useLowRatings, useOnlineMechanics } from '../hooks';
 
 import { useDesktopAlerts } from './desktopAlerts';
 import { planNotifications } from './plan';
@@ -13,14 +16,23 @@ import { planNotifications } from './plan';
 function Watcher() {
   const active = useActiveJobs();
   const lowRatings = useLowRatings();
+  const online = useOnlineMechanics();
+  const appSettings = useAppSettings();
+  const radiusKm =
+    appSettings.effective?.settings.broadcast.initialRadiusKm ?? BROADCAST.initialRadiusKm;
   const now = useNow();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const seen = useRef(new Set<string>());
 
   useEffect(() => {
-    if (active.status !== 'ready' || lowRatings.status !== 'ready') return;
-    const alerts = computeAlerts(active.data.jobs, lowRatings.data, now);
+    if (active.status !== 'ready' || lowRatings.status !== 'ready' || online.status !== 'ready') {
+      return;
+    }
+    const alerts = computeAlerts(active.data.jobs, lowRatings.data, now, {
+      online: online.data,
+      radiusKm,
+    });
     const planned = planNotifications(alerts, seen.current);
     for (const a of alerts) seen.current.add(a.key);
     // The operator is already looking at the alert rail: nothing to interrupt them with.
@@ -35,7 +47,7 @@ function Watcher() {
         n.close();
       };
     }
-  }, [active, lowRatings, now, pathname, navigate]);
+  }, [active, lowRatings, online, radiusKm, now, pathname, navigate]);
 
   return null;
 }

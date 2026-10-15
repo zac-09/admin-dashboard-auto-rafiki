@@ -25,6 +25,15 @@ function describe(alert: Alert): PlannedNotification {
       path: `/jobs/${r.jobId}`,
     };
   }
+  if (alert.kind === 'out-of-reach') {
+    const { job } = alert;
+    return {
+      tag: alert.key,
+      title: `No mechanic online within ${alert.radiusKm} km of a new request`,
+      body: `${SERVICE_LABELS[job.request.service]}, ${job.request.location.label}`,
+      path: `/jobs/${job.id}`,
+    };
+  }
   const { job, ms } = alert;
   const where = `${SERVICE_LABELS[job.request.service]}, ${job.request.location.label}`;
   return {

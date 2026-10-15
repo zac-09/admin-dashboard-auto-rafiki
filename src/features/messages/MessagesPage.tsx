@@ -46,6 +46,22 @@ function Sent({ message, index, count }: { message: OpsMessage; index: number; c
   );
 }
 
+/** `?lat=&lng=&place=` from an alert, when it is a real coordinate. */
+function placeFrom(params: URLSearchParams) {
+  const latitude = Number(params.get('lat'));
+  const longitude = Number(params.get('lng'));
+  if (
+    !params.get('lat') ||
+    !params.get('lng') ||
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude)
+  ) {
+    return null;
+  }
+  if (Math.abs(latitude) > 90 || Math.abs(longitude) > 180) return null;
+  return { latitude, longitude, label: (params.get('place') ?? 'the request').slice(0, 120) };
+}
+
 /** Messages from operations to mechanics: write one, see what was sent and who read it. */
 export function MessagesPage() {
   useDocumentTitle('Messages');
@@ -69,7 +85,11 @@ export function MessagesPage() {
         notification on the "Messages from AutoRafiki" channel. Every send is audited.
       </p>
       <div className="grid gap-4 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:items-start">
-        <Composer initialTo={params.get('to')} onSent={setMoment} />
+        <Composer
+          initialTo={params.get('to')}
+          initialPlace={placeFrom(params)}
+          onSent={setMoment}
+        />
         <section aria-label="Sent messages" className="panel">
           <h2 className="micro-label px-4 pt-4 pb-2">Sent</h2>
           {sent.isPending ? (

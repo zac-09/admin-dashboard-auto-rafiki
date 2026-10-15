@@ -18,6 +18,13 @@ const CHOICE =
 
 const DAY_MS = 86_400_000;
 
+/** "Kira (4 unanswered, nearest mechanic 8 km)"; a request's place carries no figures. */
+function placeOptionLabel(p: { label: string; unserved: number | null; nearestKm: number | null }) {
+  if (p.unserved === null) return p.label;
+  const nearest = p.nearestKm === null ? '' : `, nearest mechanic ${Math.round(p.nearestKm)} km`;
+  return `${p.label} (${p.unserved} unanswered${nearest})`;
+}
+
 /** Places worth messaging about: the worst coverage gaps of the last four weeks. */
 function useGapPlaces() {
   const inputs = useInsightsInputs();
@@ -41,9 +48,12 @@ function useGapPlaces() {
 
 export function Composer({
   initialTo,
+  initialPlace,
   onSent,
 }: {
   initialTo: string | null;
+  /** From an alert: "message mechanics near this request". Offered first and preselected. */
+  initialPlace: { latitude: number; longitude: number; label: string } | null;
   onSent: (summary: { title: string; subtitle: string }) => void;
 }) {
   const { support } = useRepositories();
@@ -53,7 +63,7 @@ export function Composer({
   });
   const gaps = useGapPlaces();
   const send = useSendMessage();
-  const [kind, setKind] = useState<Kind>(initialTo ? 'mechanics' : 'near');
+  const [kind, setKind] = useState<Kind>(initialTo && !initialPlace ? 'mechanics' : 'near');
   const [chosen, setChosen] = useState<Set<string>>(new Set(initialTo ? [initialTo] : []));
   const [filter, setFilter] = useState('');
   const [placeKey, setPlaceKey] = useState<string | null>(null);
@@ -61,7 +71,20 @@ export function Composer({
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
 
-  const place = gaps.places.find((p) => p.key === (placeKey ?? gaps.places[0]?.key));
+  const places = initialPlace
+    ? [
+        {
+          key: 'request',
+          label: `Near this request: ${initialPlace.label}`,
+          latitude: initialPlace.latitude,
+          longitude: initialPlace.longitude,
+          unserved: null as number | null,
+          nearestKm: null as number | null,
+        },
+        ...gaps.places,
+      ]
+    : gaps.places;
+  const place = places.find((p) => p.key === (placeKey ?? places[0]?.key));
   const audience: Audience | null =
     kind === 'verified'
       ? { kind: 'verified' }
@@ -75,7 +98,7 @@ export function Composer({
               latitude: place.latitude,
               longitude: place.longitude,
               radiusKm,
-              label: place.label,
+              label: place.key === 'request' && initialPlace ? initialPlace.label : place.label,
             }
           : null;
   const all: MechanicDoc[] = mechanics.data ?? [];
@@ -164,9 +187,9 @@ export function Composer({
       </fieldset>
 
       {kind === 'near' ? (
-        gaps.loading ? (
+        gaps.loading && !initialPlace ? (
           <p className="text-sm text-muted">Finding coverage gaps…</p>
-        ) : gaps.places.length === 0 ? (
+        ) : places.length === 0 ? (
           <p className="text-sm text-muted">
             No unanswered areas in the last four weeks. Choose mechanics instead.
           </p>
@@ -180,11 +203,9 @@ export function Composer({
                 onChange={(e) => setPlaceKey(e.target.value)}
                 className={`${FIELD} min-h-10`}
               >
-                {gaps.places.map((p) => (
+                {places.map((p) => (
                   <option key={p.key} value={p.key}>
-                    {p.label} ({p.unserved} unanswered
-                    {p.nearestKm === null ? '' : `, nearest mechanic ${Math.round(p.nearestKm)} km`}
-                    )
+                    {placeOptionLabel(p)}
                   </option>
                 ))}
               </select>

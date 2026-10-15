@@ -24,6 +24,20 @@ function AlertItem({ alert }: { alert: Alert }) {
       </Link>
     );
   }
+  if (alert.kind === 'out-of-reach') {
+    const { job } = alert;
+    return (
+      <Link to={`/jobs/${job.id}`} className="flex flex-col gap-0.5">
+        <span className="font-semibold">No mechanic online within {alert.radiusKm} km</span>
+        <span className="text-muted">
+          {SERVICE_LABELS[job.request.service]}, {job.request.location.label} ·{' '}
+          {alert.nearestKm === null
+            ? 'nobody online'
+            : `nearest ${alert.nearestKm.toFixed(1)} km away`}
+        </span>
+      </Link>
+    );
+  }
   const { job, ms } = alert;
   return (
     <Link to={`/jobs/${job.id}`} className="flex flex-col gap-0.5">
@@ -40,16 +54,32 @@ function AlertItem({ alert }: { alert: Alert }) {
 }
 
 /** One-click next step for an alert (the alert text itself opens the job). */
+const ACTION =
+  'mt-1 inline-flex min-h-8 items-center self-start rounded-control border border-hairline px-2 text-xs font-semibold hover:border-primary';
+
 function AlertAction({ alert }: { alert: Alert }) {
   const session = useSession();
-  if (alert.kind !== 'stale-request' || !can(session?.role, 'operations.intervene')) return null;
+  if (alert.kind !== 'stale-request' && alert.kind !== 'out-of-reach') return null;
+  const widen = can(session?.role, 'operations.intervene');
+  const message = alert.kind === 'out-of-reach' && can(session?.role, 'mechanics.message');
+  if (!widen && !message) return null;
+  const { latitude, longitude, label } = alert.job.request.location;
   return (
-    <Link
-      to={`/jobs/${alert.job.id}#rebroadcast`}
-      className="mt-1 inline-flex min-h-8 items-center self-start rounded-control border border-hairline px-2 text-xs font-semibold hover:border-primary"
-    >
-      Widen search
-    </Link>
+    <span className="flex flex-wrap gap-2">
+      {widen ? (
+        <Link to={`/jobs/${alert.job.id}#rebroadcast`} className={ACTION}>
+          Widen search
+        </Link>
+      ) : null}
+      {message ? (
+        <Link
+          to={`/messages?${new URLSearchParams({ lat: String(latitude), lng: String(longitude), place: label })}`}
+          className={ACTION}
+        >
+          Message mechanics near here
+        </Link>
+      ) : null}
+    </span>
   );
 }
 
