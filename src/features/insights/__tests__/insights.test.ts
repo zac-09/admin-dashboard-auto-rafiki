@@ -211,6 +211,7 @@ describe('mechanic scorecard', () => {
       'rating-falling',
       'low-rating',
       'payment-overdue',
+      'suspension-suggested',
     ]);
     expect(s.weekly.map((w) => w.completed)).toEqual([0, 0, 0, 0, 0, 1, 2, 0]);
   });

@@ -51,3 +51,21 @@ export function reminderMessage(account: OverdueAccount): string {
 export function whatsappLink(phone: string, text: string): string {
   return `https://wa.me/${phone.replace(/^\+/, '')}?text=${encodeURIComponent(text)}`;
 }
+
+/**
+ * Isaac's rule (2026-10-15): at this many overdue weeks the dashboard SUGGESTS suspension.
+ * It never suspends on its own; ops confirm through the normal audited decision.
+ */
+export const SUGGEST_SUSPENSION_AFTER_WEEKS = 2;
+
+export function suspensionSuggested(account: Pick<OverdueAccount, 'weeks'>): boolean {
+  return account.weeks.length >= SUGGEST_SUSPENSION_AFTER_WEEKS;
+}
+
+/** The reason prefilled into the suspend decision (ops can edit it before saving). */
+export function suspensionReason(account: OverdueAccount): string {
+  return (
+    `Subscription unpaid for ${account.weeks.length} weeks (${account.weeks.map(weekLabel).join('; ')}), ` +
+    `${formatUgx(account.amount)} outstanding. Reinstate once paid.`
+  );
+}

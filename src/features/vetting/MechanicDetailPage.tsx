@@ -19,6 +19,7 @@ import { DecisionForm } from './DecisionForm';
 import { DocumentsPanel } from './DocumentsPanel';
 import { DocumentsStanding } from './DocumentsStanding';
 import { useMechanic, useMechanicAudit } from './hooks';
+import { SuspensionSuggestion } from './SuspensionSuggestion';
 import { ratingText, servicesText, vehiclesText } from './mechanicText';
 import { PhoneLink } from './PhoneLink';
 import { VettingStatusBadge } from './VettingStatusBadge';
@@ -113,6 +114,7 @@ export function MechanicDetailPage() {
   const live = useMechanic(mechanicId);
   useDocumentTitle(live.mechanic?.businessName ?? 'Mechanic');
   const [saved, setSaved] = useState<{ mechanicId: string; message: string } | null>(null);
+  const [prefill, setPrefill] = useState<{ mechanicId: string; reason: string } | null>(null);
   const [moment, setMoment] = useState<
     | { status: 'pending' }
     | { status: 'success'; title: string; subtitle: string; message: string; mechanicId: string }
@@ -228,11 +230,20 @@ export function MechanicDetailPage() {
             </div>
           ) : null}
           <DocumentsStanding mechanic={m} />
+          <SuspensionSuggestion
+            mechanic={m}
+            onPrefill={(reason) => setPrefill({ mechanicId: m.userId, reason })}
+          />
           {can(session?.role, 'vetting.decide') ? (
-            // Remount on status change so a decision is never made against a stale status.
+            // Remount on status change (never decide against a stale status) and on prefill.
             <DecisionForm
-              key={m.vetting}
+              key={`${m.vetting}:${prefill?.mechanicId === m.userId ? prefill.reason : ''}`}
               mechanic={m}
+              prefill={
+                prefill?.mechanicId === m.userId && m.vetting === 'verified'
+                  ? { decision: 'suspend', reason: prefill.reason }
+                  : undefined
+              }
               onStart={() => setMoment({ status: 'pending' })}
               onFailed={() => setMoment(null)}
               onSaved={(outcome) =>

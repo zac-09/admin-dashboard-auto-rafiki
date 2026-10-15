@@ -241,7 +241,10 @@ The Subscriptions tab opens with a "To collect" list: every mechanic carrying ov
 (earlier unpaid weeks, plus this week from Thursday), most weeks first, with the amount and
 the weeks. Each row has a call link and a ready-made reminder (weeks and total, no payee
 details) as a WhatsApp link, an SMS link and a copy button. Recording a payment clears the
-row. Suggesting suspension after N unpaid weeks waits for an agreed rule.
+row. At 2 overdue weeks (Isaac's rule, 2026-10-15) a verified mechanic is marked "Suspension
+suggested" in To collect, on scorecards, and in their Decide panel, where "Prefill suspension"
+fills in the suspend decision with the unpaid weeks as the reason. The dashboard never
+suspends on its own: ops review and save it like any other audited decision.
 
 ### Weekly pilot report
 

@@ -5,7 +5,12 @@ import { Reveal, staggerDelay } from '@/components/motion';
 import { formatUgx } from '@/lib/format';
 import { weekLabel } from '@/lib/subscriptions';
 
-import { reminderMessage, whatsappLink, type OverdueAccount } from './collections';
+import {
+  reminderMessage,
+  suspensionSuggested,
+  whatsappLink,
+  type OverdueAccount,
+} from './collections';
 
 const ACTION =
   'inline-flex min-h-10 items-center rounded-control border border-hairline px-3 text-sm font-semibold hover:border-primary';
@@ -59,6 +64,15 @@ function Account({
           {formatUgx(amount)} · {weeks.length} {weeks.length === 1 ? 'week' : 'weeks'} overdue
         </span>
         <span className="text-xs text-muted">{weeks.map(weekLabel).join(' · ')}</span>
+        {suspensionSuggested(account) && mechanic.vetting === 'verified' ? (
+          <Link
+            to={`/vetting/${mechanic.userId}`}
+            className="inline-flex items-center gap-1.5 rounded-control border border-warning px-2 py-0.5 text-xs font-semibold"
+          >
+            <span aria-hidden className="diamond text-warning" />
+            Suspension suggested: review
+          </Link>
+        ) : null}
       </div>
       {mechanic.phone ? (
         <div className="flex flex-wrap gap-2">

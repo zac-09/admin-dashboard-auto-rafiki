@@ -36,16 +36,21 @@ export interface DecisionCallbacks {
 
 export function DecisionForm({
   mechanic,
+  prefill,
   onStart,
   onSaved,
   onFailed,
 }: {
   mechanic: MechanicDoc;
+  /** A suggested decision (e.g. suspension for unpaid weeks); the operator still saves it. */
+  prefill?: { decision: VettingDecision; reason: string };
 } & DecisionCallbacks) {
   const options = allowedDecisions(mechanic.vetting);
-  const [decision, setDecision] = useState<VettingDecision | null>(null);
+  const [decision, setDecision] = useState<VettingDecision | null>(
+    prefill && options.includes(prefill.decision) ? prefill.decision : null,
+  );
   const [checklist, setChecklist] = useState<string[]>([]);
-  const [reason, setReason] = useState('');
+  const [reason, setReason] = useState(prefill?.reason ?? '');
   const mutation = useDecideVetting();
 
   const needsChecklist = decision === 'approve';

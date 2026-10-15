@@ -2,6 +2,8 @@ import { median } from '@/features/revenue/kpis';
 import { ratedBy } from '@/lib/ratings';
 import type { Job, MechanicDoc, Rating } from '@/types';
 
+import { SUGGEST_SUSPENSION_AFTER_WEEKS } from '@/features/revenue/collections';
+
 import { arrivalMinutes, enteredAt, lateMinutes } from './jobFacts';
 import {
   hoursOnline,
@@ -45,6 +47,7 @@ export type Signal =
   | 'rating-falling'
   | 'low-rating'
   | 'payment-overdue'
+  | 'suspension-suggested'
   | 'rarely-online'
   | 'ignores-alerts';
 
@@ -55,6 +58,7 @@ export const SIGNAL_LABELS: Record<Signal, string> = {
   'rating-falling': 'Rating falling',
   'low-rating': 'Low rating',
   'payment-overdue': 'Payment overdue',
+  'suspension-suggested': 'Suspension suggested',
   'rarely-online': 'Rarely online',
   'ignores-alerts': 'Ignores job alerts',
 };
@@ -66,6 +70,7 @@ export const CONCERNS: readonly Signal[] = [
   'rating-falling',
   'low-rating',
   'payment-overdue',
+  'suspension-suggested',
   'rarely-online',
   'ignores-alerts',
 ];
@@ -192,6 +197,13 @@ export function scorecard(
     signals.push('low-rating');
   }
   if (overdueWeeks) signals.push('payment-overdue');
+  if (
+    overdueWeeks &&
+    overdueWeeks >= SUGGEST_SUSPENSION_AFTER_WEEKS &&
+    mechanic.vetting === 'verified'
+  ) {
+    signals.push('suspension-suggested');
+  }
 
   // Presence: averaged over the days the log actually covers, never over days before it.
   const t0 = now.getTime() - 28 * DAY_MS;
