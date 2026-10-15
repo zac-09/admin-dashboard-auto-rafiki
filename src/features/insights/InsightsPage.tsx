@@ -4,6 +4,7 @@ import { PageHeader } from '@/app/pages/PageHeader';
 import { Notice, SkeletonPanel, Tabs } from '@/components/ui';
 import { useDocumentTitle } from '@/lib/useDocumentTitle';
 
+import { ChangesTab } from './ChangesTab';
 import { CoverageTab } from './CoverageTab';
 import { DemandTab } from './DemandTab';
 import { useInsightsInputs } from './hooks';
@@ -17,6 +18,7 @@ const VIEWS = [
   { id: 'coverage' as const, label: 'Coverage gaps' },
   { id: 'demand' as const, label: 'Demand & supply' },
   { id: 'mechanics' as const, label: 'Mechanic scorecards' },
+  { id: 'changes' as const, label: 'Settings changes' },
 ];
 type View = (typeof VIEWS)[number]['id'];
 
@@ -58,8 +60,10 @@ export function InsightsPage() {
         <CoverageTab data={inputs.data} />
       ) : view === 'demand' ? (
         <DemandTab data={inputs.data} />
-      ) : (
+      ) : view === 'mechanics' ? (
         <MechanicsTab data={inputs.data} />
+      ) : (
+        <ChangesTab data={inputs.data} />
       )}
     </>
   );

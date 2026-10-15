@@ -327,6 +327,12 @@ uses the `etaMinutes` the mechanic was shown when setting off, falling back to t
 estimate for older jobs. Both logs are read with collection-group queries, which need the
 `fieldOverrides` in `firebase/firestore.indexes.json` (deploy indexes before hosting).
 
+**Settings changes** (fifth tab) takes every audited `settings.update` in the last ten weeks
+and compares up to 14 days before with up to 14 days after (cut short by a neighbouring
+change or today): requests a day, unanswered share, completion, median arrival, average
+fee, and requests a day for each service whose price changed, plus any broadcast radius or
+window change. It says plainly that this is a comparison, not proof.
+
 In mock mode the dev server adds ten weeks of deterministic history
 (`src/lib/mocks/historyFixtures.ts`) so these views have something to show; tests opt in.
 
