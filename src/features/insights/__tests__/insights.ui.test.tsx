@@ -45,7 +45,7 @@ describe('insights', () => {
     expect(await screen.findByText(/The map needs VITE_MAPS_API_KEY/)).toBeInTheDocument();
   });
 
-  it('demand: a weekday-by-hour grid and the hours that most need mechanics', async () => {
+  it('demand and supply: grids, the hardest hours and the hours nobody covers', async () => {
     const user = await openAs('ops', '/insights?view=demand');
     const hardest = await screen.findByRole('region', { name: 'Hardest hours' });
     expect(within(hardest).getAllByRole('listitem')[0]).toHaveTextContent(
@@ -53,6 +53,15 @@ describe('insights', () => {
     );
     const table = screen.getByRole('table', { name: 'Requests by weekday and hour' });
     expect(within(table).getAllByRole('row')).toHaveLength(8);
+    // The app's availability log: hours with demand but on average nobody online.
+    const uncovered = screen.getByRole('region', { name: 'Hours with demand but nobody online' });
+    expect(within(uncovered).getAllByRole('listitem')[0]).toHaveTextContent(
+      /requests a week, \d\.\d mechanics online on average/,
+    );
+    await user.click(screen.getByRole('button', { name: 'Mechanics online' }));
+    expect(
+      screen.getByRole('table', { name: 'Average mechanics online by weekday and hour' }),
+    ).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Unanswered' }));
     expect(
       screen.getByRole('table', { name: 'Unanswered requests by weekday and hour' }),

@@ -278,8 +278,11 @@ once per visit (no live listeners, no new indexes) and answers four questions:
   areas of about 2 km, ranked worst first, with the distance to the nearest verified
   mechanic. The app keeps only each mechanic's latest location, so mechanic positions are
   where they are now, not where they were at the time.
-- **Demand by hour**: requests and unanswered requests by weekday and hour, plus the three
-  hours that most need more mechanics online.
+- **Demand & supply**: requests, unanswered requests and average mechanics online by weekday
+  and hour, the three hours with the most unanswered requests, and the hours where customers
+  ask but on average nobody is online (linking to Messages). Mechanics online comes from the
+  availability log (online/offline stretches of non-pending mechanics), averaged over the
+  weeks logged, and is compared with requests over that same span only.
 - **Mechanic scorecards**: a ranked table (also a Performance panel on each mechanic's page)
   with jobs per week, request-to-arrival, lateness, cancellations, the 30-day rating and its
   trend, subscription arrears, and signals (top performer, often late, cancels often, rating

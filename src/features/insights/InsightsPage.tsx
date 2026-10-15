@@ -15,7 +15,7 @@ export type InsightsData = NonNullable<ReturnType<typeof useInsightsInputs>['dat
 const VIEWS = [
   { id: 'trends' as const, label: 'Trends' },
   { id: 'coverage' as const, label: 'Coverage gaps' },
-  { id: 'demand' as const, label: 'Demand by hour' },
+  { id: 'demand' as const, label: 'Demand & supply' },
   { id: 'mechanics' as const, label: 'Mechanic scorecards' },
 ];
 type View = (typeof VIEWS)[number]['id'];
