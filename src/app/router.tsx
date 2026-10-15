@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
 
 import {
   AuditLogPage,
+  CustomersPage,
   InsightsPage,
   MessagesPage,
   WeeklyReportPage,
@@ -67,6 +68,14 @@ export const routes: RouteObject[] = [
         element: (
           <RequirePermission permission="support.view">
             <SupportPage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: '/customers',
+        element: (
+          <RequirePermission permission="support.view">
+            <CustomersPage />
           </RequirePermission>
         ),
       },

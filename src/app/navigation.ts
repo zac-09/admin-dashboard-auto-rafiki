@@ -28,6 +28,11 @@ export const NAV_ITEMS: readonly NavItem[] = [
     permission: 'support.view',
   },
   {
+    to: '/customers',
+    label: 'Customers',
+    permission: 'support.view',
+  },
+  {
     to: '/revenue',
     label: 'Revenue',
     permission: 'revenue.view',

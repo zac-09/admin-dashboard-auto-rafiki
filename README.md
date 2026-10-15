@@ -238,6 +238,15 @@ transcript, ratings both ways, people, internal notes, the dispute, intervention
 by the `addSupportNote`, `flagDispute` and `resolveDispute` callables (audited); app users can
 never read them. Resolving with "Mechanic suspended" needs admin or ops.
 
+### Customers
+
+`/customers` (every role) groups everyone who requested help in the last ten weeks: never
+served (asked, and nobody ever came; call them first), lapsed (served, but nothing in 30
+days), repeat customers (two or more completed jobs) and flagged by mechanics (an average of
+2.5 stars or lower over at least two ratings from mechanics; check the jobs before acting).
+The header gives the customer count, new customers this week and the share of served
+customers who came back. Names and phones load only for the rows shown.
+
 ## Revenue & analytics
 
 `/revenue` (admin, ops). **Subscriptions**: Phase-1 UGX 15,000 per verified mechanic per week;

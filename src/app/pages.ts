@@ -34,6 +34,9 @@ export const WeeklyReportPage = lazy(() =>
 export const MessagesPage = lazy(() =>
   import('@/features/messages/MessagesPage').then((m) => ({ default: m.MessagesPage })),
 );
+export const CustomersPage = lazy(() =>
+  import('@/features/customers/CustomersPage').then((m) => ({ default: m.CustomersPage })),
+);
 export const SettingsPage = lazy(() =>
   import('@/features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })),
 );

@@ -42,6 +42,7 @@ describe('role-gated shell', () => {
       'Operations',
       'Messages',
       'Support',
+      'Customers',
       'Revenue',
       'Insights',
       'Settings',
