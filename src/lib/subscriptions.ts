@@ -11,12 +11,17 @@
  *   before the dashboard existed (no approval in the audit log) are billed from then.
  */
 import type { AuditEntry } from '../types/audit';
-import type { Ugx } from '../types/domain';
+import type { MySubscription, SubscriptionWeek, Ugx } from '../types/domain';
 import type { MechanicDoc } from '../types/firestore';
 import { isVoided, type SubscriptionPayment } from '../types/subscriptions';
 
 export const WEEKLY_FEE: Ugx = 15_000;
 export const OVERDUE_AFTER_DAYS = 3;
+/**
+ * Isaac's rule (2026-10-15): at this many overdue weeks the dashboard SUGGESTS suspension.
+ * It never suspends on its own; ops confirm through the normal audited decision.
+ */
+export const SUGGEST_SUSPENSION_AFTER_WEEKS = 2;
 /** The Monday the tracker went live. */
 export const TRACKING_START = '2026-10-05';
 
@@ -175,5 +180,56 @@ export function summarizeWeek(
     expected: rows.length * WEEKLY_FEE,
     collected: rows.reduce((sum, r) => sum + (r.payment?.amount ?? 0), 0),
     counts,
+  };
+}
+
+/** How many billable weeks the mechanic's own view lists (newest first). */
+export const MY_WEEKS_SHOWN = 12;
+
+/**
+ * The signed-in mechanic's own subscription (getMySubscription, app contract 2026-10-16):
+ * the same rules as the tracker, for one mechanic. Never carries who recorded a payment, a
+ * reference or a void reason. A mechanic never verified (or no mechanic at all) owes nothing.
+ */
+export function mySubscription(
+  mechanic: Pick<MechanicDoc, 'userId' | 'vetting'> | null,
+  entries: readonly AuditEntry[],
+  payments: readonly SubscriptionPayment[],
+  payTo: MySubscription['payTo'],
+  now: Date,
+): MySubscription {
+  const base = {
+    weeklyFee: WEEKLY_FEE,
+    overdueAfterDays: OVERDUE_AFTER_DAYS,
+    suspensionAfterOverdueWeeks: SUGGEST_SUSPENSION_AFTER_WEEKS,
+    payTo,
+    computedAt: now.toISOString(),
+  };
+  if (!mechanic) return { ...base, weeks: [], owed: 0, overdueCount: 0 };
+  const intervals = verifiedIntervals(mechanic, entries);
+  const paid = new Map(
+    payments
+      .filter((p) => p.mechanicId === mechanic.userId && !isVoided(p))
+      .map((p) => [p.weekStart, p]),
+  );
+  const all: SubscriptionWeek[] = weeksBetween(TRACKING_START, weekStartOf(now))
+    .filter((w) => isBillable(intervals, w))
+    .reverse()
+    .map((weekStart) => {
+      const payment = paid.get(weekStart);
+      return {
+        weekStart,
+        status: weekStatus(payment, weekStart, now),
+        amount: payment?.amount ?? WEEKLY_FEE,
+        paidAt: payment?.paidAt ?? null,
+        method: payment?.method ?? null,
+      };
+    });
+  const unpaid = all.filter((w) => w.status !== 'paid');
+  return {
+    ...base,
+    weeks: all.slice(0, MY_WEEKS_SHOWN),
+    owed: unpaid.reduce((sum, w) => sum + w.amount, 0),
+    overdueCount: all.filter((w) => w.status === 'overdue').length,
   };
 }

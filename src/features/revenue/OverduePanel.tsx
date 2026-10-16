@@ -2,7 +2,10 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 
 import { Reveal, staggerDelay } from '@/components/motion';
+import type { PayTo } from '@/lib/billing';
 import { formatUgx } from '@/lib/format';
+import { useRepositories } from '@/lib/repositories';
+import { useLive } from '@/lib/useLive';
 import { weekLabel } from '@/lib/subscriptions';
 
 import {
@@ -41,15 +44,17 @@ function CopyMessage({ text }: { text: string }) {
 
 function Account({
   account,
+  payTo,
   index,
   count,
 }: {
   account: OverdueAccount;
+  payTo: PayTo | null;
   index: number;
   count: number;
 }) {
   const { mechanic, weeks, amount } = account;
-  const message = reminderMessage(account);
+  const message = reminderMessage(account, payTo);
   return (
     <Reveal
       as="li"
@@ -101,6 +106,11 @@ function Account({
 
 /** Who to chase today, across every week, with a ready-made reminder. */
 export function OverduePanel({ accounts }: { accounts: readonly OverdueAccount[] }) {
+  const { settings } = useRepositories();
+  const billing = useLive<PayTo | null>('settings-billing', (n, f) =>
+    settings.subscribeBilling(n, f),
+  );
+  const payTo = billing.data ?? null;
   const total = accounts.reduce((n, a) => n + a.amount, 0);
   return (
     <section aria-label="Overdue payments" className="panel">
@@ -121,7 +131,13 @@ export function OverduePanel({ accounts }: { accounts: readonly OverdueAccount[]
       ) : (
         <ul aria-label="Mechanics to remind">
           {accounts.map((a, i) => (
-            <Account key={a.mechanic.userId} account={a} index={i} count={accounts.length} />
+            <Account
+              key={a.mechanic.userId}
+              account={a}
+              payTo={payTo}
+              index={i}
+              count={accounts.length}
+            />
           ))}
         </ul>
       )}

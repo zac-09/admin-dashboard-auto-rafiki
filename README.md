@@ -282,6 +282,21 @@ A payment recorded by mistake is **voided** (`voidSubscriptionPayment`, admin/op
 record is kept with who voided it and why, the week counts as unpaid again, and a correct
 payment can be recorded over it. Nothing in the audit trail is ever deleted.
 
+### The mechanic's own subscription (app screen)
+
+The app's Subscription screen calls `getMySubscription` (app contract 2026-10-16): for the
+signed-in uid only, with the tracker's own rules (`mySubscription` in
+`src/lib/subscriptions.ts`), it returns the fee, the overdue and suspension thresholds, the
+last 12 billable weeks (paid / due / overdue, with paid date and method), everything owed,
+the overdue count and where to pay. It never carries who recorded a payment, a reference or
+a void reason; a mechanic never verified owes nothing.
+
+Where to pay lives in `settings/billing` (dashboard-only: app users cannot read it; the app
+gets it through the callable). Admins set up to four MTN or Airtel numbers with the name
+registered on each, plus an optional note, under Settings → "Subscription payments", through
+the audited `updateBilling` callable (`billing.update`). Saving with no numbers clears them.
+Once set, the overdue reminders in To collect say where to pay.
+
 ### Collecting overdue payments
 
 The Subscriptions tab opens with a "To collect" list: every mechanic carrying overdue weeks

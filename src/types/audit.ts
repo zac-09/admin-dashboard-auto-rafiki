@@ -33,7 +33,9 @@ export type AuditAction =
   /** updateSettings: prices / broadcast values the app reads were published. */
   | 'settings.update'
   /** sendMechanicMessage: operations messaged mechanics (inbox + push). */
-  | 'mechanic.message.send';
+  | 'mechanic.message.send'
+  /** updateBilling: the mobile money numbers mechanics pay their subscription to. */
+  | 'billing.update';
 
 export type AuditTargetType =
   | 'staff'

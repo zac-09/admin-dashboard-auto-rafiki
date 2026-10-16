@@ -39,3 +39,12 @@ describe('settings/app (the app reads, the callable writes)', () => {
     }
   });
 });
+
+describe('settings/billing (dashboard-only; the app gets payTo through getMySubscription)', () => {
+  it('staff read it; app users never; nobody writes directly', async () => {
+    await seed({ 'settings/billing': { payTo: null } });
+    await assertSucceeds(getDoc(doc(staff('support'), 'settings/billing')));
+    await assertFails(getDoc(doc(appUser(UID.mechanic), 'settings/billing')));
+    await assertFails(setDoc(doc(staff('admin'), 'settings/billing'), { payTo: null }));
+  });
+});

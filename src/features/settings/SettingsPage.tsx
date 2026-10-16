@@ -19,6 +19,7 @@ import { useDocumentTitle } from '@/lib/useDocumentTitle';
 import { useThemeMode } from '@/theme/themeMode';
 
 import { useAppSettings } from './hooks';
+import { BillingPanel } from './BillingPanel';
 import { SettingsEditor } from './SettingsEditor';
 
 function Panel({ title, index, children }: { title: string; index: number; children: ReactNode }) {
@@ -191,6 +192,7 @@ export function SettingsPage() {
                 ]}
               />
             </Panel>
+            <BillingPanel />
             <Panel title="Subscriptions (dashboard)" index={2}>
               <Rows
                 rows={[

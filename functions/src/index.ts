@@ -15,6 +15,8 @@
  *   suspending a mechanic as a dispute outcome needs admin or ops; audited)
  * - sendMechanicMessage: message mechanics, inbox copy + push (admin, ops; audited)
  * - addHandoverNote, markHandoverHandled: shift notes between operators (all roles)
+ * - getMySubscription: the signed-in mechanic's own subscription weeks (app; own uid only)
+ * - updateBilling: the mobile money numbers mechanics pay to (admin; audited)
  */
 import { initializeApp } from 'firebase-admin/app';
 import { getAuth, type UserRecord } from 'firebase-admin/auth';
@@ -24,12 +26,13 @@ import { setGlobalOptions } from 'firebase-functions/v2';
 import { onCall } from 'firebase-functions/v2/https';
 
 import { SETTINGS_COLLECTION, SETTINGS_DOC } from '../../src/lib/appSettings';
+import { BILLING_DOC, type BillingSettings } from '../../src/lib/billing';
 import { SERVICE_LABELS } from '../../src/lib/labels';
 import { INBOX, OPS_MESSAGE_CHANNEL, OPS_MESSAGES } from '../../src/lib/mechanicMessages';
-import { AUDIT_COLLECTION } from '../../src/types/audit';
+import { AUDIT_COLLECTION, type AuditEntry } from '../../src/types/audit';
 import { COLLECTIONS } from '../../src/types/firestore';
 import { HANDOVER_NOTES } from '../../src/types/handover';
-import { SUBSCRIPTIONS } from '../../src/types/subscriptions';
+import { SUBSCRIPTIONS, type SubscriptionPayment } from '../../src/types/subscriptions';
 import { DISPUTES, SUPPORT_NOTES, type Dispute } from '../../src/types/support';
 import { VETTING_REVIEWS, type VettingReviews } from '../../src/types/vettingReviews';
 
@@ -45,6 +48,12 @@ import {
   type HandoverDeps,
 } from './handover';
 import { markSubscriptionPaid as markPaidHandler, type MarkPaidDeps } from './markPaid';
+import {
+  getMySubscription as getMySubscriptionHandler,
+  updateBilling as updateBillingHandler,
+  type BillingDeps,
+  type MySubscriptionDeps,
+} from './subscription';
 import { sendMechanicMessage as sendMessageHandler, type MessageDeps } from './messages';
 import { reviewDocument as reviewDocumentHandler, type ReviewDeps } from './reviewDocument';
 import { updateSettings as updateSettingsHandler, type SettingsDeps } from './updateSettings';
@@ -443,6 +452,53 @@ const handoverDeps: HandoverDeps = {
   now: () => new Date(),
 };
 
+const billingRef = () => getFirestore().collection(SETTINGS_COLLECTION).doc(BILLING_DOC);
+
+const mySubscriptionDeps: MySubscriptionDeps = {
+  async getMechanic(uid) {
+    const snap = await getFirestore().collection(COLLECTIONS.mechanics).doc(uid).get();
+    const m = snap.data();
+    return snap.exists && m ? { userId: uid, vetting: m.vetting } : null;
+  },
+  async listDecisions(uid) {
+    // Single-field equality on targetId: Firestore's automatic index covers it.
+    const s = await getFirestore().collection(AUDIT_COLLECTION).where('targetId', '==', uid).get();
+    return s.docs
+      .map((d) => ({ ...(d.data() as AuditEntry), id: d.id }))
+      .filter((e) => e.targetType === 'mechanic');
+  },
+  async listPayments(uid) {
+    const s = await getFirestore().collection(SUBSCRIPTIONS).where('mechanicId', '==', uid).get();
+    return s.docs.map((d) => ({ ...(d.data() as SubscriptionPayment), id: d.id }));
+  },
+  async getPayTo() {
+    const snap = await billingRef().get();
+    return (snap.data() as BillingSettings | undefined)?.payTo ?? null;
+  },
+  now: () => new Date(),
+};
+
+const billingDeps: BillingDeps = {
+  async transact(run) {
+    const db = getFirestore();
+    await db.runTransaction(async (tx) => {
+      await run({
+        async get() {
+          const snap = await tx.get(billingRef());
+          return (snap.data() as BillingSettings | undefined)?.payTo ?? null;
+        },
+        set(payTo, at, by) {
+          tx.set(billingRef(), { payTo, updatedAt: at, updatedBy: by });
+        },
+        audit(entry) {
+          tx.create(db.collection(AUDIT_COLLECTION).doc(), entry);
+        },
+      });
+    });
+  },
+  now: () => new Date(),
+};
+
 function callerOf(request: CallableRequest): Caller | null {
   if (!request.auth) return null;
   return {
@@ -512,4 +568,12 @@ export const addHandoverNote = onCall((request) =>
 
 export const markHandoverHandled = onCall((request) =>
   markHandledHandler(callerOf(request), request.data, handoverDeps),
+);
+
+export const getMySubscription = onCall((request) =>
+  getMySubscriptionHandler(callerOf(request), mySubscriptionDeps),
+);
+
+export const updateBilling = onCall((request) =>
+  updateBillingHandler(callerOf(request), request.data, billingDeps),
 );

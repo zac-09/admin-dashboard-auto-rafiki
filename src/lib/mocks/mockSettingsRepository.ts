@@ -4,6 +4,7 @@ import {
   removedCatalogueIds,
   settingsChanges,
 } from '@/lib/appSettings';
+import { checkPayTo, type PayTo } from '@/lib/billing';
 import { SERVICE_LABELS } from '@/lib/labels';
 import type { AppSettings, SettingsRepository, Unsubscribe } from '@/types';
 
@@ -13,6 +14,8 @@ import type { MockAuthRepository } from './mockAuthRepository';
 export class MockSettingsRepository implements SettingsRepository {
   private doc: AppSettings | null = null;
   private listeners = new Set<(raw: unknown | null) => void>();
+  private payTo: PayTo | null = null;
+  private billingListeners = new Set<(payTo: PayTo | null) => void>();
   private readonly auth: MockAuthRepository;
 
   constructor(auth: MockAuthRepository) {
@@ -46,5 +49,29 @@ export class MockSettingsRepository implements SettingsRepository {
     this.doc = { ...check.settings, updatedAt: new Date().toISOString(), updatedBy: actor.uid };
     this.listeners.forEach((l) => l(structuredClone(this.doc)));
     return { changes };
+  }
+
+  /** What getMySubscription would return as payTo (for other mocks and tests). */
+  currentPayTo() {
+    return structuredClone(this.payTo);
+  }
+
+  subscribeBilling(onChange: (payTo: PayTo | null) => void): Unsubscribe {
+    this.billingListeners.add(onChange);
+    onChange(structuredClone(this.payTo));
+    return () => this.billingListeners.delete(onChange);
+  }
+
+  /** Mirrors updateBilling (functions/src/subscription.ts). */
+  async publishBilling(payTo: unknown, reason: string) {
+    if (this.auth.current()?.role !== 'admin')
+      throw new Error('Only admins change payment numbers.');
+    if (!reason.trim()) throw new Error('A reason is required.');
+    const check = checkPayTo(payTo);
+    if (!check.ok) throw new Error(Object.values(check.errors)[0]);
+    if (JSON.stringify(check.payTo) === JSON.stringify(this.payTo))
+      throw new Error('Nothing changed.');
+    this.payTo = check.payTo;
+    this.billingListeners.forEach((l) => l(structuredClone(this.payTo)));
   }
 }

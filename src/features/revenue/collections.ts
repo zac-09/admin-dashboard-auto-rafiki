@@ -1,6 +1,16 @@
+import { payToLine, type PayTo } from '@/lib/billing';
 import { formatUgx } from '@/lib/format';
-import { summarizeWeek, weekLabel, weekStartOf, WEEKLY_FEE } from '@/lib/subscriptions';
+import {
+  SUGGEST_SUSPENSION_AFTER_WEEKS,
+  summarizeWeek,
+  weekLabel,
+  weekStartOf,
+  WEEKLY_FEE,
+} from '@/lib/subscriptions';
 import type { AuditEntry, MechanicDoc, SubscriptionPayment } from '@/types';
+
+/** Isaac's rule lives with the billing rules; re-exported for the revenue screens. */
+export { SUGGEST_SUSPENSION_AFTER_WEEKS };
 
 /** A mechanic with at least one overdue week: who to chase, for what and how much. */
 export interface OverdueAccount {
@@ -34,8 +44,8 @@ export function overdueAccounts(
     );
 }
 
-/** A polite reminder ops can send as is, by SMS or WhatsApp. */
-export function reminderMessage(account: OverdueAccount): string {
+/** A polite reminder ops can send as is, by SMS or WhatsApp; names where to pay once set. */
+export function reminderMessage(account: OverdueAccount, payTo: PayTo | null = null): string {
   const weeks = account.weeks.map(weekLabel);
   const which =
     weeks.length === 1 ? `the week of ${weeks[0]}` : `${weeks.length} weeks (${weeks.join('; ')})`;
@@ -43,7 +53,10 @@ export function reminderMessage(account: OverdueAccount): string {
     `Hello ${account.mechanic.businessName}, this is AutoRafiki. ` +
     `Your weekly subscription of ${formatUgx(WEEKLY_FEE)} is overdue for ${which}. ` +
     `Total due: ${formatUgx(account.amount)}. ` +
-    'Please pay as soon as you can and reply with your payment reference. Thank you.'
+    (payTo
+      ? `Please pay by mobile money to ${payTo.numbers.map(payToLine).join(' or ')}` +
+        `${payTo.note ? ` (${payTo.note.replace(/\.$/, '')})` : ''} and reply with your payment reference. Thank you.`
+      : 'Please pay as soon as you can and reply with your payment reference. Thank you.')
   );
 }
 
@@ -51,12 +64,6 @@ export function reminderMessage(account: OverdueAccount): string {
 export function whatsappLink(phone: string, text: string): string {
   return `https://wa.me/${phone.replace(/^\+/, '')}?text=${encodeURIComponent(text)}`;
 }
-
-/**
- * Isaac's rule (2026-10-15): at this many overdue weeks the dashboard SUGGESTS suspension.
- * It never suspends on its own; ops confirm through the normal audited decision.
- */
-export const SUGGEST_SUSPENSION_AFTER_WEEKS = 2;
 
 export function suspensionSuggested(account: Pick<OverdueAccount, 'weeks'>): boolean {
   return account.weeks.length >= SUGGEST_SUSPENSION_AFTER_WEEKS;

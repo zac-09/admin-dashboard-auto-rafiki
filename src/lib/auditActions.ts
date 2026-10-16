@@ -17,6 +17,7 @@ export const AUDIT_ACTION_LABELS: Record<AuditAction, string> = {
   'subscription.void': 'Payment voided',
   'settings.update': 'Settings published',
   'mechanic.message.send': 'Message sent to mechanics',
+  'billing.update': 'Payment numbers changed',
 };
 
 /** Groups for the filter, in the order the sidebar lists the modules. */
@@ -32,7 +33,7 @@ export const AUDIT_ACTION_GROUPS: { label: string; actions: AuditAction[] }[] = 
   },
   { label: 'Operations', actions: ['job.cancel', 'job.rebroadcast', 'mechanic.message.send'] },
   { label: 'Support', actions: ['job.dispute.open', 'job.dispute.resolve'] },
-  { label: 'Revenue', actions: ['subscription.paid', 'subscription.void'] },
+  { label: 'Revenue', actions: ['subscription.paid', 'subscription.void', 'billing.update'] },
   {
     label: 'Admin',
     actions: ['settings.update', 'staff.invite', 'staff.role.set', 'staff.bootstrap'],

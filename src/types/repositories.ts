@@ -1,4 +1,5 @@
 import type { AvailabilityRecord, OfferRecord } from './appLogs';
+import type { PayTo } from '../lib/billing';
 import type { Audience, OpsMessage } from '../lib/mechanicMessages';
 import type { DecideVettingInput, DecideVettingResult, VettingStatus } from '../lib/vetting';
 
@@ -172,6 +173,13 @@ export interface StaffRepository {
 export interface SettingsRepository {
   subscribe(onChange: (raw: unknown | null) => void, onError: (e: Error) => void): Unsubscribe;
   publish(settings: AppSettings, reason: string): Promise<{ changes: string[] }>;
+  /** settings/billing: where mechanics pay (dashboard-only; the app gets it by callable). */
+  subscribeBilling(
+    onChange: (payTo: PayTo | null) => void,
+    onError: (e: Error) => void,
+  ): Unsubscribe;
+  /** The audited updateBilling callable (admin). No numbers clears it. */
+  publishBilling(payTo: unknown, reason: string): Promise<void>;
 }
 
 /** A loaded document file, ready for an <img> / <iframe>; `revoke` frees any object URL. */
