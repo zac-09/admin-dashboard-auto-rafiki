@@ -25,7 +25,16 @@ interface DraftItem {
   /** In the currently published catalogue: its id is locked (jobs store it). */
   published: boolean;
 }
+interface DraftPackage {
+  id: string;
+  label: string;
+  price: string;
+  description: string;
+  /** Published: its id is locked (bookings store it). */
+  published: boolean;
+}
 interface Draft {
+  servicing: DraftPackage[];
   prices: Record<string, string>;
   initial: string;
   expanded: string;
@@ -44,6 +53,7 @@ function toDraft(s: AppSettings): Draft {
     emergencyPhone: s.support.emergencyPhone,
     email: s.support.email,
     catalogue: s.catalogue.map((c) => ({ ...c, published: true })),
+    servicing: s.servicing.map((p) => ({ ...p, price: String(p.price), published: true })),
   };
 }
 
@@ -59,6 +69,12 @@ function fromDraft(d: Draft): unknown {
     },
     support: { emergencyPhone: d.emergencyPhone.replace(/[\s-]/g, ''), email: d.email.trim() },
     catalogue: d.catalogue.map(({ id, label, service }) => ({ id, label, service })),
+    servicing: d.servicing.map(({ id, label, price, description }) => ({
+      id,
+      label,
+      price: n(price),
+      description,
+    })),
   };
 }
 
@@ -181,6 +197,93 @@ function AddItem({ taken, onAdd }: { taken: Set<string>; onAdd: (item: DraftItem
   );
 }
 
+/** Adds a servicing package: a new slug id, a name, a price, one line on what's included. */
+function AddPackage({
+  taken,
+  full,
+  onAdd,
+}: {
+  taken: Set<string>;
+  full: boolean;
+  onAdd: (pkg: DraftPackage) => void;
+}) {
+  const [id, setId] = useState('');
+  const [label, setLabel] = useState('');
+  const [price, setPrice] = useState('');
+  const [description, setDescription] = useState('');
+  const slug = id.trim().toLowerCase();
+  const problem = full
+    ? `At most ${LIMITS.servicing.maxItems} packages`
+    : !CATALOGUE_ID.test(slug)
+      ? 'Id: lowercase letters, digits and dashes'
+      : taken.has(slug)
+        ? `"${slug}" already exists`
+        : !label.trim()
+          ? 'Give it a name'
+          : !price.trim()
+            ? 'Give it a price'
+            : null;
+  const FIELD = 'min-h-10 rounded-control border border-hairline bg-background px-3 text-sm';
+  return (
+    <div className="mt-3 flex flex-col gap-2 border-t border-hairline pt-3">
+      <span className="text-xs font-semibold">Add a package</span>
+      <div className="flex flex-wrap items-end gap-2">
+        <input
+          aria-label="New package id"
+          placeholder="tyre-rotation"
+          value={id}
+          onChange={(e) => setId(e.target.value)}
+          className={`${FIELD} w-44`}
+        />
+        <input
+          aria-label="New package name"
+          placeholder="Tyre rotation"
+          value={label}
+          maxLength={LIMITS.servicing.maxLabel}
+          onChange={(e) => setLabel(e.target.value)}
+          className={`${FIELD} w-52`}
+        />
+        <input
+          aria-label="New package price"
+          placeholder="40000"
+          inputMode="numeric"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+          className={`${FIELD} w-28`}
+        />
+      </div>
+      <input
+        aria-label="New package description"
+        placeholder="What's included, in one line"
+        value={description}
+        maxLength={LIMITS.servicing.maxDescription}
+        onChange={(e) => setDescription(e.target.value)}
+        className={`${FIELD} w-full`}
+      />
+      <Button
+        variant="secondary"
+        disabled={!!problem}
+        hint={problem}
+        onClick={() => {
+          onAdd({
+            id: slug,
+            label: label.trim(),
+            price: price.trim(),
+            description: description.trim(),
+            published: false,
+          });
+          setId('');
+          setLabel('');
+          setPrice('');
+          setDescription('');
+        }}
+      >
+        Add package
+      </Button>
+    </div>
+  );
+}
+
 export function SettingsEditor({
   current,
   onStart,
@@ -236,6 +339,11 @@ export function SettingsEditor({
       catalogue: d.catalogue.map((c, j) => (j === i ? { ...c, ...patch } : c)),
     }));
   const takenIds = new Set(draft.catalogue.map((c) => c.id));
+  const setPackage = (i: number, patch: Partial<DraftPackage>) =>
+    setDraft((d) => ({
+      ...d,
+      servicing: d.servicing.map((p, j) => (j === i ? { ...p, ...patch } : p)),
+    }));
 
   return (
     <form onSubmit={onSubmit} aria-label="Edit settings" className="flex flex-col gap-4">
@@ -378,6 +486,85 @@ export function SettingsEditor({
         <AddItem
           taken={takenIds}
           onAdd={(item) => setDraft((d) => ({ ...d, catalogue: [...d.catalogue, item] }))}
+        />
+      </section>
+
+      <section aria-label="Servicing" className="panel p-5">
+        <h2 className="micro-label mb-1">Booked servicing (fixed-price packages)</h2>
+        <p className="mb-3 text-xs text-muted">
+          What customers can book ahead at a fixed price. Ids are stored on bookings, so a published
+          id is locked: change the name, price or description freely, or withdraw a package
+          (bookings already made keep their name and price). {draft.servicing.length} of{' '}
+          {LIMITS.servicing.maxItems} packages.
+        </p>
+        {errors['servicing'] ? <Notice tone="error">{errors['servicing']}</Notice> : null}
+        <ul className="flex flex-col" aria-label="Servicing packages">
+          {draft.servicing.map((pkg, i) => {
+            const err = (k: string) => errors[`servicing.${i}.${k}`];
+            const cls = (k: string) =>
+              `min-h-10 rounded-control border bg-background px-3 text-sm ${err(k) ? 'border-danger' : 'border-hairline'}`;
+            return (
+              <li
+                key={`${pkg.id}:${i}`}
+                className="flex flex-col gap-2 border-b border-hairline py-2.5 last:border-0"
+              >
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <code className="w-44 shrink-0 text-xs text-muted">
+                    {pkg.id}
+                    {pkg.published ? '' : ' · new'}
+                  </code>
+                  <input
+                    aria-label={`Name for ${pkg.id}`}
+                    value={pkg.label}
+                    maxLength={LIMITS.servicing.maxLabel}
+                    aria-invalid={!!err('label')}
+                    onChange={(e) => setPackage(i, { label: e.target.value })}
+                    className={`${cls('label')} w-56 max-w-full`}
+                  />
+                  <label className="flex items-center gap-1.5 text-xs text-muted">
+                    UGX
+                    <input
+                      aria-label={`Price for ${pkg.id}`}
+                      inputMode="numeric"
+                      value={pkg.price}
+                      aria-invalid={!!err('price')}
+                      onChange={(e) => setPackage(i, { price: e.target.value })}
+                      className={`${cls('price')} w-32`}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setDraft((d) => ({ ...d, servicing: d.servicing.filter((_, j) => j !== i) }))
+                    }
+                    className="min-h-10 text-xs text-muted underline hover:text-primary"
+                  >
+                    {pkg.published ? 'Withdraw' : 'Remove'}
+                  </button>
+                </div>
+                <input
+                  aria-label={`Description for ${pkg.id}`}
+                  value={pkg.description}
+                  maxLength={LIMITS.servicing.maxDescription}
+                  aria-invalid={!!err('description')}
+                  onChange={(e) => setPackage(i, { description: e.target.value })}
+                  className={`${cls('description')} w-full`}
+                />
+                {['id', 'label', 'price', 'description'].map((k) =>
+                  err(k) ? (
+                    <span key={k} className="text-xs text-danger">
+                      {err(k)}
+                    </span>
+                  ) : null,
+                )}
+              </li>
+            );
+          })}
+        </ul>
+        <AddPackage
+          taken={new Set(draft.servicing.map((p) => p.id))}
+          full={draft.servicing.length >= LIMITS.servicing.maxItems}
+          onAdd={(pkg) => setDraft((d) => ({ ...d, servicing: [...d.servicing, pkg] }))}
         />
       </section>
 

@@ -8,7 +8,10 @@ import type { IsoDate, Ugx } from './domain';
  */
 export const SUBSCRIPTIONS = 'subscriptions';
 
-export type PaymentMethod = 'mobile-money' | 'cash' | 'bank' | 'other';
+// PaymentMethod is the app's (domain.ts, 2026-10-16): the same four methods the tracker records.
+import type { PaymentMethod } from './domain';
+
+export type { PaymentMethod };
 
 export const PAYMENT_METHODS: readonly PaymentMethod[] = ['mobile-money', 'cash', 'bank', 'other'];
 

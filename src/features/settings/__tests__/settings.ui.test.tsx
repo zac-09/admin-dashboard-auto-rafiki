@@ -149,4 +149,42 @@ describe('support contacts and the catalogue', () => {
       screen.getByRole('region', { name: 'Support contacts (shown in the app)' }),
     ).toHaveTextContent('+256772123456');
   });
+
+  it('an admin confirms servicing prices and adds a package; placeholders are flagged until then', async () => {
+    const user = await openAs('admin');
+    const panel = await screen.findByRole('region', { name: 'Booked servicing (fixed prices)' });
+    expect(panel).toHaveTextContent("These are the app's placeholder prices");
+    expect(panel).toHaveTextContent('Oil and filter changeUGX 120,000');
+
+    await user.click(screen.getByRole('button', { name: 'Edit prices & broadcast' }));
+    const form = screen.getByRole('form', { name: 'Edit settings' });
+    const packages = within(form).getByRole('list', { name: 'Servicing packages' });
+    expect(within(packages).getAllByRole('listitem')).toHaveLength(5);
+    const oil = within(form).getByLabelText('Price for oil-change');
+    await user.clear(oil);
+    await user.type(oil, '999');
+    expect(
+      within(form).getByText('Whole shillings from UGX 1,000 to 1,000,000.', {
+        selector: 'span.text-danger',
+      }),
+    ).toBeInTheDocument();
+    await user.clear(oil);
+    await user.type(oil, '110000');
+    await user.type(within(form).getByLabelText('New package id'), 'tyre-rotation');
+    await user.type(within(form).getByLabelText('New package name'), 'Tyre rotation');
+    await user.type(within(form).getByLabelText('New package price'), '40000');
+    await user.type(within(form).getByLabelText('New package description'), 'All four rotated.');
+    await user.click(within(form).getByRole('button', { name: 'Add package' }));
+    expect(within(packages).getAllByRole('listitem')).toHaveLength(6);
+
+    const changes = within(form).getByRole('region', { name: 'Changes' });
+    expect(changes).toHaveTextContent('Oil and filter change: UGX 120,000 → UGX 110,000');
+    expect(changes).toHaveTextContent('Servicing: new package Tyre rotation at UGX 40,000');
+    await user.type(within(form).getByLabelText(/Reason/), 'Prices confirmed with garages');
+    await user.click(within(form).getByRole('button', { name: 'Publish to the app' }));
+    expect(await screen.findByText('Settings published')).toBeInTheDocument();
+    const after = screen.getByRole('region', { name: 'Booked servicing (fixed prices)' });
+    expect(after).not.toHaveTextContent('placeholder');
+    expect(after).toHaveTextContent('Tyre rotationUGX 40,000');
+  });
 });

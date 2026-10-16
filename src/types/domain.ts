@@ -81,11 +81,39 @@ export interface JobRequest {
   items?: string[];
   description: string;
   /**
+   * Present on booked servicing (absent = a breakdown, now). `service` is 'other' on these;
+   * show `booking.packageLabel` as the job's title (features/jobs jobTitle).
+   */
+  booking?: Booking;
+  /**
    * Number plate, normalised (uppercase, no spaces, ^[A-Z0-9]{2,10}$). Optional; omitted
    * entirely when not given, and absent on older jobs. See lib/plate.
    */
   vehiclePlate?: string;
   createdAt: IsoDate;
+}
+
+/** A planned service at a fixed price, booked into a time window (2026-10-16). */
+export interface Booking {
+  /** ServicePackage id from settings/app → servicing. */
+  packageId: string;
+  /** Label at booking time (the catalogue may change later). */
+  packageLabel: string;
+  /** Start of the arrival window (ISO). */
+  scheduledFor: IsoDate;
+  /** Length of the arrival window. */
+  windowMinutes: number;
+}
+
+/** One bookable service (settings/app → servicing; compiled default in lib/servicing). */
+export interface ServicePackage {
+  /** Stable slug stored on jobs; never renamed. */
+  id: string;
+  label: string;
+  /** Fixed price the customer pays the mechanic, whole UGX. */
+  price: Ugx;
+  /** One line on what's included. */
+  description: string;
 }
 
 export type JobStatus =
@@ -160,6 +188,48 @@ export interface BroadcastOffer {
   declinedAt: IsoDate | null;
 }
 
+/* ---- Subscription (Phase 1 billing). PROPOSED contract with the ops dashboard: the
+ * dashboard's getMySubscription callable computes this with its billing rules (UGX 15,000 a
+ * week, Monday–Sunday Kampala time, overdue 3 days after the Monday, billed only for weeks
+ * the mechanic was verified). Payment records themselves stay staff-only. ---- */
+
+export type SubscriptionWeekStatus = 'paid' | 'due' | 'overdue';
+export type PaymentMethod = 'mobile-money' | 'cash' | 'bank' | 'other';
+
+export interface SubscriptionWeek {
+  /** Monday of the week, Kampala date (YYYY-MM-DD). */
+  weekStart: string;
+  status: SubscriptionWeekStatus;
+  amount: Ugx;
+  /** When the payment was recorded (paid weeks only). */
+  paidAt: IsoDate | null;
+  method: PaymentMethod | null;
+}
+
+export interface PayToNumber {
+  network: 'MTN' | 'Airtel';
+  /** E.164. */
+  number: UgPhone;
+  /** Registered name shown by the network when paying. */
+  name: string;
+}
+
+export interface MySubscription {
+  weeklyFee: Ugx;
+  /** Days after the Monday before an unpaid week counts as overdue. */
+  overdueAfterDays: number;
+  /** Overdue weeks at which operations consider suspension. */
+  suspensionAfterOverdueWeeks: number;
+  /** Billable weeks, newest first (at most the last 12). */
+  weeks: SubscriptionWeek[];
+  /** Sum of due and overdue weeks. */
+  owed: Ugx;
+  overdueCount: number;
+  /** Where to send mobile money; ops-editable. Null until operations set it. */
+  payTo: { numbers: PayToNumber[]; note: string | null } | null;
+  computedAt: IsoDate;
+}
+
 /** Vetting documents (contract shared with the ops dashboard, 2026-10-08). */
 export const VETTING_DOC_TYPES = ['national-id', 'certification', 'riding-permit'] as const;
 export type VettingDocType = (typeof VETTING_DOC_TYPES)[number];
@@ -231,6 +301,8 @@ export interface AppSettings {
   support: SupportSettings;
   /** Parts-and-jobs catalogue for the cart; absent → compiled DEFAULT_CATALOGUE. */
   catalogue: CatalogueItem[];
+  /** Bookable servicing packages; absent → compiled DEFAULT_SERVICING. */
+  servicing: ServicePackage[];
   updatedAt?: IsoDate;
   updatedBy?: string;
 }
@@ -309,6 +381,8 @@ export interface EarningsItem {
   completedAt: IsoDate;
   fee: Ugx;
   service: ServiceType;
+  /** Booked servicing: the package (show instead of the fault). */
+  bookingLabel?: string;
   locationLabel: string;
   /** Minutes from arrival to completion, when both are known. */
   minutes?: number;
@@ -338,4 +412,6 @@ export interface ChatMessage {
   senderRole: UserRole;
   text: string;
   createdAt: IsoDate;
+  /** Client-only, never stored: written on this phone but not yet on the server. */
+  pending?: boolean;
 }

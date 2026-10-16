@@ -142,14 +142,27 @@ export function SettingsPage() {
         />
       ) : live.effective ? (
         <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
-          <Panel title="Upfront prices" index={0}>
-            <Rows
-              rows={SERVICES.map((s) => [
-                SERVICE_LABELS[s],
-                formatUgx(live.effective!.settings.prices[s]),
-              ])}
-            />
-          </Panel>
+          <div className="flex flex-col gap-4">
+            <Panel title="Upfront prices" index={0}>
+              <Rows
+                rows={SERVICES.map((s) => [
+                  SERVICE_LABELS[s],
+                  formatUgx(live.effective!.settings.prices[s]),
+                ])}
+              />
+            </Panel>
+            <Panel title="Booked servicing (fixed prices)" index={1}>
+              {!(live.data as { servicing?: unknown } | null)?.servicing ? (
+                <p className="mb-3 text-xs text-warning">
+                  <span aria-hidden className="diamond mr-2" />
+                  These are the app's placeholder prices: confirm them before customers book.
+                </p>
+              ) : null}
+              <Rows
+                rows={live.effective.settings.servicing.map((p) => [p.label, formatUgx(p.price)])}
+              />
+            </Panel>
+          </div>
           <div className="flex flex-col gap-4">
             <Panel title="Broadcast" index={1}>
               <Rows

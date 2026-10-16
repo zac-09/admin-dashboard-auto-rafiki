@@ -51,7 +51,12 @@ describe('who a message reaches', () => {
   });
 });
 
+// The mock history is generated relative to "now"; pin it so the worst gap is always Mukono.
+const PINNED = new Date('2026-10-15T09:00:00Z');
+afterEach(() => vi.useRealTimers());
+
 async function openAs(role: 'admin' | 'ops' | 'support', path: string) {
+  vi.useFakeTimers({ now: PINNED, toFake: ['Date'] });
   const repos = createMockRepositories(new MockOperationsStore(new Date(), { history: true }));
   await repos.auth.signIn(`${role}@autorafiki.test`, MOCK_PASSWORD);
   setRepositoriesForTesting(repos);

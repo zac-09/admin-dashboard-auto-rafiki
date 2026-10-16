@@ -362,6 +362,17 @@ customers tap; ids are stored on jobs, so the editor adds and relabels items but
 a published one, and `updateSettings` refuses a publish that would). Job cards and job pages show
 a request's catalogue items as labels, falling back to the raw id for an unknown one.
 
+### Booked servicing packages
+
+Settings also edits `servicing` (2026-10-16): the fixed-price packages customers can book
+ahead, `[{id, label, price, description}]`, validated exactly as the app's schema (slug ids,
+names up to 40 characters, whole UGX 1,000–1,000,000, descriptions up to 120, at most 30,
+unique ids; an invalid list would make the app ignore the whole document, so the editor
+refuses it). Published ids are locked because bookings store them; names, prices and
+descriptions change freely and a package can be withdrawn (existing bookings keep their name
+and price). Until servicing is published the app uses its compiled placeholder prices, and
+the Settings page says so.
+
 ## Audit log
 
 `/audit` (admin and ops) lists every audited decision in one place: vetting, document

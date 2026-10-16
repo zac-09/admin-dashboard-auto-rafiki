@@ -176,3 +176,67 @@ describe('support and catalogue (added 2026-10-08, optional in the document)', (
     ]);
   });
 });
+
+describe('servicing (added 2026-10-16, optional in the document)', () => {
+  const base = () => structuredClone(DEFAULT_APP_SETTINGS);
+  const pkg = (over: Record<string, unknown> = {}) => ({
+    id: 'tyre-rotation',
+    label: 'Tyre rotation',
+    price: 40_000,
+    description: 'All four tyres rotated and pressures set.',
+    ...over,
+  });
+
+  it('absent means the app defaults; a valid list is kept', () => {
+    const { servicing: _drop, ...without } = base();
+    const absent = checkAppSettings(without);
+    expect(absent.ok && absent.settings.servicing.map((p) => p.id)).toEqual([
+      'oil-change',
+      'minor-service',
+      'full-service',
+      'brake-check',
+      'battery-check',
+    ]);
+    const kept = checkAppSettings({ ...base(), servicing: [pkg()] });
+    expect(kept.ok && kept.settings.servicing).toEqual([pkg()]);
+  });
+
+  it('rejects what the app would reject (and so fall back on the whole document)', () => {
+    const errors = (servicing: unknown) => {
+      const r = checkAppSettings({ ...base(), servicing });
+      return r.ok ? {} : r.errors;
+    };
+    expect(errors([pkg({ id: 'Tyre Rotation' })])).toHaveProperty('servicing.0.id');
+    expect(errors([pkg(), pkg()])).toHaveProperty('servicing.1.id');
+    expect(errors([pkg({ label: ' ' })])).toHaveProperty('servicing.0.label');
+    expect(errors([pkg({ label: 'x'.repeat(41) })])).toHaveProperty('servicing.0.label');
+    expect(errors([pkg({ price: 999 })])).toHaveProperty('servicing.0.price');
+    expect(errors([pkg({ price: 40_000.5 })])).toHaveProperty('servicing.0.price');
+    expect(errors([pkg({ description: 'x'.repeat(121) })])).toHaveProperty(
+      'servicing.0.description',
+    );
+    expect(errors([pkg({ description: undefined })])).toHaveProperty('servicing.0.description');
+    expect(errors(Array.from({ length: 31 }, (_, i) => pkg({ id: `p-${i}` })))).toHaveProperty(
+      'servicing',
+    );
+    // An empty description is fine (the app trims to at most 120, no minimum).
+    expect(errors([pkg({ description: '' })])).toEqual({});
+  });
+
+  it('describes package changes in words', () => {
+    const before = base();
+    const after = {
+      ...base(),
+      servicing: [
+        { ...before.servicing[0]!, price: 130_000 },
+        ...before.servicing.slice(1, 4),
+        pkg(),
+      ],
+    };
+    expect(settingsChanges(before, after, SERVICE_LABELS)).toEqual([
+      'Oil and filter change: UGX 120,000 → UGX 130,000',
+      'Servicing: new package Tyre rotation at UGX 40,000',
+      'Servicing: Battery and charging check withdrawn',
+    ]);
+  });
+});

@@ -11,7 +11,8 @@ import type { AdminRole } from './admin';
 import type { InviteStaffInput, InviteStaffResult, StaffMember } from './staff';
 import type { VettingDocType, VettingDocument } from './domain';
 import type { ReviewDocumentInput, VettingReviews } from './vettingReviews';
-import type { PaymentMethod, SubscriptionPayment } from './subscriptions';
+import type { SubscriptionPayment } from './subscriptions';
+import type { PaymentMethod } from './domain';
 import type { Dispute, DisputeOutcome, SupportNote } from './support';
 
 /**

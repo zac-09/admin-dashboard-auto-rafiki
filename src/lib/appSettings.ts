@@ -9,12 +9,14 @@ import {
   BROADCAST,
   type AppSettings,
   type CatalogueItem,
+  type ServicePackage,
   type ServiceType,
   type UgPhone,
 } from '../types/domain';
 
 import { DEFAULT_CATALOGUE, DEFAULT_SUPPORT } from './catalogue';
 import { APP_CALLOUT_PRICES } from './pricing';
+import { DEFAULT_SERVICING } from './servicing';
 
 export const SETTINGS_COLLECTION = 'settings';
 export const SETTINGS_DOC = 'app';
@@ -26,6 +28,7 @@ export const LIMITS = {
   radiusKm: { min: 1, max: 30 },
   windowMs: { min: 30_000, max: 600_000 },
   catalogue: { maxItems: 200, maxLabel: 40 },
+  servicing: { maxItems: 30, maxLabel: 40, maxDescription: 120 },
 } as const;
 
 /** The app's rules for a catalogue id (a slug) and a Ugandan E.164 number. */
@@ -44,6 +47,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   },
   support: { ...DEFAULT_SUPPORT },
   catalogue: [...DEFAULT_CATALOGUE],
+  servicing: [...DEFAULT_SERVICING],
 };
 
 export type SettingsCheck =
@@ -123,6 +127,45 @@ export function checkAppSettings(raw: unknown): SettingsCheck {
     }
   }
 
+  // servicing (2026-10-16), optional like the catalogue: bookable packages at fixed prices.
+  const srv = (input as { servicing?: unknown }).servicing;
+  let servicing: ServicePackage[] = [...DEFAULT_SERVICING];
+  if (srv !== undefined) {
+    servicing = [];
+    if (!Array.isArray(srv)) errors['servicing'] = 'A list of packages.';
+    else if (srv.length > LIMITS.servicing.maxItems) {
+      errors['servicing'] = `At most ${LIMITS.servicing.maxItems} packages.`;
+    } else {
+      const seen = new Set<string>();
+      srv.forEach((raw, i) => {
+        const item = (raw ?? {}) as Record<string, unknown>;
+        const id = typeof item.id === 'string' ? item.id : '';
+        const label = typeof item.label === 'string' ? item.label.trim() : '';
+        const description = typeof item.description === 'string' ? item.description.trim() : '';
+        const price = item.price;
+        if (!CATALOGUE_ID.test(id))
+          errors[`servicing.${i}.id`] = 'Lowercase letters, digits and dashes, 2–40 characters.';
+        else if (seen.has(id)) errors[`servicing.${i}.id`] = `"${id}" is used twice.`;
+        seen.add(id);
+        if (!label || label.length > LIMITS.servicing.maxLabel)
+          errors[`servicing.${i}.label`] = 'A name up to 40 characters.';
+        if (
+          !isNum(price) ||
+          !Number.isInteger(price) ||
+          price < LIMITS.price.min ||
+          price > LIMITS.price.max
+        )
+          errors[`servicing.${i}.price`] = 'Whole shillings from UGX 1,000 to 1,000,000.';
+        if (
+          typeof item.description !== 'string' ||
+          description.length > LIMITS.servicing.maxDescription
+        )
+          errors[`servicing.${i}.description`] = 'Up to 120 characters.';
+        servicing.push({ id, label, price: price as number, description });
+      });
+    }
+  }
+
   if (Object.keys(errors).length > 0) return { ok: false, errors };
   return {
     ok: true,
@@ -136,6 +179,7 @@ export function checkAppSettings(raw: unknown): SettingsCheck {
       },
       support,
       catalogue,
+      servicing,
     },
   };
 }
@@ -219,5 +263,19 @@ export function settingsChanges(
     changes.push(`Catalogue "${c.id}": ${was.get(c.id)!.label} → ${c.label}`);
   const removed = removedCatalogueIds(before.catalogue, after.catalogue);
   if (removed.length) changes.push(`Catalogue: ${removed.length} removed (${removed.join(', ')})`);
+  const pkgWas = new Map(before.servicing.map((p) => [p.id, p]));
+  const pkgNow = new Set(after.servicing.map((p) => p.id));
+  for (const p of after.servicing) {
+    const old = pkgWas.get(p.id);
+    if (!old) changes.push(`Servicing: new package ${p.label} at ${ugx(p.price)}`);
+    else {
+      if (old.price !== p.price) changes.push(`${p.label}: ${ugx(old.price)} → ${ugx(p.price)}`);
+      if (old.label !== p.label) changes.push(`Servicing "${p.id}": ${old.label} → ${p.label}`);
+      if (old.description !== p.description) changes.push(`${p.label}: description changed`);
+    }
+  }
+  for (const p of before.servicing) {
+    if (!pkgNow.has(p.id)) changes.push(`Servicing: ${p.label} withdrawn`);
+  }
   return changes;
 }
