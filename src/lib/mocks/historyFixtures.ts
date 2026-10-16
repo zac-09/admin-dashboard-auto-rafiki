@@ -285,8 +285,8 @@ export function generateHistory(now: Date, seed = 7): History {
 }
 
 /**
- * Two upcoming booked services for mock mode (contract 2026-10-16): one still waiting for a
- * mechanic close to its confirmation cutoff, one confirmed for tomorrow morning.
+ * Two upcoming booked services for mock mode (contract 2026-10-16), in the app's slots: one
+ * still waiting for a mechanic in the next open window, one confirmed for tomorrow morning.
  */
 export function upcomingBookings(now: Date): Job[] {
   const kampalaHour = (daysAhead: number, hour: number) => {
@@ -332,8 +332,17 @@ export function upcomingBookings(now: Date): Job[] {
       ...(mechanicId ? { mechanicId } : {}),
     };
   };
-  // Waiting: its window opens 5 hours from now, so 3 hours are left to confirm it.
-  const soon = Math.ceil((now.getTime() + 5 * 3_600_000) / 3_600_000) * 3_600_000;
+  // The app's slots: two-hour windows from 08:00 to 16:00 Kampala, at least 3 hours ahead.
+  const nextSlot = () => {
+    for (let d = 0; d < 8; d++) {
+      for (const h of [8, 10, 12, 14, 16]) {
+        const t = kampalaHour(d, h);
+        if (t - now.getTime() >= 3 * 3_600_000) return t;
+      }
+    }
+    return kampalaHour(1, 10);
+  };
+  const soon = nextSlot();
   return [
     make('job_booking_unconfirmed', soon, 'minor-service', 'Minor service', 180_000),
     make(

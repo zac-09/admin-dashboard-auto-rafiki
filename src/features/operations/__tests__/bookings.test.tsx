@@ -85,7 +85,30 @@ describe('bookings are scheduled, not urgent', () => {
 describe('bookings in the control room', () => {
   it('cards say when it is booked for; the rail flags the one close to its cutoff', async () => {
     const store = new MockOperationsStore();
-    for (const j of upcomingBookings(new Date())) store.putJob(j);
+    const [, confirmed] = upcomingBookings(new Date());
+    store.putJob(confirmed!);
+    // Waiting, with its window 5 hours away: 3 hours left before the cutoff.
+    const t = Date.now();
+    const soon = new Date(t + 5 * 3_600_000).toISOString();
+    const base = structuredClone(JOBS.find((j) => j.id === 'job_req_stale')!);
+    store.putJob({
+      ...base,
+      id: 'job_booking_soon',
+      request: {
+        ...base.request,
+        id: 'job_booking_soon',
+        service: 'other',
+        items: [],
+        booking: {
+          packageId: 'minor-service',
+          packageLabel: 'Minor service',
+          scheduledFor: soon,
+          windowMinutes: 120,
+        },
+      },
+      expiresAt: new Date(t + 3 * 3_600_000).toISOString(),
+      fee: 180_000,
+    });
     const repos = createMockRepositories(store);
     await repos.auth.signIn('ops@autorafiki.test', MOCK_PASSWORD);
     setRepositoriesForTesting(repos);
@@ -100,7 +123,7 @@ describe('bookings in the control room', () => {
     );
     const rail = screen.getByRole('region', { name: 'Alerts' });
     expect(
-      within(rail).getByText(/^Booking not confirmed: 3 h( \d+ min)? left to confirm$/),
+      within(rail).getByText(/^Booking not confirmed: (2 h \d+ min|3 h) left to confirm$/),
     ).toBeInTheDocument();
     expect(
       within(rail).getByRole('link', { name: 'Message mechanics near here' }),
