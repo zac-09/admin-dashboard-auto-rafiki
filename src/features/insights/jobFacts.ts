@@ -26,8 +26,12 @@ export function travelMinutes(job: Job): number | null {
   return from === null || to === null ? null : (to - from) / 60_000;
 }
 
-/** Minutes from request to arrival: the north-star measure. */
+/**
+ * Minutes from request to arrival: the north-star measure, for breakdowns only. A booking is
+ * requested days ahead of its window, so it has no request-to-arrival time.
+ */
 export function arrivalMinutes(job: Job): number | null {
+  if (job.request.booking) return null;
   const to = enteredAt(job, 'arrived');
   return to === null ? null : (to - Date.parse(job.request.createdAt)) / 60_000;
 }

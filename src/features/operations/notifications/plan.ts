@@ -1,4 +1,4 @@
-import { SERVICE_LABELS } from '@/lib/labels';
+import { bookingWindow, jobTitle } from '@/lib/jobs';
 
 import { ratingDirection, type Alert } from '../alerts';
 import { formatDuration } from '../jobTime';
@@ -30,12 +30,21 @@ function describe(alert: Alert): PlannedNotification {
     return {
       tag: alert.key,
       title: `No mechanic online within ${alert.radiusKm} km of a new request`,
-      body: `${SERVICE_LABELS[job.request.service]}, ${job.request.location.label}`,
+      body: `${jobTitle(job)}, ${job.request.location.label}`,
+      path: `/jobs/${job.id}`,
+    };
+  }
+  if (alert.kind === 'booking-unconfirmed') {
+    const { job } = alert;
+    return {
+      tag: alert.key,
+      title: 'A booking still has no mechanic',
+      body: `${jobTitle(job)}, ${job.request.location.label}${job.request.booking ? ` · ${bookingWindow(job.request.booking)}` : ''}`,
       path: `/jobs/${job.id}`,
     };
   }
   const { job, ms } = alert;
-  const where = `${SERVICE_LABELS[job.request.service]}, ${job.request.location.label}`;
+  const where = `${jobTitle(job)}, ${job.request.location.label}`;
   return {
     tag: alert.key,
     title:

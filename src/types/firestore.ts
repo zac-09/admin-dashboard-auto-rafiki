@@ -1,4 +1,4 @@
-import type { Job, MechanicProfile, User } from './domain';
+import type { IsoDate, Job, MechanicProfile, User } from './domain';
 
 /**
  * Firestore document shapes where they differ from the app's domain types: fields the app
@@ -48,3 +48,10 @@ export interface PresenceDoc {
 
 /** An `online` presence older than this is stale (the app's heartbeat has stopped). */
 export const PRESENCE_STALE_MS = 75_000;
+
+/**
+ * jobs/{jobId} as stored: the mirrored Job plus fields the app's functions write without
+ * putting them in domain.ts. `remindedAt` (2026-10-16): when remindBookings pushed both
+ * parties an hour before a confirmed booking.
+ */
+export type StoredJob = Job & { remindedAt?: IsoDate };

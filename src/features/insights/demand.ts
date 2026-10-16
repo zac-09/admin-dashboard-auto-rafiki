@@ -21,6 +21,8 @@ export interface Demand {
 export function demand(jobs: readonly Job[]): Demand {
   const grid = DAYS.map(() => Array.from({ length: 24 }, () => ({ requests: 0, unserved: 0 })));
   for (const j of jobs) {
+    // When a booking was made says nothing about when help was needed.
+    if (j.request.booking) continue;
     const { day, hour } = kampalaSlot(j.request.createdAt);
     const cell = grid[day]![hour]!;
     cell.requests += 1;

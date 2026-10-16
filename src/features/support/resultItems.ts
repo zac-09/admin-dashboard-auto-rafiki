@@ -1,6 +1,7 @@
 import { STATUS_LABELS } from '@/features/operations/board';
+import { jobTitle } from '@/lib/jobs';
 import { formatDate, formatUgx } from '@/lib/format';
-import { SERVICE_LABELS, VETTING_LABELS } from '@/lib/labels';
+import { VETTING_LABELS } from '@/lib/labels';
 
 import type { SearchResults as Results } from './search';
 
@@ -19,7 +20,7 @@ export function resultItems(r: Results): ResultItem[] {
       key: `job:${j.id}`,
       to: `/jobs/${j.id}`,
       kind: 'Job' as const,
-      title: `${SERVICE_LABELS[j.request.service]}, ${j.request.location.label}`,
+      title: `${jobTitle(j)}, ${j.request.location.label}`,
       detail: `${j.request.vehiclePlate ? `${j.request.vehiclePlate} · ` : ''}${STATUS_LABELS[j.status]} · ${formatUgx(j.fee)} · ${formatDate(j.request.createdAt)}`,
     })),
     ...r.people.map((u) => ({

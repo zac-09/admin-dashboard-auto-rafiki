@@ -77,7 +77,7 @@ export function supply(
   const unserved = blank();
   for (const j of jobs) {
     const at = Date.parse(j.request.createdAt);
-    if (at < from || at > to) continue;
+    if (at < from || at > to || j.request.booking) continue;
     const { day, hour } = slotOf(at);
     requests[day]![hour]! += 1;
     if (isUnserved(j)) unserved[day]![hour]! += 1;

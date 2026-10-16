@@ -9,8 +9,10 @@ import { RatingsList } from '@/features/support/RatingsList';
 import { useAppSettings } from '@/features/settings/hooks';
 import { PhoneLink } from '@/features/vetting/PhoneLink';
 import { DEFAULT_CATALOGUE, itemLabels } from '@/lib/catalogue';
-import { formatUgx } from '@/lib/format';
-import { SERVICE_LABELS, VEHICLE_LABELS } from '@/lib/labels';
+import { formatDateTime, formatUgx } from '@/lib/format';
+import { bookingWindow, jobTitle } from '@/lib/jobs';
+import { VEHICLE_LABELS } from '@/lib/labels';
+import type { StoredJob } from '@/types';
 import { can } from '@/lib/permissions';
 import { useSession } from '@/lib/session';
 import { useDocumentTitle } from '@/lib/useDocumentTitle';
@@ -95,8 +97,21 @@ export function JobDetailPage() {
       <header className="mb-6 flex flex-col gap-1">
         <span className="micro-label">Job {job.id}</span>
         <h1 className="text-xl font-semibold">
-          {SERVICE_LABELS[request.service]} · {VEHICLE_LABELS[request.vehicle]}
+          {jobTitle(job)} · {VEHICLE_LABELS[request.vehicle]}
         </h1>
+        {request.booking ? (
+          <p className="text-sm">
+            <span className="text-muted">Booked servicing for </span>
+            <span className="font-semibold">{bookingWindow(request.booking)}</span>
+            <span className="text-muted">
+              {' '}
+              · mechanics can confirm until {formatDateTime(job.expiresAt)}
+              {(job as StoredJob).remindedAt
+                ? ` · both reminded ${formatDateTime((job as StoredJob).remindedAt!)}`
+                : ''}
+            </span>
+          </p>
+        ) : null}
         {request.vehiclePlate ? (
           <p className="text-sm">
             <span className="text-muted">Number plate </span>

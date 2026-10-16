@@ -1,5 +1,5 @@
 import { ACTIVE_STATUSES, CLOSED_STATUSES } from '@/features/operations/constants';
-import { SERVICE_LABELS } from '@/lib/labels';
+import { jobTitle } from '@/lib/jobs';
 import { canAdminCancel, canRebroadcast, isValidRebroadcastRadius } from '@/lib/interventions';
 import type {
   AppSettings,
@@ -16,7 +16,7 @@ import type {
 } from '@/types';
 
 import { FIXTURE_NOW, JOBS, RATINGS, shiftIso, shiftJob, USERS } from './contractFixtures';
-import { generateHistory } from './historyFixtures';
+import { generateHistory, upcomingBookings } from './historyFixtures';
 import type { MockVettingStore } from './mockVettingRepositories';
 import type { AvailabilityRecord, OfferRecord } from '@/features/insights/presence';
 
@@ -44,6 +44,7 @@ export class MockOperationsStore {
       const history = generateHistory(now);
       for (const job of history.jobs) this.jobs.set(job.id, job);
       this.ratings.push(...history.ratings);
+      for (const job of upcomingBookings(now)) this.jobs.set(job.id, job);
       this.availability = history.availability;
       this.offers = history.offers;
     }
@@ -105,7 +106,7 @@ export class MockOperationsRepository implements OperationsRepository {
         actorRole: actor.role!,
         targetType: 'job',
         targetId: jobId,
-        targetLabel: `${SERVICE_LABELS[job.request.service]}, ${job.request.location.label}`,
+        targetLabel: `${jobTitle(job)}, ${job.request.location.label}`,
         before,
         after,
         reason: reason.trim(),

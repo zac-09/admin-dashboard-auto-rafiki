@@ -1,11 +1,12 @@
 import { Link, useParams } from 'react-router';
+import { jobTitle } from '@/lib/jobs';
 
 import { Reveal, staggerDelay } from '@/components/motion';
 import { Notice, SkeletonDetail } from '@/components/ui';
 import { PhoneLink } from '@/features/vetting/PhoneLink';
 import { STATUS_LABELS } from '@/features/operations/board';
 import { formatDate, formatUgx } from '@/lib/format';
-import { SERVICE_LABELS, VETTING_LABELS } from '@/lib/labels';
+import { VETTING_LABELS } from '@/lib/labels';
 import { useDocumentTitle } from '@/lib/useDocumentTitle';
 import type { Job } from '@/types';
 
@@ -30,7 +31,7 @@ function JobList({ title, jobs }: { title: string; jobs: Job[] }) {
               >
                 <span className="flex min-w-0 flex-col">
                   <span className="truncate font-semibold">
-                    {SERVICE_LABELS[j.request.service]}, {j.request.location.label}
+                    {jobTitle(j)}, {j.request.location.label}
                   </span>
                   <span className="text-xs text-muted">
                     {formatDate(j.request.createdAt)} · {formatUgx(j.fee)}

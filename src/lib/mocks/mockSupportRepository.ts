@@ -1,4 +1,4 @@
-import { SERVICE_LABELS } from '@/lib/labels';
+import { jobTitle } from '@/lib/jobs';
 import { nextVetting } from '@/lib/vetting';
 import type {
   ChatMessage,
@@ -71,7 +71,7 @@ export class MockSupportRepository implements SupportRepository {
   }
 
   private jobLabel(job: Job) {
-    return `${SERVICE_LABELS[job.request.service]}, ${job.request.location.label}`;
+    return `${jobTitle(job)}, ${job.request.location.label}`;
   }
 
   async findJob(jobId: string) {

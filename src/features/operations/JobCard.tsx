@@ -2,7 +2,8 @@ import { Link } from 'react-router';
 
 import { itemLabels } from '@/lib/catalogue';
 import { formatUgx } from '@/lib/format';
-import { SERVICE_LABELS, VEHICLE_LABELS } from '@/lib/labels';
+import { bookingWindow, jobTitle } from '@/lib/jobs';
+import { VEHICLE_LABELS } from '@/lib/labels';
 import type { CatalogueItem, Job } from '@/types';
 
 import { CANCELLED_BY_LABELS } from './board';
@@ -40,8 +41,15 @@ export function JobCard({
           {attention}
         </span>
       ) : null}
+      {job.request.booking ? (
+        // Scheduled, not urgent: say when, in words and with its own shape.
+        <span className="flex items-center gap-1.5 text-xs font-semibold">
+          <span aria-hidden className="size-2 rounded-full border border-accent" />
+          Booked for {bookingWindow(job.request.booking)}
+        </span>
+      ) : null}
       <span className="font-semibold">
-        {SERVICE_LABELS[job.request.service]} · {VEHICLE_LABELS[job.request.vehicle]}
+        {jobTitle(job)} · {VEHICLE_LABELS[job.request.vehicle]}
         {job.request.vehiclePlate ? (
           <span className="font-normal text-muted"> · {job.request.vehiclePlate}</span>
         ) : null}
@@ -65,7 +73,9 @@ export function JobCard({
             ? `Cancelled ${CANCELLED_BY_LABELS[job.cancelledBy] ?? ''}`
             : closed
               ? formatDuration(msInStatus(job, now)) + ' ago'
-              : `${formatDuration(msInStatus(job, now))} in status`}
+              : job.request.booking && job.status === 'requested'
+                ? 'Waiting for a mechanic to confirm'
+                : `${formatDuration(msInStatus(job, now))} in status`}
         </span>
       </span>
     </Link>

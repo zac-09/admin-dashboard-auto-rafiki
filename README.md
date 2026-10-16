@@ -197,6 +197,18 @@ way (the app's own state machine; written as `cancelledBy: 'admin'`, which the a
 `rebroadcastJob` are audited callables that also leave a note on the job. Stale requests on the
 alert rail have a one-click "Widen search".
 
+### Booked servicing in the live views
+
+Bookings (app contract 2026-10-16) are ordinary jobs carrying `request.booking`, requested
+days ahead for a two-hour window. The dashboard treats them as scheduled, not urgent: they
+never raise "No taker" or "No mechanic online nearby"; cards, the job page, alerts and search
+show the package as the title and "Booked for Sat 18 Oct, 10:00–12:00"; the map labels them
+"Booking". One alert is theirs: "Booking not confirmed" once an unconfirmed booking is within
+6 hours of its confirmation cutoff (`expiresAt`, two hours before the window), with "Message
+mechanics near here". The job page shows the cutoff and, once sent, the app's reminder
+(`remindedAt`). Bookings are left out of request-to-arrival times (KPIs, trends, scorecards)
+and of demand by hour; the jobs CSV gains package, booked-for and plate columns.
+
 ### Shift handover
 
 The control room has a live "Shift handover" panel under the alerts: any staff role writes a

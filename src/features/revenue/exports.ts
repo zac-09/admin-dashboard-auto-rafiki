@@ -24,6 +24,9 @@ export function jobsCsv(jobs: readonly Job[], mechanicNames: Map<string, string>
       'Cancelled by',
       'Distance driven (km)',
       'Broadcast radius (km)',
+      'Booked package',
+      'Booked for',
+      'Number plate',
     ],
     jobs.map((j) => [
       j.id,
@@ -42,6 +45,9 @@ export function jobsCsv(jobs: readonly Job[], mechanicNames: Map<string, string>
       j.cancelledBy ?? '',
       j.distanceKm ?? '',
       j.radiusKm,
+      j.request.booking?.packageLabel ?? '',
+      j.request.booking?.scheduledFor ?? '',
+      j.request.vehiclePlate ?? '',
     ]),
   );
 }

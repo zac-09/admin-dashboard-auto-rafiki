@@ -56,6 +56,8 @@ export function computeKpis(
   const jobs = allJobs.filter((j) => Date.parse(j.request.createdAt) >= since);
 
   const arrivals = jobs.flatMap((j) => {
+    // Bookings are requested days ahead: only breakdowns have a request-to-arrival time.
+    if (j.request.booking) return [];
     const arrived = at(j, 'arrived');
     return arrived === null ? [] : [(arrived - Date.parse(j.request.createdAt)) / 60_000];
   });

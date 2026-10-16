@@ -19,3 +19,9 @@ export const LOW_RATING_MAX_STARS = 2;
 export const LOW_RATING_WINDOW_MS = 7 * 24 * 60 * 60_000;
 /** How far back the board shows complete / cancelled jobs. */
 export const CLOSED_WINDOW_MS = 24 * 60 * 60_000;
+
+/**
+ * A booking (request.booking) still waiting for a mechanic with less than this left before
+ * its confirmation cutoff (expiresAt, two hours before the window) needs ops to find one.
+ */
+export const BOOKING_CONFIRM_WARN_MS = 6 * 60 * 60_000;

@@ -1,14 +1,22 @@
 import { haversineKm } from '@/lib/geo';
+import { isBooking } from '@/lib/jobs';
 import { ratedBy } from '@/lib/ratings';
 import type { Job, MechanicDoc, Rating } from '@/types';
 
-import { LATE_ENROUTE_MS, LOW_RATING_MAX_STARS, STALE_REQUEST_MS } from './constants';
+import {
+  BOOKING_CONFIRM_WARN_MS,
+  LATE_ENROUTE_MS,
+  LOW_RATING_MAX_STARS,
+  STALE_REQUEST_MS,
+} from './constants';
 import { msInStatus } from './jobTime';
 
 export type Alert =
   /** An open request with no verified mechanic online within the broadcast radius. */
   | { kind: 'out-of-reach'; key: string; job: Job; radiusKm: number; nearestKm: number | null }
   | { kind: 'stale-request'; key: string; job: Job; ms: number }
+  /** A booking nobody has confirmed, close to its cutoff (`msLeft` may be negative). */
+  | { kind: 'booking-unconfirmed'; key: string; job: Job; msLeft: number }
   | { kind: 'late-enroute'; key: string; job: Job; ms: number }
   | { kind: 'low-rating'; key: string; rating: Rating };
 
@@ -41,7 +49,8 @@ export function computeAlerts(
   // place of the stale-request alert for the same job, which would only repeat it.
   const outOfReach: Alert[] = coverage
     ? activeJobs
-        .filter((job) => job.status === 'requested' && !job.mechanicId)
+        // Bookings are planned days ahead: nobody needs to be online right now.
+        .filter((job) => job.status === 'requested' && !job.mechanicId && !isBooking(job))
         .map((job) => ({ job, nearestKm: nearestOnlineKm(job, coverage.online) }))
         .filter((x) => x.nearestKm === null || x.nearestKm > coverage.radiusKm)
         .sort((a, b) => a.job.request.createdAt.localeCompare(b.job.request.createdAt))
@@ -62,12 +71,25 @@ export function computeAlerts(
     activeJobs
       .filter((job) => job.status === status && !(status === 'requested' && job.mechanicId))
       .filter((job) => !unreachable.has(job.id))
+      // A booking waiting to be confirmed is scheduled, not a stale broadcast.
+      .filter((job) => !(status === 'requested' && isBooking(job)))
       .map((job) => ({ kind, key: `${kind}:${job.id}`, job, ms: msInStatus(job, now) }))
       .filter((a) => a.ms > limit)
       .sort((a, b) => b.ms - a.ms);
   return [
     ...outOfReach,
     ...jobAlerts('stale-request', 'requested', STALE_REQUEST_MS),
+    ...activeJobs
+      .filter((job) => job.status === 'requested' && !job.mechanicId && isBooking(job))
+      .map((job) => ({ job, msLeft: Date.parse(job.expiresAt) - now.getTime() }))
+      .filter((x) => x.msLeft < BOOKING_CONFIRM_WARN_MS)
+      .sort((a, b) => a.msLeft - b.msLeft)
+      .map(({ job, msLeft }) => ({
+        kind: 'booking-unconfirmed' as const,
+        key: `booking-unconfirmed:${job.id}`,
+        job,
+        msLeft,
+      })),
     ...jobAlerts('late-enroute', 'enroute', LATE_ENROUTE_MS),
     ...lowRatings
       .filter((r) => r.stars <= LOW_RATING_MAX_STARS)

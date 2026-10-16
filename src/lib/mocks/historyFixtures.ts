@@ -283,3 +283,66 @@ export function generateHistory(now: Date, seed = 7): History {
   }
   return { jobs, ratings, availability, offers };
 }
+
+/**
+ * Two upcoming booked services for mock mode (contract 2026-10-16): one still waiting for a
+ * mechanic close to its confirmation cutoff, one confirmed for tomorrow morning.
+ */
+export function upcomingBookings(now: Date): Job[] {
+  const kampalaHour = (daysAhead: number, hour: number) => {
+    const local = new Date(now.getTime() + 3 * 3_600_000 + daysAhead * DAY_MS);
+    local.setUTCHours(hour, 0, 0, 0);
+    return local.getTime() - 3 * 3_600_000;
+  };
+  const make = (
+    id: string,
+    windowStart: number,
+    packageId: string,
+    packageLabel: string,
+    fee: number,
+    mechanicId?: string,
+  ): Job => {
+    const createdAt = new Date(now.getTime() - 2 * DAY_MS).toISOString();
+    const timeline: JobTimelineEntry[] = [{ status: 'requested', at: createdAt }];
+    if (mechanicId)
+      timeline.push({ status: 'matched', at: new Date(now.getTime() - DAY_MS).toISOString() });
+    return {
+      id,
+      request: {
+        id,
+        customerId: 'u_customer_aisha',
+        location: PLACES.kololo,
+        vehicle: 'car',
+        service: 'other',
+        description: '',
+        createdAt,
+        items: [],
+        booking: {
+          packageId,
+          packageLabel,
+          scheduledFor: new Date(windowStart).toISOString(),
+          windowMinutes: 120,
+        },
+      },
+      status: mechanicId ? 'matched' : 'requested',
+      radiusKm: 8,
+      expiresAt: new Date(windowStart - 2 * 3_600_000).toISOString(),
+      fee,
+      timeline,
+      ...(mechanicId ? { mechanicId } : {}),
+    };
+  };
+  // Waiting: its window opens 5 hours from now, so 3 hours are left to confirm it.
+  const soon = Math.ceil((now.getTime() + 5 * 3_600_000) / 3_600_000) * 3_600_000;
+  return [
+    make('job_booking_unconfirmed', soon, 'minor-service', 'Minor service', 180_000),
+    make(
+      'job_booking_confirmed',
+      kampalaHour(1, 10),
+      'oil-change',
+      'Oil and filter change',
+      120_000,
+      'u_mech_okello',
+    ),
+  ];
+}

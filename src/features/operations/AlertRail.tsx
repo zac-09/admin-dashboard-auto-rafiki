@@ -1,9 +1,8 @@
 import { AnimatePresence, motion } from 'motion/react';
+import { bookingWindow, jobTitle } from '@/lib/jobs';
 import { Link } from 'react-router';
 
 import { AnimatedNumber, Pop, springs, timings } from '@/components/motion';
-
-import { SERVICE_LABELS } from '@/lib/labels';
 
 import { can } from '@/lib/permissions';
 import { useSession } from '@/lib/session';
@@ -30,10 +29,26 @@ function AlertItem({ alert }: { alert: Alert }) {
       <Link to={`/jobs/${job.id}`} className="flex flex-col gap-0.5">
         <span className="font-semibold">No mechanic online within {alert.radiusKm} km</span>
         <span className="text-muted">
-          {SERVICE_LABELS[job.request.service]}, {job.request.location.label} ·{' '}
+          {jobTitle(job)}, {job.request.location.label} ·{' '}
           {alert.nearestKm === null
             ? 'nobody online'
             : `nearest ${alert.nearestKm.toFixed(1)} km away`}
+        </span>
+      </Link>
+    );
+  }
+  if (alert.kind === 'booking-unconfirmed') {
+    const { job } = alert;
+    return (
+      <Link to={`/jobs/${job.id}`} className="flex flex-col gap-0.5">
+        <span className="font-semibold">
+          {alert.msLeft > 0
+            ? `Booking not confirmed: ${formatDuration(alert.msLeft)} left to confirm`
+            : 'Booking not confirmed: the confirmation cutoff has passed'}
+        </span>
+        <span className="text-muted">
+          {jobTitle(job)}, {job.request.location.label}
+          {job.request.booking ? ` · ${bookingWindow(job.request.booking)}` : ''}
         </span>
       </Link>
     );
@@ -47,7 +62,7 @@ function AlertItem({ alert }: { alert: Alert }) {
           : `On the way for ${formatDuration(ms)}`}
       </span>
       <span className="text-muted">
-        {SERVICE_LABELS[job.request.service]}, {job.request.location.label}
+        {jobTitle(job)}, {job.request.location.label}
       </span>
     </Link>
   );
@@ -59,9 +74,16 @@ const ACTION =
 
 function AlertAction({ alert }: { alert: Alert }) {
   const session = useSession();
-  if (alert.kind !== 'stale-request' && alert.kind !== 'out-of-reach') return null;
-  const widen = can(session?.role, 'operations.intervene');
-  const message = alert.kind === 'out-of-reach' && can(session?.role, 'mechanics.message');
+  if (
+    alert.kind !== 'stale-request' &&
+    alert.kind !== 'out-of-reach' &&
+    alert.kind !== 'booking-unconfirmed'
+  ) {
+    return null;
+  }
+  // Bookings go out at the widened radius from the start: there is nothing to widen.
+  const widen = alert.kind !== 'booking-unconfirmed' && can(session?.role, 'operations.intervene');
+  const message = alert.kind !== 'stale-request' && can(session?.role, 'mechanics.message');
   if (!widen && !message) return null;
   const { latitude, longitude, label } = alert.job.request.location;
   return (

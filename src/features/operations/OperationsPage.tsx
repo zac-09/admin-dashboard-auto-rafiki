@@ -84,6 +84,7 @@ export function OperationsPage() {
     ['ratings', lowRatings.error],
   ].filter((f): f is [string, Error] => !!f[1]);
   const receiving = onlineMechanics.filter((m) => m.vetting === 'verified').length;
+  const bookings = activeJobs.filter((j) => j.request.booking).length;
 
   return (
     <>
@@ -97,8 +98,11 @@ export function OperationsPage() {
         ) : (
           <>
             <AnimatedNumber value={activeJobs.length} /> active{' '}
-            {activeJobs.length === 1 ? 'job' : 'jobs'} ·{' '}
-            <AnimatedNumber value={onlineMechanics.length} /> mechanics online (
+            {activeJobs.length === 1 ? 'job' : 'jobs'}
+            {bookings > 0
+              ? ` (${bookings} booked ${bookings === 1 ? 'service' : 'services'})`
+              : ''}{' '}
+            · <AnimatedNumber value={onlineMechanics.length} /> mechanics online (
             <AnimatedNumber value={receiving} /> receiving jobs)
           </>
         )}

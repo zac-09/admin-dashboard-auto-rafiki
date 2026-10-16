@@ -35,7 +35,8 @@ export function jobPins(jobs: readonly Job[], alerts: readonly Alert[]): JobPin[
       id: j.id,
       position: { lat: j.request.location.latitude, lng: j.request.location.longitude },
       status: j.status,
-      label: PIN_LABELS[j.status]!,
+      // A booking waiting for confirmation is planned, not a live call for help.
+      label: j.status === 'requested' && j.request.booking ? 'Booking' : PIN_LABELS[j.status]!,
       attention: flagged.has(j.id),
     }));
 }
