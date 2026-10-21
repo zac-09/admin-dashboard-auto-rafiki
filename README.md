@@ -363,7 +363,15 @@ uses the `etaMinutes` the mechanic was shown when setting off, falling back to t
 estimate for older jobs. Both logs are read with collection-group queries, which need the
 `fieldOverrides` in `firebase/firestore.indexes.json` (deploy indexes before hosting).
 
-**Settings changes** (fifth tab) takes every audited `settings.update` in the last ten weeks
+**Funnel & mix** (over the last 7 days, 4 weeks or 10 weeks): how many requests reached each
+step (accepted, set off, arrived, work started, completed); cancellations by the step reached
+and who cancelled (customer, mechanic, expired, AutoRafiki); the median minutes of each step
+of a breakdown (waiting for acceptance, setting off, travel, on site), so the 30-minute target
+can be traced to the slow step; breakdowns against bookings; and a table per service and per
+vehicle type with requests, completion, unanswered share, median arrival, average fee and the
+call-out fees on completed jobs (a floor: on-site prices are not recorded).
+
+**Settings changes** (sixth tab) takes every audited `settings.update` in the last ten weeks
 and compares up to 14 days before with up to 14 days after (cut short by a neighbouring
 change or today): requests a day, unanswered share, completion, median arrival, average
 fee, and requests a day for each service whose price changed, plus any broadcast radius or
