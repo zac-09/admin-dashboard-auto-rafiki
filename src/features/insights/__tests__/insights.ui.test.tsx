@@ -68,6 +68,30 @@ describe('insights', () => {
     ).toBeInTheDocument();
   });
 
+  it('funnel & mix: steps, minutes per step, cancellations, services and vehicles', async () => {
+    const user = await openAs('ops', '/insights');
+    await user.click(await screen.findByRole('button', { name: 'Funnel & mix' }));
+    const steps = await screen.findByRole('list', { name: 'Requests reaching each step' });
+    const items = within(steps).getAllByRole('listitem');
+    expect(items).toHaveLength(6);
+    expect(items[0]).toHaveTextContent(/^Requested\d+ \(100%\)$/);
+    expect(items[5]).toHaveTextContent(/^Completed\d+ \(\d+%\)/);
+    const minutes = screen.getByRole('list', { name: 'Median minutes per step' });
+    expect(within(minutes).getAllByRole('listitem')[2]).toHaveTextContent(
+      /^Travelling to the customer\d+ minover \d+ jobs$/,
+    );
+    expect(
+      screen.getByRole('table', { name: 'Cancellations by step and who cancelled' }),
+    ).toBeInTheDocument();
+    const services = screen.getByRole('table', { name: 'Requests by service' });
+    expect(within(services).getAllByRole('row').length).toBeGreaterThan(2);
+    expect(services).toHaveTextContent(/UGX \d{1,3}(,\d{3})+/);
+    expect(screen.getByRole('table', { name: 'Requests by vehicle' })).toHaveTextContent('Boda');
+    // The period changes the numbers in view.
+    await user.click(screen.getByRole('button', { name: 'Last 10 weeks' }));
+    expect(screen.getByText(/\d+ requests in the last 10 weeks/)).toBeInTheDocument();
+  });
+
   it('scorecards: a ranked table with signals; sorting by concerns', async () => {
     const user = await openAs('admin', '/insights?view=mechanics');
     const table = await screen.findByRole('table', { name: 'Mechanic scorecards' });

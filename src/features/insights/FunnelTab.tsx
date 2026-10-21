@@ -152,10 +152,11 @@ export function FunnelTab({ data }: { data: InsightsData }) {
     <div className="flex flex-col gap-4">
       <Tabs label="Funnel period" value={period} onChange={setPeriod} items={PERIODS} />
       <p className="text-sm text-muted">
-        {plural(f.requests, 'request')} in the {PERIODS.find((p) => p.id === period)!.label.toLowerCase()}
-        {f.inProgress ? `, ${f.inProgress} still in progress` : ''}. Fees are the call-out fee
-        fixed when the customer asked; on-site prices are not recorded, so money figures are a
-        floor. {formatUgx(fees)} in call-out fees on completed jobs.
+        {plural(f.requests, 'request')} in the{' '}
+        {PERIODS.find((p) => p.id === period)!.label.toLowerCase()}
+        {f.inProgress ? `, ${f.inProgress} still in progress` : ''}. Fees are the call-out fee fixed
+        when the customer asked; on-site prices are not recorded, so money figures are a floor.{' '}
+        {formatUgx(fees)} in call-out fees on completed jobs.
       </p>
       {f.requests === 0 ? (
         <p className="panel p-6 text-sm text-muted">No requests in this period.</p>
@@ -200,12 +201,16 @@ export function FunnelTab({ data }: { data: InsightsData }) {
                     <span>
                       {l.label}
                       {l.beforeArrival ? null : (
-                        <span className="block text-xs text-muted">After arrival, not in the target</span>
+                        <span className="block text-xs text-muted">
+                          After arrival, not in the target
+                        </span>
                       )}
                     </span>
                     <span className="text-right">
                       <span className="font-semibold">{minutes(l.medianMin)}</span>
-                      <span className="block text-xs text-muted">over {plural(l.measured, 'job')}</span>
+                      <span className="block text-xs text-muted">
+                        over {plural(l.measured, 'job')}
+                      </span>
                     </span>
                   </span>
                   <Bar share={(l.medianMin ?? 0) / legMax} />
@@ -226,7 +231,10 @@ export function FunnelTab({ data }: { data: InsightsData }) {
               </p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[30rem] text-sm" aria-label="Cancellations by step and who cancelled">
+                <table
+                  className="w-full min-w-[30rem] text-sm"
+                  aria-label="Cancellations by step and who cancelled"
+                >
                   <thead>
                     <tr className="border-b border-hairline">
                       <th scope="col" className={TH}>
@@ -282,8 +290,7 @@ export function FunnelTab({ data }: { data: InsightsData }) {
                       <dd className="text-2xl font-light">{bookedCount}</dd>
                       {booked ? (
                         <dd className="text-xs text-muted">
-                          {pct(booked.completionShare)} completed,{' '}
-                          {formatUgx(booked.completedFees)}
+                          {pct(booked.completionShare)} completed, {formatUgx(booked.completedFees)}
                         </dd>
                       ) : null}
                     </div>
