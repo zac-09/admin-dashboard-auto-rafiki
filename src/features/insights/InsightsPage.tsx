@@ -7,6 +7,7 @@ import { useDocumentTitle } from '@/lib/useDocumentTitle';
 import { ChangesTab } from './ChangesTab';
 import { CoverageTab } from './CoverageTab';
 import { DemandTab } from './DemandTab';
+import { FunnelTab } from './FunnelTab';
 import { useInsightsInputs } from './hooks';
 import { MechanicsTab } from './MechanicsTab';
 import { TrendsTab } from './TrendsTab';
@@ -15,6 +16,7 @@ export type InsightsData = NonNullable<ReturnType<typeof useInsightsInputs>['dat
 
 const VIEWS = [
   { id: 'trends' as const, label: 'Trends' },
+  { id: 'funnel' as const, label: 'Funnel & mix' },
   { id: 'coverage' as const, label: 'Coverage gaps' },
   { id: 'demand' as const, label: 'Demand & supply' },
   { id: 'mechanics' as const, label: 'Mechanic scorecards' },
@@ -56,6 +58,8 @@ export function InsightsPage() {
         <Notice tone="error">Could not load insights: {inputs.error.message}</Notice>
       ) : view === 'trends' ? (
         <TrendsTab data={inputs.data} />
+      ) : view === 'funnel' ? (
+        <FunnelTab data={inputs.data} />
       ) : view === 'coverage' ? (
         <CoverageTab data={inputs.data} />
       ) : view === 'demand' ? (
