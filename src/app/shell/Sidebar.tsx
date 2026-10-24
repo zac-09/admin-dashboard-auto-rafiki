@@ -12,6 +12,7 @@ import type { AdminSession } from '@/types';
 import { NAV_ITEMS } from '../navigation';
 import { badgeFor, type Attention } from '../useAttention';
 
+import { useShortcutsSheet } from './shortcutsStore';
 import { UserMenu } from './UserMenu';
 
 export function Sidebar({
@@ -117,6 +118,18 @@ export function Sidebar({
         >
           <span aria-hidden className="diamond scale-75" />
           Report a problem
+        </button>
+        {/* Phones have no keyboard: the shortcuts sheet is for desktops. */}
+        <button
+          type="button"
+          onClick={() => useShortcutsSheet.getState().setOpen(true)}
+          className="hidden min-h-10 w-full items-center justify-between rounded-control px-3 text-sm text-muted transition-colors hover:text-primary md:flex"
+        >
+          <span className="flex items-center gap-3">
+            <span aria-hidden className="diamond scale-75" />
+            Keyboard shortcuts
+          </span>
+          <kbd className="text-xs">?</kbd>
         </button>
       </div>
       <UserMenu session={session} />

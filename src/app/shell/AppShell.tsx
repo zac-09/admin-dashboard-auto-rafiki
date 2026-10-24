@@ -15,6 +15,7 @@ import type { AdminSession } from '@/types';
 
 import { AttentionContext, useAttention } from '../useAttention';
 
+import { Shortcuts } from './Shortcuts';
 import { Sidebar } from './Sidebar';
 
 /** Sidebar on desktop; a top bar with a sliding drawer on phones (triage from a phone). */
@@ -105,6 +106,7 @@ export function AppShell({ session }: { session: AdminSession }) {
         <Toaster />
         <UnsavedChangesGuard />
         <ReportProblemDialog />
+        <Shortcuts session={session} />
         {can(session.role, 'operations.view') ? <AlertNotifier /> : null}
 
         <main className="min-w-0 p-4 md:p-8 print:p-0">
