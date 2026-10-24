@@ -8,6 +8,7 @@ import type { AuditEntry } from './audit';
 import type { AppSettings, ChatMessage, Job, Rating, UgPhone } from './domain';
 import type { MechanicDoc, UserDoc } from './firestore';
 import type { HandoverNote } from './handover';
+import type { ProblemContext, ProblemReport } from './problemReports';
 import type { AdminRole } from './admin';
 import type { InviteStaffInput, InviteStaffResult, StaffMember } from './staff';
 import type { VettingDocType, VettingDocument } from './domain';
@@ -228,6 +229,14 @@ export interface HandoverRepository {
   markHandled(id: string): Promise<void>;
 }
 
+/** "Report a problem": staff send, admins read and resolve (callables). */
+export interface ProblemReportsRepository {
+  /** The latest 100 reports, newest first, live. */
+  subscribe(onChange: (reports: ProblemReport[]) => void, onError: (e: Error) => void): Unsubscribe;
+  report(input: { description: string; context: ProblemContext }): Promise<void>;
+  resolve(id: string): Promise<void>;
+}
+
 /** Messages from operations to mechanics (inbox + push). */
 export interface MessagesRepository {
   /** The audited sendMechanicMessage callable. */
@@ -261,4 +270,5 @@ export interface Repositories {
   messages: MessagesRepository;
   insights: InsightsRepository;
   handover: HandoverRepository;
+  problems: ProblemReportsRepository;
 }

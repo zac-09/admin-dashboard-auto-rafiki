@@ -15,6 +15,7 @@
  *   suspending a mechanic as a dispute outcome needs admin or ops; audited)
  * - sendMechanicMessage: message mechanics, inbox copy + push (admin, ops; audited)
  * - addHandoverNote, markHandoverHandled: shift notes between operators (all roles)
+ * - reportProblem (all roles), resolveProblemReport (admin): the team's problem reports
  * - getMySubscription: the signed-in mechanic's own subscription weeks (app; own uid only)
  * - updateBilling: the mobile money numbers mechanics pay to (admin; audited)
  */
@@ -32,6 +33,7 @@ import { INBOX, OPS_MESSAGE_CHANNEL, OPS_MESSAGES } from '../../src/lib/mechanic
 import { AUDIT_COLLECTION, type AuditEntry } from '../../src/types/audit';
 import { COLLECTIONS } from '../../src/types/firestore';
 import { HANDOVER_NOTES } from '../../src/types/handover';
+import { PROBLEM_REPORTS } from '../../src/types/problemReports';
 import { SUBSCRIPTIONS, type SubscriptionPayment } from '../../src/types/subscriptions';
 import { DISPUTES, SUPPORT_NOTES, type Dispute } from '../../src/types/support';
 import { VETTING_REVIEWS, type VettingReviews } from '../../src/types/vettingReviews';
@@ -47,6 +49,11 @@ import {
   markHandoverHandled as markHandledHandler,
   type HandoverDeps,
 } from './handover';
+import {
+  reportProblem as reportProblemHandler,
+  resolveProblemReport as resolveProblemHandler,
+  type ProblemReportDeps,
+} from './problemReports';
 import { markSubscriptionPaid as markPaidHandler, type MarkPaidDeps } from './markPaid';
 import {
   getMySubscription as getMySubscriptionHandler,
@@ -452,6 +459,25 @@ const handoverDeps: HandoverDeps = {
   now: () => new Date(),
 };
 
+const problemReportDeps: ProblemReportDeps = {
+  async add(report) {
+    const ref = await getFirestore().collection(PROBLEM_REPORTS).add(report);
+    return ref.id;
+  },
+  async resolve(id, by) {
+    const db = getFirestore();
+    const ref = db.collection(PROBLEM_REPORTS).doc(id);
+    return db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      if (!snap.exists) return 'missing' as const;
+      if (snap.data()?.resolvedAt) return 'already' as const;
+      tx.update(ref, { resolvedAt: by.at, resolvedBy: by.uid, resolvedByEmail: by.email });
+      return 'ok' as const;
+    });
+  },
+  now: () => new Date(),
+};
+
 const billingRef = () => getFirestore().collection(SETTINGS_COLLECTION).doc(BILLING_DOC);
 
 const mySubscriptionDeps: MySubscriptionDeps = {
@@ -568,6 +594,14 @@ export const addHandoverNote = onCall((request) =>
 
 export const markHandoverHandled = onCall((request) =>
   markHandledHandler(callerOf(request), request.data, handoverDeps),
+);
+
+export const reportProblem = onCall((request) =>
+  reportProblemHandler(callerOf(request), request.data, problemReportDeps),
+);
+
+export const resolveProblemReport = onCall((request) =>
+  resolveProblemHandler(callerOf(request), request.data, problemReportDeps),
 );
 
 export const getMySubscription = onCall((request) =>

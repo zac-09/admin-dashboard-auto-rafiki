@@ -408,6 +408,15 @@ descriptions change freely and a package can be withdrawn (existing bookings kee
 and price). Until servicing is published the app uses its compiled placeholder prices, and
 the Settings page says so.
 
+## Problem reports
+
+"Report a problem" (bottom of the sidebar, every role) sends what went wrong with the page,
+role, browser, window size and theme captured automatically, through the `reportProblem`
+callable into `problemReports` (dashboard-only; app users never read it; no direct writes).
+Admins see them live under **Problem reports** (with an open count in the sidebar), open the
+page they came from, and mark each resolved once with `resolveProblemReport`. Reports are
+not audited: each one records its reporter and resolver.
+
 ## Audit log
 
 `/audit` (admin and ops) lists every audited decision in one place: vetting, document

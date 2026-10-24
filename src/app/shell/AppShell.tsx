@@ -7,6 +7,7 @@ import { Toaster } from '@/components/toast/Toaster';
 import { UnsavedChangesGuard } from '@/components/unsaved/UnsavedChangesGuard';
 import { WheelMark } from '@/components/ui';
 import { AlertNotifier } from '@/features/operations/notifications/AlertNotifier';
+import { ReportProblemDialog } from '@/features/problems/ReportProblemDialog';
 import { CommandPalette } from '@/features/support/CommandPalette';
 import { can } from '@/lib/permissions';
 import type { AdminSession } from '@/types';
@@ -102,6 +103,7 @@ export function AppShell({ session }: { session: AdminSession }) {
         <CommandPalette />
         <Toaster />
         <UnsavedChangesGuard />
+        <ReportProblemDialog />
         {can(session.role, 'operations.view') ? <AlertNotifier /> : null}
 
         <main className="min-w-0 p-4 md:p-8 print:p-0">

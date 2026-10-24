@@ -10,6 +10,7 @@ import {
   MechanicDetailPage,
   OperationsPage,
   PersonPage,
+  ProblemReportsPage,
   RevenuePage,
   SettingsPage,
   StaffPage,
@@ -30,6 +31,14 @@ export const routes: RouteObject[] = [
     children: [
       // Every role starts on Today: what needs them, across the modules they can see.
       { index: true, element: <Navigate to="/today" replace /> },
+      {
+        path: '/problems',
+        element: (
+          <RequirePermission permission="problems.manage">
+            <ProblemReportsPage />
+          </RequirePermission>
+        ),
+      },
       {
         path: '/today',
         element: (

@@ -10,3 +10,4 @@ export * from './vettingReviews';
 export * from './repositories';
 export * from './appLogs';
 export * from './handover';
+export * from './problemReports';

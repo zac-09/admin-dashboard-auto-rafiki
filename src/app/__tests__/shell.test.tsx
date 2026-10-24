@@ -85,6 +85,7 @@ describe('role-gated shell', () => {
       'Settings',
       'Audit log',
       'Staff',
+      'Problem reports',
     ]);
     expect(within(nav).getByRole('link', { name: 'Vetting' })).toHaveAttribute(
       'aria-current',

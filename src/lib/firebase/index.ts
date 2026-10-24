@@ -8,6 +8,7 @@ import {
 } from './firestoreRepositories';
 import { FirestoreOperationsRepository, FirestorePeopleRepository } from './operationsRepository';
 import { FirestoreHandoverRepository } from './handoverRepository';
+import { FirestoreProblemReportsRepository } from './problemReportsRepository';
 import { FirestoreInsightsRepository } from './insightsRepository';
 import { FirebaseMessagesRepository } from './messagesRepository';
 import { FirestoreRevenueRepository } from './revenueRepository';
@@ -32,5 +33,6 @@ export function createFirebaseRepositories(): Repositories {
     messages: new FirebaseMessagesRepository(),
     insights: new FirestoreInsightsRepository(),
     handover: new FirestoreHandoverRepository(),
+    problems: new FirestoreProblemReportsRepository(),
   };
 }

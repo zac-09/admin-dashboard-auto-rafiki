@@ -7,6 +7,11 @@ import { lazy } from 'react';
 export const TodayPage = lazy(() =>
   import('@/features/today/TodayPage').then((m) => ({ default: m.TodayPage })),
 );
+export const ProblemReportsPage = lazy(() =>
+  import('@/features/problems/ProblemReportsPage').then((m) => ({
+    default: m.ProblemReportsPage,
+  })),
+);
 export const VettingQueuePage = lazy(() =>
   import('@/features/vetting/VettingQueuePage').then((m) => ({ default: m.VettingQueuePage })),
 );

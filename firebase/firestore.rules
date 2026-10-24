@@ -321,6 +321,13 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // problemReports/{id}: "Report a problem" from dashboard staff, written by the
+    // reportProblem and resolveProblemReport callables. Staff read via the rule above; app
+    // users never.
+    match /problemReports/{reportId} {
+      allow read, write: if false;
+    }
+
     // opsMessages/{id}: what operations sent to mechanics (who, to whom, push counts), written
     // by the sendMechanicMessage callable. Staff read via the rule above; the mechanics' own
     // copies live in mechanics/{uid}/inbox.

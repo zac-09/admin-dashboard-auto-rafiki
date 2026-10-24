@@ -62,4 +62,9 @@ export const NAV_ITEMS: readonly NavItem[] = [
     label: 'Staff',
     permission: 'staff.manage',
   },
+  {
+    to: '/problems',
+    label: 'Problem reports',
+    permission: 'problems.manage',
+  },
 ];

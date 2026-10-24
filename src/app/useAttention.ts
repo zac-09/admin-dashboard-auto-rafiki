@@ -2,6 +2,7 @@ import { createContext, useContext } from 'react';
 
 import { computeAlerts, type Alert } from '@/features/operations/alerts';
 import { useActiveJobs, useLowRatings, useOnlineMechanics } from '@/features/operations/hooks';
+import { useProblemReports } from '@/features/problems/hooks';
 import { overdueAccounts, type OverdueAccount } from '@/features/revenue/collections';
 import { useSubscriptionInputs } from '@/features/revenue/hooks';
 import { useAppSettings } from '@/features/settings/hooks';
@@ -10,7 +11,7 @@ import { useVettingQueue } from '@/features/vetting/hooks';
 import { can } from '@/lib/permissions';
 import { useSession } from '@/lib/session';
 import { useNow } from '@/lib/useLive';
-import { BROADCAST, type Dispute, type Job, type MechanicDoc } from '@/types';
+import { BROADCAST, type Dispute, type Job, type MechanicDoc, type ProblemReport } from '@/types';
 
 /** What needs someone now, per module. `undefined` while loading or not this role's to see. */
 export interface Attention {
@@ -25,6 +26,8 @@ export interface Attention {
   activeJobs?: Job[];
   /** Mechanics online now (any vetting). */
   online?: MechanicDoc[];
+  /** Problem reports nobody has resolved (admins only). */
+  openReports?: ProblemReport[];
 }
 
 /**
@@ -40,6 +43,7 @@ export function useAttention(): Attention {
   const online = useOnlineMechanics();
   const appSettings = useAppSettings();
   const disputes = useOpenDisputes();
+  const reports = useProblemReports();
   const revenue = useSubscriptionInputs(can(session?.role, 'revenue.view'));
 
   const radiusKm =
@@ -55,6 +59,10 @@ export function useAttention(): Attention {
     activeJobs: active.status === 'ready' ? active.data.jobs : undefined,
     online: online.status === 'ready' ? online.data : undefined,
     openDisputes: disputes.status === 'ready' ? disputes.data : undefined,
+    openReports:
+      reports.status === 'ready' && can(session?.role, 'problems.manage')
+        ? reports.data.filter((r) => !r.resolvedAt)
+        : undefined,
     overdue: revenue.data
       ? overdueAccounts(revenue.data.mechanics, revenue.data.entries, revenue.data.payments, now)
       : undefined,
@@ -76,6 +84,8 @@ export function badgeFor(path: string, a: Attention): { count: number; noun: str
       return of(a.alerts, 'open alert', 'open alerts');
     case '/support':
       return of(a.openDisputes, 'open dispute', 'open disputes');
+    case '/problems':
+      return of(a.openReports, 'open report', 'open reports');
     case '/revenue':
       return of(a.overdue, 'mechanic overdue', 'mechanics overdue');
     default:

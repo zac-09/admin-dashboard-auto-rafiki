@@ -195,6 +195,17 @@ describe('opsMessages (dashboard-only record of messages sent)', () => {
   });
 });
 
+describe('problemReports (dashboard-only problem reports)', () => {
+  it('staff read; app users never; nobody writes directly', async () => {
+    await seed({ 'problemReports/r1': { description: 'Map is blank', reporterUid: 's1' } });
+    await assertSucceeds(getDoc(doc(staff('support'), 'problemReports/r1')));
+    await assertFails(getDoc(doc(appUser(UID.mechanic), 'problemReports/r1')));
+    await assertFails(getDoc(doc(anonymous(), 'problemReports/r1')));
+    await assertFails(setDoc(doc(staff('admin'), 'problemReports/r2'), { description: 'x' }));
+    await assertFails(updateDoc(doc(staff('admin'), 'problemReports/r1'), { resolvedAt: 'now' }));
+  });
+});
+
 describe('collection-group reads the dashboard makes over the app logs', () => {
   beforeEach(() =>
     seed({

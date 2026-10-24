@@ -4,6 +4,7 @@ import { NavLink } from 'react-router';
 
 import { AnimatedNumber, springs } from '@/components/motion';
 import { WheelMark } from '@/components/ui';
+import { useReportDialog } from '@/features/problems/reportStore';
 import { usePalette } from '@/features/support/paletteStore';
 import { can } from '@/lib/permissions';
 import type { AdminSession } from '@/types';
@@ -105,6 +106,19 @@ export function Sidebar({
           ))}
         </ul>
       </nav>
+      <div className="px-2 pb-1">
+        <button
+          type="button"
+          onClick={() => {
+            onNavigate?.();
+            useReportDialog.getState().setOpen(true);
+          }}
+          className="flex min-h-10 w-full items-center gap-3 rounded-control px-3 text-sm text-muted transition-colors hover:text-primary"
+        >
+          <span aria-hidden className="diamond scale-75" />
+          Report a problem
+        </button>
+      </div>
       <UserMenu session={session} />
     </div>
   );

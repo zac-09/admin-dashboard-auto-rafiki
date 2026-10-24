@@ -30,7 +30,9 @@ export type Permission =
   /** Message mechanics (inbox + push) and see what was sent. */
   | 'mechanics.message'
   /** Write shift handover notes and mark them handled. */
-  | 'handover.write';
+  | 'handover.write'
+  /** Read and resolve the team's problem reports. */
+  | 'problems.manage';
 
 const MATRIX: Record<AdminRole, readonly Permission[]> = {
   admin: [
@@ -50,6 +52,7 @@ const MATRIX: Record<AdminRole, readonly Permission[]> = {
     'insights.view',
     'mechanics.message',
     'handover.write',
+    'problems.manage',
   ],
   ops: [
     'today.view',
