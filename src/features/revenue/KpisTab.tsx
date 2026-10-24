@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 
+import { InfoTip } from '@/components/info/InfoTip';
+import type { MetricId } from '@/lib/metrics';
 import { Freshness } from '@/components/network/Freshness';
 import { AnimatedNumber, Reveal, staggerDelay } from '@/components/motion';
 import { Button, Notice, SkeletonPanel, Tabs } from '@/components/ui';
@@ -26,8 +28,11 @@ function Card({
   state,
   index,
   highlight = false,
+  metric,
 }: {
   label: string;
+  /** The ⓘ explanation for this number. */
+  metric?: MetricId;
   value: ReactNode;
   context: string;
   /** Spelled out, with a shape, never colour alone. */
@@ -42,7 +47,10 @@ function Card({
       delay={staggerDelay(index, 7)}
       className={`panel flex flex-col gap-2 p-5 ${highlight ? 'border-primary' : ''}`}
     >
-      <h3 className="micro-label">{label}</h3>
+      <h3 className="micro-label flex items-center gap-1">
+        {label}
+        {metric ? <InfoTip metric={metric} label={label} /> : null}
+      </h3>
       <span className="text-3xl font-light">{value}</span>
       <span className="text-xs text-muted">{context}</span>
       {state ? (
@@ -123,12 +131,14 @@ export function KpisTab() {
           index={0}
           highlight
           label="Jobs per mechanic per week"
+          metric="jobsPerMechanicPerWeek"
           value={k.jobsPerMechanicPerWeek === null ? none : oneDp(k.jobsPerMechanicPerWeek)}
           context={`Completed jobs per week ÷ ${k.verifiedMechanics} verified mechanics. The pilot's make-or-break number.`}
         />
         <Card
           index={1}
           label="Request to arrival (median)"
+          metric="arrival"
           value={
             k.medianArrivalMin === null ? (
               none
@@ -150,30 +160,35 @@ export function KpisTab() {
         <Card
           index={2}
           label="Jobs per day"
+          metric="jobsPerDay"
           value={oneDp(k.jobsPerDay)}
           context={`${k.jobs} ${k.jobs === 1 ? 'request' : 'requests'} in ${days} days.`}
         />
         <Card
           index={3}
           label="Active mechanics"
+          metric="activeMechanics"
           value={<AnimatedNumber value={k.activeMechanics} />}
           context={`Of ${k.verifiedMechanics} verified, at least 3 completed jobs in the last 7 days.`}
         />
         <Card
           index={4}
           label="Acceptance rate"
+          metric="acceptance"
           value={k.acceptanceRate === null ? none : pct(k.acceptanceRate)}
           context="Requests a mechanic accepted, of those no longer waiting."
         />
         <Card
           index={5}
           label="Completion rate"
+          metric="completion"
           value={k.completionRate === null ? none : pct(k.completionRate)}
           context="Accepted jobs completed rather than cancelled."
         />
         <Card
           index={6}
           label="Average rating"
+          metric="rating"
           value={k.averageRating === null ? none : `★ ${oneDp(k.averageRating)}`}
           context={`Customers rating mechanics, ${k.ratings} ${k.ratings === 1 ? 'rating' : 'ratings'}.`}
         />

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 
+import { InfoTip } from '@/components/info/InfoTip';
 import { PageHeader } from '@/app/pages/PageHeader';
 import { useAttentionContext } from '@/app/useAttention';
 import { AnimatedNumber, Reveal, staggerDelay } from '@/components/motion';
@@ -212,7 +213,10 @@ function LastDay() {
         <dd className="text-xl font-light">{k.jobs}</dd>
       </div>
       <div className="flex flex-col gap-0.5">
-        <dt className="text-xs text-muted">Request to arrival</dt>
+        <dt className="flex items-center gap-1 text-xs text-muted">
+          Request to arrival
+          <InfoTip metric="arrival" label="request to arrival" />
+        </dt>
         <dd className="text-xl font-light">
           {arrival === null ? '–' : `${Math.round(arrival)} min`}
         </dd>
@@ -227,13 +231,19 @@ function LastDay() {
         )}
       </div>
       <div className="flex flex-col gap-0.5">
-        <dt className="text-xs text-muted">Accepted</dt>
+        <dt className="flex items-center gap-1 text-xs text-muted">
+          Accepted
+          <InfoTip metric="acceptance" label="accepted" />
+        </dt>
         <dd className="text-xl font-light">
           {k.acceptanceRate === null ? '–' : `${Math.round(k.acceptanceRate * 100)}%`}
         </dd>
       </div>
       <div className="flex flex-col gap-0.5">
-        <dt className="text-xs text-muted">Completed</dt>
+        <dt className="flex items-center gap-1 text-xs text-muted">
+          Completed
+          <InfoTip metric="completion" label="completed" />
+        </dt>
         <dd className="text-xl font-light">
           {k.completionRate === null ? '–' : `${Math.round(k.completionRate * 100)}%`}
         </dd>

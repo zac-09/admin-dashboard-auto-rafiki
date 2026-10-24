@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 
+import { InfoTip } from '@/components/info/InfoTip';
+import type { MetricId } from '@/lib/metrics';
 import { Reveal, staggerDelay } from '@/components/motion';
 import { ARRIVAL_TARGET_MIN } from '@/features/revenue/kpis';
 import { formatUgx } from '@/lib/format';
@@ -37,10 +39,12 @@ function ChartCard({
   label,
   context,
   highlight = false,
+  metric,
   children,
 }: {
   index: number;
   label: string;
+  metric: MetricId;
   context: string;
   highlight?: boolean;
   children: ReactNode;
@@ -52,7 +56,10 @@ function ChartCard({
       delay={staggerDelay(index, 4)}
       className={`panel flex min-w-0 flex-col gap-2 p-5 ${highlight ? 'border-primary' : ''}`}
     >
-      <h3 className="micro-label">{label}</h3>
+      <h3 className="micro-label flex items-center gap-1">
+        {label}
+        <InfoTip metric={metric} label={label} />
+      </h3>
       <p className="text-sm">{context}</p>
       {children}
     </Reveal>
@@ -83,6 +90,7 @@ export function TrendsTab({ data }: { data: InsightsData }) {
           index={0}
           highlight
           label="Jobs per mechanic per week"
+          metric="jobsPerMechanicPerWeek"
           context={compare(trend, (w) => w.jobsPerMechanic, oneDp)}
         >
           <LineChart
@@ -95,6 +103,7 @@ export function TrendsTab({ data }: { data: InsightsData }) {
         <ChartCard
           index={1}
           label="Request to arrival (median)"
+          metric="arrival"
           context={compare(trend, (w) => w.medianArrivalMin, minutes)}
         >
           <LineChart
@@ -107,6 +116,7 @@ export function TrendsTab({ data }: { data: InsightsData }) {
         <ChartCard
           index={2}
           label="Subscriptions collected"
+          metric="collected"
           context={compare(trend, (w) => w.collected, formatUgx)}
         >
           <LineChart
@@ -118,6 +128,7 @@ export function TrendsTab({ data }: { data: InsightsData }) {
         <ChartCard
           index={3}
           label="Requests nobody took"
+          metric="unserved"
           context={compare(trend, (w) => w.unservedShare, pct)}
         >
           <LineChart
