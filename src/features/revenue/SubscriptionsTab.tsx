@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 
+import { Freshness } from '@/components/network/Freshness';
 import { AnimatedNumber, Reveal, springs, staggerDelay, SuccessMoment } from '@/components/motion';
 import { FilterBox, matchesQuery, SortButtons, useSort } from '@/components/table';
 import { Button, Notice, SkeletonPanel, SkeletonTable } from '@/components/ui';
@@ -232,9 +233,16 @@ export function SubscriptionsTab() {
             →
           </Button>
         </div>
-        <Button variant="secondary" onClick={exportAll}>
-          Export subscriptions CSV
-        </Button>
+        <div className="flex flex-wrap items-center gap-3">
+          <Freshness
+            updatedAt={inputs.dataUpdatedAt}
+            fetching={inputs.isFetching}
+            onRefresh={() => inputs.refetch()}
+          />
+          <Button variant="secondary" onClick={exportAll}>
+            Export subscriptions CSV
+          </Button>
+        </div>
       </div>
 
       <section aria-label="Week summary" className="panel flex flex-col gap-4 p-5">

@@ -1,6 +1,7 @@
 import { Link, useSearchParams } from 'react-router';
 
 import { PageHeader } from '@/app/pages/PageHeader';
+import { Freshness } from '@/components/network/Freshness';
 import { Reveal } from '@/components/motion';
 import { Notice, SkeletonPanel, Tabs } from '@/components/ui';
 import { useDocumentTitle } from '@/lib/useDocumentTitle';
@@ -36,12 +37,19 @@ export function InsightsPage() {
     <>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <PageHeader label="Business" title="Insights" />
-        <Link
-          to="/report"
-          className="inline-flex min-h-10 items-center rounded-control border border-hairline px-3 text-sm font-semibold hover:border-primary"
-        >
-          Weekly pilot report
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <Freshness
+            updatedAt={inputs.dataUpdatedAt}
+            fetching={inputs.isFetching}
+            onRefresh={() => inputs.refetch()}
+          />
+          <Link
+            to="/report"
+            className="inline-flex min-h-10 items-center rounded-control border border-hairline px-3 text-sm font-semibold hover:border-primary"
+          >
+            Weekly pilot report
+          </Link>
+        </div>
       </div>
       <Tabs
         label="Insight views"

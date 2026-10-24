@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router';
 
 import { Reveal, springs, timings } from '@/components/motion';
+import { OfflineBanner } from '@/components/network/OfflineBanner';
 import { Toaster } from '@/components/toast/Toaster';
 import { UnsavedChangesGuard } from '@/components/unsaved/UnsavedChangesGuard';
 import { WheelMark } from '@/components/ui';
@@ -107,6 +108,7 @@ export function AppShell({ session }: { session: AdminSession }) {
         {can(session.role, 'operations.view') ? <AlertNotifier /> : null}
 
         <main className="min-w-0 p-4 md:p-8 print:p-0">
+          <OfflineBanner />
           {/* Each page settles in like the app's screens; tabs within a page do not re-trigger. */}
           <Reveal key={pathname} from="down">
             <Outlet />

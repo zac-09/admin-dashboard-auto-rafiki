@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useMemo, useState, useSyncExternalStore } from 'react';
+import { useMemo, useState } from 'react';
 
 import { useRepositories } from '@/lib/repositories';
 import { useLive } from '@/lib/useLive';
@@ -85,18 +85,4 @@ export function useMechanic(userId: string | undefined) {
   });
 }
 
-/** The browser's own network state (navigator.onLine), live. */
-export function useOnline(): boolean {
-  return useSyncExternalStore(
-    (onChange) => {
-      window.addEventListener('online', onChange);
-      window.addEventListener('offline', onChange);
-      return () => {
-        window.removeEventListener('online', onChange);
-        window.removeEventListener('offline', onChange);
-      };
-    },
-    () => navigator.onLine,
-    () => true,
-  );
-}
+export { useOnline } from '@/lib/useOnline';

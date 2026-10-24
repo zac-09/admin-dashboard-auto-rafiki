@@ -4,6 +4,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router';
 import { motion } from 'motion/react';
 
 import { PageHeader } from '@/app/pages/PageHeader';
+import { Freshness } from '@/components/network/Freshness';
 import { Reveal, springs, staggerDelay } from '@/components/motion';
 import { FilterBox, matchesQuery, SortHeader, useSort } from '@/components/table';
 import { Notice, SkeletonPanel, SkeletonTable, Tabs } from '@/components/ui';
@@ -138,7 +139,14 @@ export function VettingQueuePage() {
 
   return (
     <>
-      <PageHeader label="Trust" title="Mechanic vetting" />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader label="Trust" title="Mechanic vetting" />
+        <Freshness
+          updatedAt={loading ? 0 : Math.min(...queries.map((q) => q.dataUpdatedAt))}
+          fetching={queries.some((q) => q.isFetching)}
+          onRefresh={() => queries.forEach((q) => q.refetch())}
+        />
+      </div>
       <Tabs
         label="Vetting queues"
         value={queue}

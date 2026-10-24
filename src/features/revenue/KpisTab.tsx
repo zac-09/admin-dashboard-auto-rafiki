@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 
+import { Freshness } from '@/components/network/Freshness';
 import { AnimatedNumber, Reveal, staggerDelay } from '@/components/motion';
 import { Button, Notice, SkeletonPanel, Tabs } from '@/components/ui';
 import { downloadCsv } from '@/lib/csv';
@@ -101,9 +102,16 @@ export function KpisTab() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <Tabs label="KPI window" value={range} onChange={setRange} items={WINDOWS} />
-        <Button variant="secondary" onClick={exportJobs}>
-          Export jobs CSV
-        </Button>
+        <div className="flex flex-wrap items-center gap-3">
+          <Freshness
+            updatedAt={inputs.dataUpdatedAt}
+            fetching={inputs.isFetching}
+            onRefresh={() => inputs.refetch()}
+          />
+          <Button variant="secondary" onClick={exportJobs}>
+            Export jobs CSV
+          </Button>
+        </div>
       </div>
       <div key={range} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card

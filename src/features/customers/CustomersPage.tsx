@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 
 import { PageHeader } from '@/app/pages/PageHeader';
+import { Freshness } from '@/components/network/Freshness';
 import { Reveal, staggerDelay } from '@/components/motion';
 import { SortButtons, useSort } from '@/components/table';
 import { Notice, Skeleton, SkeletonTable, Tabs } from '@/components/ui';
@@ -118,7 +119,14 @@ export function CustomersPage() {
 
   return (
     <>
-      <PageHeader label="Support" title="Customers" />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader label="Support" title="Customers" />
+        <Freshness
+          updatedAt={inputs.dataUpdatedAt}
+          fetching={inputs.isFetching}
+          onRefresh={() => inputs.refetch()}
+        />
+      </div>
       {inputs.isPending ? (
         <SkeletonTable rows={5} columns={3} label="Loading customers" />
       ) : inputs.error ? (
