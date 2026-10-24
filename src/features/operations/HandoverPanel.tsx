@@ -10,6 +10,7 @@ import { useSession } from '@/lib/session';
 import { useLive, useNow } from '@/lib/useLive';
 import { MAX_HANDOVER_NOTE, type HandoverNote } from '@/types';
 import { toast } from '@/components/toast/toastStore';
+import { useUnsaved } from '@/components/unsaved/unsavedStore';
 
 const DAY_MS = 86_400_000;
 const FIELD =
@@ -81,6 +82,8 @@ export function HandoverPanel() {
       setJobId('');
     },
   });
+
+  useUnsaved(text.trim() !== '');
 
   // Re-evaluated on the shared ticker, not on every render.
   const now = useNow(60_000).getTime();

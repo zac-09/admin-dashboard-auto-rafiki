@@ -4,6 +4,7 @@ import { Pop, Reveal } from '@/components/motion';
 import { Button, Notice, TextField } from '@/components/ui';
 import { MAX_REASON } from '@/lib/vetting';
 import type { AdminRole, InviteStaffResult } from '@/types';
+import { useUnsaved } from '@/components/unsaved/unsavedStore';
 
 import { useEmailSetupLink, useInviteStaff } from './hooks';
 import { RolePicker } from './RolePicker';
@@ -67,6 +68,7 @@ export function InvitePanel({ onClose }: { onClose: () => void }) {
   const [name, setName] = useState('');
   const [role, setRole] = useState<AdminRole | null | undefined>(undefined);
   const [reason, setReason] = useState('');
+  useUnsaved((email.trim() !== '' || reason.trim() !== '') && !invite.isSuccess);
 
   if (invite.data) {
     return <SetupLink email={email.trim().toLowerCase()} result={invite.data} onClose={onClose} />;

@@ -5,6 +5,7 @@ import { Button, Notice, SkeletonLines } from '@/components/ui';
 import { formatDateTime } from '@/lib/format';
 import { can } from '@/lib/permissions';
 import { useSession } from '@/lib/session';
+import { useUnsaved } from '@/components/unsaved/unsavedStore';
 import {
   DISPUTE_OUTCOME_LABELS,
   DISPUTE_OUTCOMES,
@@ -20,6 +21,7 @@ type Moment = { status: 'pending' | 'success'; title: string; subtitle?: string 
 function FlagForm({ jobId, onMoment }: { jobId: string; onMoment: (m: Moment) => void }) {
   const flag = useFlagDispute(jobId);
   const [reason, setReason] = useState('');
+  useUnsaved(reason.trim() !== '' && !flag.isSuccess);
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     onMoment({ status: 'pending', title: '' });
@@ -69,6 +71,7 @@ function ResolveForm({ dispute, onMoment }: { dispute: Dispute; onMoment: (m: Mo
   const resolve = useResolveDispute(dispute.jobId);
   const [outcome, setOutcome] = useState<DisputeOutcome | null>(null);
   const [note, setNote] = useState('');
+  useUnsaved(note.trim() !== '' && !resolve.isSuccess);
   const canSuspend = can(session?.role, 'vetting.decide');
   const options = DISPUTE_OUTCOMES.filter((o) => o !== 'mechanic-suspended' || dispute.mechanicId);
 

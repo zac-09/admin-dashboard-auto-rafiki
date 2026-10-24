@@ -14,6 +14,7 @@ import { PLACEHOLDER_EMERGENCY_PHONE } from '@/lib/catalogue';
 import { SERVICE_LABELS } from '@/lib/labels';
 import { MAX_REASON } from '@/lib/vetting';
 import type { AppSettings, ServiceType } from '@/types';
+import { useUnsaved } from '@/components/unsaved/unsavedStore';
 
 import { usePublishSettings } from './hooks';
 
@@ -300,6 +301,10 @@ export function SettingsEditor({
   const publish = usePublishSettings();
   const [draft, setDraft] = useState(() => toDraft(current));
   const [reason, setReason] = useState('');
+  useUnsaved(
+    (reason.trim() !== '' || JSON.stringify(draft) !== JSON.stringify(toDraft(current))) &&
+      !publish.isSuccess,
+  );
   const check = checkAppSettings(fromDraft(draft));
   const errors = check.ok ? {} : check.errors;
   const changes = check.ok ? settingsChanges(current, check.settings, SERVICE_LABELS) : [];

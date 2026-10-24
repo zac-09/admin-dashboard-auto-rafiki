@@ -7,6 +7,7 @@ import { can } from '@/lib/permissions';
 import { useSession } from '@/lib/session';
 import { MAX_NOTE, type SupportNote } from '@/types';
 import { toast } from '@/components/toast/toastStore';
+import { useUnsaved } from '@/components/unsaved/unsavedStore';
 
 import { useAddNote, useNotes } from './hooks';
 
@@ -23,6 +24,7 @@ export function NotesPanel({ jobId }: { jobId: string }) {
   const live = useNotes(jobId);
   const add = useAddNote(jobId);
   const [text, setText] = useState('');
+  useUnsaved(text.trim() !== '');
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();

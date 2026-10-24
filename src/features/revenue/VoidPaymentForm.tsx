@@ -3,6 +3,7 @@ import { useState, type FormEvent } from 'react';
 import { Button, Notice } from '@/components/ui';
 import { MAX_REASON } from '@/lib/vetting';
 import type { SubscriptionPayment } from '@/types';
+import { useUnsaved } from '@/components/unsaved/unsavedStore';
 
 import { useVoidPayment } from './hooks';
 
@@ -22,6 +23,7 @@ export function VoidPaymentForm({
 }) {
   const [reason, setReason] = useState('');
   const run = useVoidPayment();
+  useUnsaved(reason.trim() !== '' && !run.isSuccess);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();

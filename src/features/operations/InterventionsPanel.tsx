@@ -10,6 +10,7 @@ import { canAdminCancel, canRebroadcast, rebroadcastOptions } from '@/lib/interv
 import { useRepositories } from '@/lib/repositories';
 import { MAX_REASON } from '@/lib/vetting';
 import type { Job, MechanicDoc } from '@/types';
+import { useUnsaved } from '@/components/unsaved/unsavedStore';
 
 import { SuspendMechanicForm } from './SuspendMechanicForm';
 
@@ -64,6 +65,7 @@ function RebroadcastForm({ job, onMoment }: { job: Job; onMoment: (m: Moment) =>
   const run = useMutation({
     mutationFn: () => operations.rebroadcastJob(job.id, radius!, reason.trim()),
   });
+  useUnsaved(reason.trim() !== '' && !run.isSuccess);
 
   if (!open) {
     return (
@@ -153,6 +155,7 @@ function CancelForm({ job, onMoment }: { job: Job; onMoment: (m: Moment) => void
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState('');
   const run = useMutation({ mutationFn: () => operations.cancelJob(job.id, reason.trim()) });
+  useUnsaved(reason.trim() !== '' && !run.isSuccess);
 
   if (!open) {
     return (

@@ -6,6 +6,7 @@ import { formatDateTime } from '@/lib/format';
 import { can } from '@/lib/permissions';
 import { useSession } from '@/lib/session';
 import { MAX_REASON } from '@/lib/vetting';
+import { useUnsaved } from '@/components/unsaved/unsavedStore';
 import {
   DOC_LABELS,
   DOCUMENT_STATE_LABELS,
@@ -103,6 +104,7 @@ function ReviewForm({
   const review = useReviewDocument();
   const [decision, setDecision] = useState<DocumentDecision | null>(null);
   const [reason, setReason] = useState('');
+  useUnsaved(reason.trim() !== '' && !review.isSuccess);
   const label = DOC_LABELS[docType];
   if (!decision) {
     return (

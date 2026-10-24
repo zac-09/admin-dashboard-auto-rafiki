@@ -7,6 +7,7 @@ import { useInsightsInputs } from '@/features/insights/hooks';
 import { MESSAGE_LIMITS, NEAR_RADII_KM, recipients, type Audience } from '@/lib/mechanicMessages';
 import { useRepositories } from '@/lib/repositories';
 import type { MechanicDoc } from '@/types';
+import { useUnsaved } from '@/components/unsaved/unsavedStore';
 
 import { useSendMessage } from './hooks';
 
@@ -70,6 +71,7 @@ export function Composer({
   const [radiusKm, setRadiusKm] = useState<number>(5);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
+  useUnsaved(title.trim() !== '' || body.trim() !== '');
 
   const places = initialPlace
     ? [

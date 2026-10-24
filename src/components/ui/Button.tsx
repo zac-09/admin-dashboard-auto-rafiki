@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes } from 'react';
+import type { ComponentProps } from 'react';
 
 import { Spinner } from './Spinner';
 
@@ -20,7 +20,7 @@ const VARIANTS: Record<Variant, string> = {
     'border border-danger text-danger hover:bg-surface active:scale-[0.98] disabled:border-hairline disabled:text-muted aria-busy:border-danger! aria-busy:text-danger!',
 };
 
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends ComponentProps<'button'> {
   variant?: Variant;
   /**
    * Why the button is disabled ("Tick 2 more checks"). Shown under it and linked with

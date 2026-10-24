@@ -9,6 +9,7 @@ import { useSession } from '@/lib/session';
 import { useLive } from '@/lib/useLive';
 import { MAX_REASON } from '@/lib/vetting';
 import { toast } from '@/components/toast/toastStore';
+import { useUnsaved } from '@/components/unsaved/unsavedStore';
 
 type Row = { network: (typeof NETWORKS)[number]; number: string; name: string };
 const FIELD = 'min-h-10 rounded-control border bg-background px-3 text-sm';
@@ -31,6 +32,11 @@ function Editor({ current, onDone }: { current: PayTo | null; onDone: () => void
       onDone();
     },
   });
+  // What the form opened with, to tell an edit from a glance.
+  const [opened] = useState(() => JSON.stringify({ rows, note }));
+  useUnsaved(
+    (reason.trim() !== '' || JSON.stringify({ rows, note }) !== opened) && !save.isSuccess,
+  );
   const check = checkPayTo({ numbers: rows, note });
   const errors = check.ok ? {} : check.errors;
   const set = (i: number, patch: Partial<Row>) =>

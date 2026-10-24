@@ -3,6 +3,7 @@ import { useState, type FormEvent } from 'react';
 import { Button, Notice } from '@/components/ui';
 import { WEEKLY_FEE } from '@/lib/subscriptions';
 import { formatUgx } from '@/lib/format';
+import { useUnsaved } from '@/components/unsaved/unsavedStore';
 import {
   PAYMENT_METHOD_LABELS,
   PAYMENT_METHODS,
@@ -30,6 +31,7 @@ export function MarkPaidForm({
   const mark = useMarkPaid();
   const [method, setMethod] = useState<PaymentMethod>('mobile-money');
   const [reference, setReference] = useState('');
+  useUnsaved(reference.trim() !== '' && !mark.isSuccess);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();

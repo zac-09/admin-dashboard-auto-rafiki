@@ -10,6 +10,7 @@ import {
   type VettingDecision,
 } from '@/lib/vetting';
 import type { MechanicDoc } from '@/types';
+import { useUnsaved } from '@/components/unsaved/unsavedStore';
 
 import { decisionOutcome } from './decisionOutcome';
 import { useDecideVetting } from './hooks';
@@ -52,6 +53,7 @@ export function DecisionForm({
   const [checklist, setChecklist] = useState<string[]>([]);
   const [reason, setReason] = useState(prefill?.reason ?? '');
   const mutation = useDecideVetting();
+  useUnsaved(reason.trim() !== (prefill?.reason ?? '').trim() && !mutation.isSuccess);
 
   const needsChecklist = decision === 'approve';
   const ticked = checklist.length;

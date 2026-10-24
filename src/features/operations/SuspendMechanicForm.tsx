@@ -5,6 +5,7 @@ import { Button, Notice } from '@/components/ui';
 import { useDecideVetting } from '@/features/vetting/hooks';
 import { MAX_REASON, nextVetting } from '@/lib/vetting';
 import type { MechanicDoc } from '@/types';
+import { useUnsaved } from '@/components/unsaved/unsavedStore';
 
 /** Suspend from the control room: the same audited decideVetting call as the vetting page. */
 export function SuspendMechanicForm({ mechanic, jobId }: { mechanic: MechanicDoc; jobId: string }) {
@@ -12,6 +13,7 @@ export function SuspendMechanicForm({ mechanic, jobId }: { mechanic: MechanicDoc
   const [done, setDone] = useState(false);
   const [moment, setMoment] = useState<'pending' | 'success' | null>(null);
   const mutation = useDecideVetting();
+  useUnsaved(reason.trim() !== '' && !done && !mutation.isSuccess);
 
   const overlay = moment ? (
     <SuccessMoment

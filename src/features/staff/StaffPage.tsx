@@ -10,6 +10,7 @@ import { useSession } from '@/lib/session';
 import { useDocumentTitle } from '@/lib/useDocumentTitle';
 import { MAX_REASON } from '@/lib/vetting';
 import type { AdminRole, StaffMember } from '@/types';
+import { useUnsaved } from '@/components/unsaved/unsavedStore';
 
 import { useSetRole, useStaff } from './hooks';
 import { InvitePanel } from './InvitePanel';
@@ -35,6 +36,7 @@ function ChangeRole({
   const setRole = useSetRole();
   const [role, setRoleValue] = useState<AdminRole | null | undefined>(undefined);
   const [reason, setReason] = useState('');
+  useUnsaved(reason.trim() !== '' && !setRole.isSuccess);
   const unchanged = role === undefined || role === member.role;
   const missing = unchanged
     ? 'Choose a different role'
