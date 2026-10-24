@@ -9,6 +9,7 @@ import { useRepositories } from '@/lib/repositories';
 import { useSession } from '@/lib/session';
 import { useLive, useNow } from '@/lib/useLive';
 import { MAX_HANDOVER_NOTE, type HandoverNote } from '@/types';
+import { toast } from '@/components/toast/toastStore';
 
 const DAY_MS = 86_400_000;
 const FIELD =
@@ -16,7 +17,11 @@ const FIELD =
 
 function Note({ note, canWrite }: { note: HandoverNote; canWrite: boolean }) {
   const { handover } = useRepositories();
-  const handled = useMutation({ mutationFn: () => handover.markHandled(note.id) });
+  const handled = useMutation({
+    mutationFn: () => handover.markHandled(note.id),
+    onSuccess: () =>
+      toast({ title: 'Marked handled', body: 'It folds away under handled notes.', tone: 'info' }),
+  });
   return (
     <li className="flex gap-3 border-t border-hairline py-2.5 text-sm first:border-0">
       <span
@@ -68,6 +73,10 @@ export function HandoverPanel() {
   const add = useMutation({
     mutationFn: () => handover.add({ text: text.trim(), jobId: jobId.trim() || null }),
     onSuccess: () => {
+      toast({
+        title: 'Handover note added',
+        body: 'The next shift sees it at the top of the panel.',
+      });
       setText('');
       setJobId('');
     },

@@ -20,6 +20,7 @@ import {
   type MechanicWeek,
 } from '@/lib/subscriptions';
 import { PAYMENT_METHOD_LABELS } from '@/types';
+import { toast } from '@/components/toast/toastStore';
 
 import { overdueAccounts } from './collections';
 import { subscriptionsCsv } from './exports';
@@ -168,7 +169,9 @@ export function SubscriptionsTab() {
     const weeks = weeksBetween(TRACKING_START, current).map((w) =>
       summarizeWeek(w, mechanics, entries, payments, now),
     );
-    downloadCsv(`autorafiki-subscriptions-${current}.csv`, subscriptionsCsv(weeks));
+    const file = `autorafiki-subscriptions-${current}.csv`;
+    downloadCsv(file, subscriptionsCsv(weeks));
+    toast({ title: 'Subscriptions exported', body: `Saved as ${file}.`, tone: 'info' });
   }
 
   return (

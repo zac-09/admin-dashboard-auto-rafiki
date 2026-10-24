@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router';
 
 import { Reveal, springs, timings } from '@/components/motion';
+import { Toaster } from '@/components/toast/Toaster';
 import { WheelMark } from '@/components/ui';
 import { AlertNotifier } from '@/features/operations/notifications/AlertNotifier';
 import { CommandPalette } from '@/features/support/CommandPalette';
@@ -90,6 +91,7 @@ export function AppShell({ session }: { session: AdminSession }) {
       </AnimatePresence>
 
       <CommandPalette />
+      <Toaster />
       {can(session.role, 'operations.view') ? <AlertNotifier /> : null}
 
       <main className="min-w-0 p-4 md:p-8 print:p-0">

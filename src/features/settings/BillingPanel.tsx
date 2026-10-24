@@ -8,6 +8,7 @@ import { useRepositories } from '@/lib/repositories';
 import { useSession } from '@/lib/session';
 import { useLive } from '@/lib/useLive';
 import { MAX_REASON } from '@/lib/vetting';
+import { toast } from '@/components/toast/toastStore';
 
 type Row = { network: (typeof NETWORKS)[number]; number: string; name: string };
 const FIELD = 'min-h-10 rounded-control border bg-background px-3 text-sm';
@@ -21,7 +22,14 @@ function Editor({ current, onDone }: { current: PayTo | null; onDone: () => void
   const [reason, setReason] = useState('');
   const save = useMutation({
     mutationFn: () => settings.publishBilling({ numbers: rows, note }, reason.trim()),
-    onSuccess: onDone,
+    onSuccess: () => {
+      toast({
+        title: 'Payment numbers saved',
+        body: 'Overdue reminders and the app now show them.',
+        link: { to: '/audit?action=billing.update', label: 'View in audit log' },
+      });
+      onDone();
+    },
   });
   const check = checkPayTo({ numbers: rows, note });
   const errors = check.ok ? {} : check.errors;

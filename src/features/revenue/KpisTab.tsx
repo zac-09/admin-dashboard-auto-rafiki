@@ -3,6 +3,7 @@ import { useState, type ReactNode } from 'react';
 import { AnimatedNumber, Reveal, staggerDelay } from '@/components/motion';
 import { Button, Notice, SkeletonPanel, Tabs } from '@/components/ui';
 import { downloadCsv } from '@/lib/csv';
+import { toast } from '@/components/toast/toastStore';
 
 import { jobsCsv } from './exports';
 import { useKpiInputs } from './hooks';
@@ -87,7 +88,13 @@ export function KpisTab() {
 
   function exportJobs() {
     const names = new Map(mechanics.map((m) => [m.userId, m.businessName]));
-    downloadCsv(`autorafiki-jobs-last-${days}-days.csv`, jobsCsv(inWindow, names));
+    const file = `autorafiki-jobs-last-${days}-days.csv`;
+    downloadCsv(file, jobsCsv(inWindow, names));
+    toast({
+      title: 'Jobs exported',
+      body: `${inWindow.length} jobs saved as ${file}.`,
+      tone: 'info',
+    });
   }
 
   return (

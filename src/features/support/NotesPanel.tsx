@@ -6,6 +6,7 @@ import { formatDateTime } from '@/lib/format';
 import { can } from '@/lib/permissions';
 import { useSession } from '@/lib/session';
 import { MAX_NOTE, type SupportNote } from '@/types';
+import { toast } from '@/components/toast/toastStore';
 
 import { useAddNote, useNotes } from './hooks';
 
@@ -28,6 +29,7 @@ export function NotesPanel({ jobId }: { jobId: string }) {
     try {
       await add.mutateAsync(text.trim());
       setText('');
+      toast({ title: 'Note added', body: 'Staff only: the customer and mechanic never see it.' });
     } catch {
       // Shown from add.error.
     }
