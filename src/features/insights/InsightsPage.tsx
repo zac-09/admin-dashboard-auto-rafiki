@@ -5,6 +5,7 @@ import { Freshness } from '@/components/network/Freshness';
 import { Reveal } from '@/components/motion';
 import { Notice, SkeletonPanel, Tabs } from '@/components/ui';
 import { useDocumentTitle } from '@/lib/useDocumentTitle';
+import { useRememberedParam } from '@/lib/preferences';
 
 import { ChangesTab } from './ChangesTab';
 import { CoverageTab } from './CoverageTab';
@@ -31,6 +32,12 @@ export function InsightsPage() {
   useDocumentTitle('Insights');
   const [params, setParams] = useSearchParams();
   const view = (VIEWS.find((v) => v.id === params.get('view'))?.id ?? 'trends') as View;
+  useRememberedParam(
+    'insights.view',
+    'view',
+    view,
+    VIEWS.map((v) => v.id),
+  );
   const inputs = useInsightsInputs();
 
   return (

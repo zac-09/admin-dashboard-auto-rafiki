@@ -32,4 +32,8 @@ if (typeof window !== 'undefined' && !window.matchMedia) {
 afterEach(() => {
   cleanup();
   globalThis.sessionStorage?.clear();
+  // Remembered tabs, periods and sorts must not carry from one test into the next.
+  for (const key of Object.keys(globalThis.localStorage ?? {})) {
+    if (key.startsWith('autorafiki.pref.')) globalThis.localStorage.removeItem(key);
+  }
 });

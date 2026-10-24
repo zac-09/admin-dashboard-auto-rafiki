@@ -1,8 +1,8 @@
-import { useState } from 'react';
 import { Link } from 'react-router';
 
 import { overdueAccounts } from '@/features/revenue/collections';
 import { VettingStatusBadge } from '@/features/vetting/VettingStatusBadge';
+import { usePreference } from '@/lib/preferences';
 
 import type { InsightsData } from './InsightsPage';
 import { scorecard, scoredMechanics, SIGNALS, type Scorecard } from './scorecard';
@@ -55,7 +55,9 @@ const TH = 'px-3 py-2 text-left text-xs font-normal text-muted';
 const TD = 'px-3 py-2 align-top';
 
 export function MechanicsTab({ data }: { data: InsightsData }) {
-  const [sort, setSort] = useState<SortKey>('jobs');
+  const [sort, setSort] = usePreference<SortKey>('scorecards.sort', 'jobs', (v): v is SortKey =>
+    SORTS.some((s) => s.id === v),
+  );
   const { jobs, ratings, mechanics, entries, payments, now } = data;
   const overdue = new Map(
     overdueAccounts(mechanics, entries, payments, now).map((a) => [

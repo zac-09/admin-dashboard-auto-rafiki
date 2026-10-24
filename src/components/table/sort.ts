@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 
+import { readPreference, writePreference } from '@/lib/preferences';
+
 export type SortDir = 'asc' | 'desc';
 export interface SortState<K extends string> {
   /** null: the list's own order (oldest application first, most overdue first…). */
@@ -34,8 +36,24 @@ export function useSort<T, K extends string>(
   rows: readonly T[],
   columns: Record<K, (row: T) => SortValue>,
   initial: SortState<K> = { key: null, dir: 'asc' },
+  /** Remember the chosen sort in this browser under this name. */
+  rememberAs?: string,
 ) {
-  const [sort, setSort] = useState<SortState<K>>(initial);
+  const [sort, setSortState] = useState<SortState<K>>(() => {
+    if (!rememberAs) return initial;
+    const saved = readPreference<SortState<K> | null>(`sort.${rememberAs}`, null);
+    const known =
+      saved &&
+      (saved.key === null || saved.key in columns) &&
+      (saved.dir === 'asc' || saved.dir === 'desc');
+    return known ? saved : initial;
+  });
+  const setSort = (update: SortState<K> | ((s: SortState<K>) => SortState<K>)) =>
+    setSortState((s) => {
+      const next = typeof update === 'function' ? update(s) : update;
+      if (rememberAs) writePreference(`sort.${rememberAs}`, next);
+      return next;
+    });
   const sorted = useMemo(() => {
     if (!sort.key) return [...rows];
     const value = columns[sort.key];

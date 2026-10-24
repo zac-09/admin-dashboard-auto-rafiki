@@ -13,6 +13,7 @@ import { useIsDesktop } from '@/lib/useMediaQuery';
 import { daysSince, formatDate } from '@/lib/format';
 import type { VettingStatus } from '@/lib/vetting';
 import type { AuditEntry, MechanicDoc } from '@/types';
+import { useRememberedParam } from '@/lib/preferences';
 
 import { AfterApproval } from './AfterApproval';
 import { ApplicantPipeline } from './ApplicantPipeline';
@@ -94,6 +95,12 @@ export function VettingQueuePage() {
   const isDesktop = useIsDesktop();
   useDocumentTitle('Vetting');
   const queue: Queue = isQueue(params.get('queue')) ? (params.get('queue') as Queue) : 'pending';
+  useRememberedParam(
+    'vetting.queue',
+    'queue',
+    queue,
+    QUEUES.map((q) => q.id),
+  );
   const pending = useVettingQueue('pending');
   const verified = useVettingQueue('verified');
   const suspended = useVettingQueue('suspended');
@@ -124,11 +131,16 @@ export function VettingQueuePage() {
     sorted: rows,
     sort,
     toggle,
-  } = useSort(filtered, {
-    business: (r) => r.mechanic.businessName,
-    rating: (r) => (r.mechanic.ratingCount ? r.mechanic.ratingAverage : null),
-    jobs: (r) => r.mechanic.jobsCompleted,
-  });
+  } = useSort(
+    filtered,
+    {
+      business: (r) => r.mechanic.businessName,
+      rating: (r) => (r.mechanic.ratingCount ? r.mechanic.ratingAverage : null),
+      jobs: (r) => r.mechanic.jobsCompleted,
+    },
+    undefined,
+    'vetting',
+  );
   const current = QUEUES.find((q) => q.id === queue)!;
 
   const openMechanic = (id: string) => (event: MouseEvent) => {

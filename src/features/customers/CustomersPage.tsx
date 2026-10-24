@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
 import { Link } from 'react-router';
 
 import { PageHeader } from '@/app/pages/PageHeader';
@@ -12,6 +11,7 @@ import { PhoneLink } from '@/features/vetting/PhoneLink';
 import { formatDate } from '@/lib/format';
 import { useRepositories } from '@/lib/repositories';
 import { useDocumentTitle } from '@/lib/useDocumentTitle';
+import { usePreference } from '@/lib/preferences';
 
 import {
   CUSTOMER_RULES,
@@ -92,7 +92,11 @@ function Row({
 export function CustomersPage() {
   useDocumentTitle('Customers');
   const inputs = useInsightsInputs();
-  const [segment, setSegment] = useState<Segment>('never-served');
+  const [segment, setSegment] = usePreference<Segment>(
+    'customers.segment',
+    'never-served',
+    (v): v is Segment => SEGMENTS.includes(v as Segment),
+  );
 
   const summaries = inputs.data ? summarizeCustomers(inputs.data.jobs, inputs.data.ratings) : [];
   const now = inputs.data?.now ?? new Date();
@@ -108,11 +112,16 @@ export function CustomersPage() {
     sorted: list,
     sort,
     toggle,
-  } = useSort(bySegment.get(segment) ?? [], {
-    requests: (c) => -c.requests,
-    completed: (c) => -c.completed,
-    unanswered: (c) => -c.unanswered,
-  });
+  } = useSort(
+    bySegment.get(segment) ?? [],
+    {
+      requests: (c) => -c.requests,
+      completed: (c) => -c.completed,
+      unanswered: (c) => -c.unanswered,
+    },
+    undefined,
+    'customers',
+  );
   const shown = list.slice(0, SHOWN);
   const names = useNames(shown.map((c) => c.customerId));
   const o = overview(summaries, now);

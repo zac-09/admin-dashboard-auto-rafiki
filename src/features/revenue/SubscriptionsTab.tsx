@@ -161,12 +161,17 @@ export function SubscriptionsTab() {
     sorted: rows,
     sort,
     toggle,
-  } = useSort(filtered, {
-    name: (row) => row.mechanic.businessName,
-    // Overdue first when ascending: the order someone chasing payments wants.
-    status: (row) => STATUS_RANK[row.status],
-    arrears: (row) => -row.unpaidEarlier.length,
-  });
+  } = useSort(
+    filtered,
+    {
+      name: (row) => row.mechanic.businessName,
+      // Overdue first when ascending: the order someone chasing payments wants.
+      status: (row) => STATUS_RANK[row.status],
+      arrears: (row) => -row.unpaidEarlier.length,
+    },
+    undefined,
+    'subscriptions',
+  );
 
   if (inputs.isPending) {
     return (

@@ -1,10 +1,11 @@
-import { useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 import { Freshness } from '@/components/network/Freshness';
 import { AnimatedNumber, Reveal, staggerDelay } from '@/components/motion';
 import { Button, Notice, SkeletonPanel, Tabs } from '@/components/ui';
 import { downloadCsv } from '@/lib/csv';
 import { toast } from '@/components/toast/toastStore';
+import { usePreference } from '@/lib/preferences';
 
 import { jobsCsv } from './exports';
 import { useKpiInputs } from './hooks';
@@ -60,7 +61,11 @@ function Card({
 const none = <span className="text-muted">–</span>;
 
 export function KpisTab() {
-  const [range, setRange] = useState<'7' | '30'>('7');
+  const [range, setRange] = usePreference<'7' | '30'>(
+    'kpis.window',
+    '7',
+    (v): v is '7' | '30' => v === '7' || v === '30',
+  );
   const days = Number(range);
   const inputs = useKpiInputs(days);
 

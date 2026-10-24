@@ -4,6 +4,7 @@ import { PageHeader } from '@/app/pages/PageHeader';
 import { Reveal } from '@/components/motion';
 import { Tabs } from '@/components/ui';
 import { useDocumentTitle } from '@/lib/useDocumentTitle';
+import { useRememberedParam } from '@/lib/preferences';
 
 import { KpisTab } from './KpisTab';
 import { Phase2Tab } from './Phase2Tab';
@@ -19,6 +20,12 @@ export function RevenuePage() {
   useDocumentTitle('Revenue');
   const [params, setParams] = useSearchParams();
   const view = VIEWS.find((v) => v.id === params.get('view'))?.id ?? 'subscriptions';
+  useRememberedParam(
+    'revenue.view',
+    'view',
+    view,
+    VIEWS.map((v) => v.id),
+  );
   return (
     <>
       <PageHeader label="Business" title="Revenue & analytics" />

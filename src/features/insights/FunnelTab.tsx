@@ -1,10 +1,11 @@
 import { motion } from 'motion/react';
-import { useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 import { Reveal, springs, staggerDelay } from '@/components/motion';
 import { Tabs } from '@/components/ui';
 import { ARRIVAL_TARGET_MIN, median } from '@/features/revenue/kpis';
 import { formatUgx } from '@/lib/format';
+import { usePreference } from '@/lib/preferences';
 
 import {
   CANCEL_STAGES,
@@ -132,7 +133,9 @@ function MixTable({ label, first, rows }: { label: string; first: string; rows: 
 
 /** How far requests get, where the minutes go, and how each service and vehicle performs. */
 export function FunnelTab({ data }: { data: InsightsData }) {
-  const [period, setPeriod] = useState<Period>('28');
+  const [period, setPeriod] = usePreference<Period>('funnel.period', '28', (v): v is Period =>
+    PERIODS.some((p) => p.id === v),
+  );
   const days = Number(period);
   const jobs = requestedWithin(data.jobs, days, data.now);
   const f = funnel(jobs);
