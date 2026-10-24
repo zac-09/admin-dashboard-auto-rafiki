@@ -15,7 +15,8 @@ export interface PlannedNotification {
 /** More new alerts than this at once become one summary notification. */
 export const MAX_INDIVIDUAL = 3;
 
-function describe(alert: Alert): PlannedNotification {
+/** The alert in words, and where it leads (desktop notifications and the Today page). */
+export function describeAlert(alert: Alert): PlannedNotification {
   if (alert.kind === 'low-rating') {
     const r = alert.rating;
     return {
@@ -65,14 +66,14 @@ export function planNotifications(
   seen: ReadonlySet<string>,
 ): PlannedNotification[] {
   const fresh = alerts.filter((a) => !seen.has(a.key));
-  if (fresh.length <= MAX_INDIVIDUAL) return fresh.map(describe);
+  if (fresh.length <= MAX_INDIVIDUAL) return fresh.map(describeAlert);
   return [
     {
       tag: 'autorafiki-summary',
       title: `${fresh.length} alerts need attention`,
       body: fresh
         .slice(0, MAX_INDIVIDUAL)
-        .map((a) => describe(a).title)
+        .map((a) => describeAlert(a).title)
         .join('\n'),
       path: '/operations',
     },

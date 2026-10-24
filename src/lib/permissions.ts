@@ -5,6 +5,8 @@ import type { AdminRole } from '../types/admin';
  * the same table to enforce it server-side (the UI check alone is never the protection).
  */
 export type Permission =
+  /** The Today overview (each panel still checks its own permission). */
+  | 'today.view'
   | 'vetting.view'
   /** Approve / reject / suspend mechanics. */
   | 'vetting.decide'
@@ -32,6 +34,7 @@ export type Permission =
 
 const MATRIX: Record<AdminRole, readonly Permission[]> = {
   admin: [
+    'today.view',
     'vetting.view',
     'vetting.decide',
     'operations.view',
@@ -49,6 +52,7 @@ const MATRIX: Record<AdminRole, readonly Permission[]> = {
     'handover.write',
   ],
   ops: [
+    'today.view',
     'vetting.view',
     'vetting.decide',
     'operations.view',
@@ -64,6 +68,7 @@ const MATRIX: Record<AdminRole, readonly Permission[]> = {
     'handover.write',
   ],
   support: [
+    'today.view',
     'vetting.view',
     'operations.view',
     'support.view',

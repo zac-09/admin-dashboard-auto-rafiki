@@ -4,6 +4,9 @@ import { lazy } from 'react';
  * Module pages, each in its own chunk: signing in downloads the shell, and a page's code only
  * when someone opens it. The router wraps them in Suspense with a skeleton.
  */
+export const TodayPage = lazy(() =>
+  import('@/features/today/TodayPage').then((m) => ({ default: m.TodayPage })),
+);
 export const VettingQueuePage = lazy(() =>
   import('@/features/vetting/VettingQueuePage').then((m) => ({ default: m.VettingQueuePage })),
 );

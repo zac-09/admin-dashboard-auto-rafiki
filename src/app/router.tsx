@@ -14,6 +14,7 @@ import {
   SettingsPage,
   StaffPage,
   SupportPage,
+  TodayPage,
   VettingQueuePage,
 } from './pages';
 
@@ -27,8 +28,16 @@ export const routes: RouteObject[] = [
     path: '/',
     element: <ProtectedShell />,
     children: [
-      // Every role can view vetting, the first module.
-      { index: true, element: <Navigate to="/vetting" replace /> },
+      // Every role starts on Today: what needs them, across the modules they can see.
+      { index: true, element: <Navigate to="/today" replace /> },
+      {
+        path: '/today',
+        element: (
+          <RequirePermission permission="today.view">
+            <TodayPage />
+          </RequirePermission>
+        ),
+      },
       {
         path: '/vetting',
         element: (

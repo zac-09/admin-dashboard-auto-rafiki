@@ -10,7 +10,7 @@ import { CommandPalette } from '@/features/support/CommandPalette';
 import { can } from '@/lib/permissions';
 import type { AdminSession } from '@/types';
 
-import { useAttention } from '../useAttention';
+import { AttentionContext, useAttention } from '../useAttention';
 
 import { Sidebar } from './Sidebar';
 
@@ -39,74 +39,76 @@ export function AppShell({ session }: { session: AdminSession }) {
   }, [drawerOpen]);
 
   return (
-    <div className="min-h-dvh md:grid md:grid-cols-[15rem_1fr] print:block">
-      {/* The column carries the background for the full page height; the content sticks. */}
-      <aside className="hidden border-r border-hairline bg-surface md:block print:hidden">
-        <div className="sticky top-0 h-dvh">
-          <Sidebar session={session} attention={attention} />
-        </div>
-      </aside>
-
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-hairline bg-background px-4 py-2 md:hidden print:hidden">
-        <div className="flex items-center gap-2">
-          <WheelMark size={32} />
-          <span className="text-sm font-semibold tracking-[0.2em]">AUTORAFIKI</span>
-        </div>
-        <button
-          ref={menuButton}
-          type="button"
-          aria-expanded={drawerOpen}
-          aria-controls="nav-drawer"
-          onClick={() => setDrawerOpen((o) => !o)}
-          className="min-h-10 rounded-control border border-hairline px-3 text-sm"
-        >
-          Menu
-        </button>
-      </header>
-
-      <AnimatePresence>
-        {drawerOpen ? (
-          <div className="fixed inset-0 z-40 md:hidden">
-            <motion.button
-              type="button"
-              aria-label="Close menu"
-              className="absolute inset-0 bg-primary/40"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1, transition: timings.fade }}
-              exit={{ opacity: 0, transition: timings.exit }}
-              onClick={() => setDrawerOpen(false)}
-            />
-            <motion.div
-              ref={drawer}
-              id="nav-drawer"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Navigation"
-              className="absolute inset-y-0 left-0 w-72 max-w-[85vw] border-r border-hairline bg-surface shadow-xl"
-              initial={{ x: '-100%' }}
-              animate={{ x: 0, transition: springs.settle }}
-              exit={{ x: '-100%', transition: timings.exit }}
-            >
-              <Sidebar
-                session={session}
-                attention={attention}
-                onNavigate={() => setDrawerOpen(false)}
-              />
-            </motion.div>
+    <AttentionContext.Provider value={attention}>
+      <div className="min-h-dvh md:grid md:grid-cols-[15rem_1fr] print:block">
+        {/* The column carries the background for the full page height; the content sticks. */}
+        <aside className="hidden border-r border-hairline bg-surface md:block print:hidden">
+          <div className="sticky top-0 h-dvh">
+            <Sidebar session={session} attention={attention} />
           </div>
-        ) : null}
-      </AnimatePresence>
+        </aside>
 
-      <CommandPalette />
-      <Toaster />
-      {can(session.role, 'operations.view') ? <AlertNotifier /> : null}
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-hairline bg-background px-4 py-2 md:hidden print:hidden">
+          <div className="flex items-center gap-2">
+            <WheelMark size={32} />
+            <span className="text-sm font-semibold tracking-[0.2em]">AUTORAFIKI</span>
+          </div>
+          <button
+            ref={menuButton}
+            type="button"
+            aria-expanded={drawerOpen}
+            aria-controls="nav-drawer"
+            onClick={() => setDrawerOpen((o) => !o)}
+            className="min-h-10 rounded-control border border-hairline px-3 text-sm"
+          >
+            Menu
+          </button>
+        </header>
 
-      <main className="min-w-0 p-4 md:p-8 print:p-0">
-        {/* Each page settles in like the app's screens; tabs within a page do not re-trigger. */}
-        <Reveal key={pathname} from="down">
-          <Outlet />
-        </Reveal>
-      </main>
-    </div>
+        <AnimatePresence>
+          {drawerOpen ? (
+            <div className="fixed inset-0 z-40 md:hidden">
+              <motion.button
+                type="button"
+                aria-label="Close menu"
+                className="absolute inset-0 bg-primary/40"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1, transition: timings.fade }}
+                exit={{ opacity: 0, transition: timings.exit }}
+                onClick={() => setDrawerOpen(false)}
+              />
+              <motion.div
+                ref={drawer}
+                id="nav-drawer"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Navigation"
+                className="absolute inset-y-0 left-0 w-72 max-w-[85vw] border-r border-hairline bg-surface shadow-xl"
+                initial={{ x: '-100%' }}
+                animate={{ x: 0, transition: springs.settle }}
+                exit={{ x: '-100%', transition: timings.exit }}
+              >
+                <Sidebar
+                  session={session}
+                  attention={attention}
+                  onNavigate={() => setDrawerOpen(false)}
+                />
+              </motion.div>
+            </div>
+          ) : null}
+        </AnimatePresence>
+
+        <CommandPalette />
+        <Toaster />
+        {can(session.role, 'operations.view') ? <AlertNotifier /> : null}
+
+        <main className="min-w-0 p-4 md:p-8 print:p-0">
+          {/* Each page settles in like the app's screens; tabs within a page do not re-trigger. */}
+          <Reveal key={pathname} from="down">
+            <Outlet />
+          </Reveal>
+        </main>
+      </div>
+    </AttentionContext.Provider>
   );
 }

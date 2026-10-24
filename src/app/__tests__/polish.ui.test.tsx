@@ -35,7 +35,7 @@ describe('shell polish', () => {
   it('names the browser tab after the page, with the alert count on operations', async () => {
     await openAs('/vetting');
     await screen.findByRole('heading', { name: 'Mechanic vetting' });
-    expect(document.title).toBe('Vetting · AutoRafiki Ops');
+    await waitFor(() => expect(document.title).toBe('Vetting · AutoRafiki Ops'));
   });
 
   it('puts the live alert count in the operations tab title', async () => {

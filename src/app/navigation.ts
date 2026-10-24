@@ -8,6 +8,11 @@ export interface NavItem {
 
 export const NAV_ITEMS: readonly NavItem[] = [
   {
+    to: '/today',
+    label: 'Today',
+    permission: 'today.view',
+  },
+  {
     to: '/vetting',
     label: 'Vetting',
     permission: 'vetting.view',

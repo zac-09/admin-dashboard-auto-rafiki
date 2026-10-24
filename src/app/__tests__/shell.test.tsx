@@ -74,6 +74,7 @@ describe('role-gated shell', () => {
         // The label without its count badge (labels have no digits; badges start with one).
         .map((l) => l.textContent?.replace(/\d.*$/, '')),
     ).toEqual([
+      'Today',
       'Vetting',
       'Operations',
       'Messages',
