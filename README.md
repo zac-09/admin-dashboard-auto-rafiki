@@ -426,6 +426,25 @@ the last 7, 30 or 90 days or all time; filters live in the URL, so a filtered vi
 shared. Each entry links to its subject. The query orders `auditLog` by `at` only, which
 Firestore's automatic single-field index covers.
 
+## Everyday use
+
+- **Today** (`/today`, where everyone lands): open alerts, applicants waiting, open disputes,
+  money to collect, open handover notes, the live board and the last 24 hours, limited to
+  what the role can see. The sidebar shows the same counts as badges.
+- **Toasts** confirm actions that have no success moment of their own (notes, payment
+  numbers, exports). **Unsaved work**: leaving a page or closing the tab with a typed reason,
+  note or message asks first (one guard in the shell; forms call `useUnsaved`).
+- **Lists**: the vetting queue, subscriptions and customers sort (and filter, where names
+  are loaded) through `src/components/table`.
+- **Freshness**: views read once (Insights, Revenue, Customers, Vetting) say when they were
+  loaded and can refresh; an offline banner shows on every page.
+- **Remembered choices** (per browser, `src/lib/preferences.ts`): last tab, KPI window,
+  funnel period, customer segment and list sorting. A link that names a tab always wins.
+- **Keyboard**: `g` then a letter jumps to a module, `/` searches, `?` lists them all.
+  Nothing fires while typing in a field.
+- **ⓘ explanations** on KPIs, trends and Today come from `src/lib/metrics.ts`; relative
+  times show the exact Kampala time on hover (`Since`).
+
 ## Motion and loading states
 
 Ported from the app's motion system so both feel the same (`src/components/motion`):
