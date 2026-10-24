@@ -46,6 +46,7 @@ function Note({ note, canWrite }: { note: HandoverNote; canWrite: boolean }) {
         <Button
           variant="secondary"
           disabled={handled.isPending}
+          loading={handled.isPending}
           onClick={() => handled.mutate()}
           aria-label={`Mark handled: ${note.text.slice(0, 40)}`}
         >
@@ -149,6 +150,7 @@ export function HandoverPanel() {
             <Button
               type="submit"
               disabled={!text.trim() || add.isPending}
+              loading={add.isPending}
               hint={text.trim() ? null : 'Write the note first'}
             >
               {add.isPending ? 'Saving…' : 'Add note'}

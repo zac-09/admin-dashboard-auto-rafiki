@@ -80,7 +80,7 @@ export function MarkPaidForm({
         <Button variant="ghost" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit" disabled={mark.isPending}>
+        <Button type="submit" disabled={mark.isPending} loading={mark.isPending}>
           Record {formatUgx(WEEKLY_FEE)} paid
         </Button>
       </div>

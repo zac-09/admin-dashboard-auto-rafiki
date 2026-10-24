@@ -165,6 +165,7 @@ function ReviewForm({
           type="submit"
           variant={decision === 'rejected' ? 'danger' : 'primary'}
           disabled={!reason.trim() || review.isPending}
+          loading={review.isPending}
         >
           {decision === 'verified' ? 'Mark verified' : 'Mark rejected'}
         </Button>

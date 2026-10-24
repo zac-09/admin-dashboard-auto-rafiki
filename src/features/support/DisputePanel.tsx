@@ -55,6 +55,7 @@ function FlagForm({ jobId, onMoment }: { jobId: string; onMoment: (m: Moment) =>
         type="submit"
         variant="secondary"
         disabled={!reason.trim() || flag.isPending}
+        loading={flag.isPending}
         hint={reason.trim() ? null : 'Describe the complaint first'}
       >
         Flag a dispute
@@ -135,6 +136,7 @@ function ResolveForm({ dispute, onMoment }: { dispute: Dispute; onMoment: (m: Mo
         id={`resolve-btn-${dispute.jobId}`}
         type="submit"
         disabled={!outcome || !note.trim() || resolve.isPending}
+        loading={resolve.isPending}
         hint={!outcome ? 'Choose an outcome' : !note.trim() ? 'Add a resolution note' : null}
       >
         Resolve dispute

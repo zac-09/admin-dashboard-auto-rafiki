@@ -30,6 +30,28 @@ describe('role-gated shell', () => {
     expect(screen.queryByRole('navigation', { name: 'Main' })).not.toBeInTheDocument();
   });
 
+  it('reset password shows it is sending, sends once, then confirms', async () => {
+    const repos = createMockRepositories();
+    let release!: () => void;
+    const send = vi
+      .spyOn(repos.auth, 'sendPasswordReset')
+      .mockImplementation(() => new Promise<void>((resolve) => (release = resolve)));
+    setRepositoriesForTesting(repos);
+    const user = userEvent.setup();
+    renderApp('/login');
+    await user.type(await screen.findByLabelText('Email'), 'ops@autorafiki.test');
+    await user.click(screen.getByRole('button', { name: 'Reset password' }));
+    const busy = screen.getByRole('button', { name: 'Sending reset link…' });
+    expect(busy).toHaveAttribute('aria-busy', 'true');
+    await user.click(busy);
+    expect(send).toHaveBeenCalledTimes(1);
+    release();
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'If ops@autorafiki.test has a staff account, a reset link is on its way.',
+    );
+    expect(screen.getByRole('button', { name: 'Reset password' })).toBeEnabled();
+  });
+
   it('an admin lands on Vetting and sees every module, including Staff', async () => {
     await signInAs('admin@autorafiki.test');
     const nav = await screen.findByRole('navigation', { name: 'Main' });

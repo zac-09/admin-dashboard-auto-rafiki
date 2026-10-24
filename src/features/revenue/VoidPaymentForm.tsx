@@ -59,7 +59,12 @@ export function VoidPaymentForm({
         <Button variant="ghost" onClick={onCancel}>
           Keep it
         </Button>
-        <Button type="submit" variant="danger" disabled={!reason.trim() || run.isPending}>
+        <Button
+          type="submit"
+          variant="danger"
+          disabled={!reason.trim() || run.isPending}
+          loading={run.isPending}
+        >
           Void this payment
         </Button>
       </div>

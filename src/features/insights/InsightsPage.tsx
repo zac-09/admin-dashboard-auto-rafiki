@@ -1,6 +1,7 @@
 import { Link, useSearchParams } from 'react-router';
 
 import { PageHeader } from '@/app/pages/PageHeader';
+import { Reveal } from '@/components/motion';
 import { Notice, SkeletonPanel, Tabs } from '@/components/ui';
 import { useDocumentTitle } from '@/lib/useDocumentTitle';
 
@@ -56,18 +57,22 @@ export function InsightsPage() {
         </div>
       ) : inputs.error ? (
         <Notice tone="error">Could not load insights: {inputs.error.message}</Notice>
-      ) : view === 'trends' ? (
-        <TrendsTab data={inputs.data} />
-      ) : view === 'funnel' ? (
-        <FunnelTab data={inputs.data} />
-      ) : view === 'coverage' ? (
-        <CoverageTab data={inputs.data} />
-      ) : view === 'demand' ? (
-        <DemandTab data={inputs.data} />
-      ) : view === 'mechanics' ? (
-        <MechanicsTab data={inputs.data} />
       ) : (
-        <ChangesTab data={inputs.data} />
+        <Reveal key={view} from="fade">
+          {view === 'trends' ? (
+            <TrendsTab data={inputs.data} />
+          ) : view === 'funnel' ? (
+            <FunnelTab data={inputs.data} />
+          ) : view === 'coverage' ? (
+            <CoverageTab data={inputs.data} />
+          ) : view === 'demand' ? (
+            <DemandTab data={inputs.data} />
+          ) : view === 'mechanics' ? (
+            <MechanicsTab data={inputs.data} />
+          ) : (
+            <ChangesTab data={inputs.data} />
+          )}
+        </Reveal>
       )}
     </>
   );

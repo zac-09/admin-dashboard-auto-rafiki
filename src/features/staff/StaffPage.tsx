@@ -95,6 +95,7 @@ function ChangeRole({
           id={`save-role-${member.uid}`}
           type="submit"
           disabled={!!missing || setRole.isPending}
+          loading={setRole.isPending}
           hint={missing}
         >
           Save

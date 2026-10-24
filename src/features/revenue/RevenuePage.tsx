@@ -1,6 +1,7 @@
 import { useSearchParams } from 'react-router';
 
 import { PageHeader } from '@/app/pages/PageHeader';
+import { Reveal } from '@/components/motion';
 import { Tabs } from '@/components/ui';
 import { useDocumentTitle } from '@/lib/useDocumentTitle';
 
@@ -27,13 +28,15 @@ export function RevenuePage() {
         onChange={(id) => setParams(id === 'subscriptions' ? {} : { view: id })}
         items={VIEWS}
       />
-      {view === 'subscriptions' ? (
-        <SubscriptionsTab />
-      ) : view === 'kpis' ? (
-        <KpisTab />
-      ) : (
-        <Phase2Tab />
-      )}
+      <Reveal key={view} from="fade">
+        {view === 'subscriptions' ? (
+          <SubscriptionsTab />
+        ) : view === 'kpis' ? (
+          <KpisTab />
+        ) : (
+          <Phase2Tab />
+        )}
+      </Reveal>
     </>
   );
 }

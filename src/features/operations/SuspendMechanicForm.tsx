@@ -70,7 +70,12 @@ export function SuspendMechanicForm({ mechanic, jobId }: { mechanic: MechanicDoc
         className="rounded-control border border-hairline bg-background px-3 py-2 text-sm"
       />
       {mutation.error ? <Notice tone="error">{mutation.error.message}</Notice> : null}
-      <Button type="submit" variant="secondary" disabled={!reason.trim() || mutation.isPending}>
+      <Button
+        type="submit"
+        variant="secondary"
+        disabled={!reason.trim() || mutation.isPending}
+        loading={mutation.isPending}
+      >
         {mutation.isPending ? 'Suspending…' : `Suspend ${mechanic.businessName}`}
       </Button>
     </form>

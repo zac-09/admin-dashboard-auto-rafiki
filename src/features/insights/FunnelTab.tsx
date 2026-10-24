@@ -1,6 +1,7 @@
+import { motion } from 'motion/react';
 import { useState, type ReactNode } from 'react';
 
-import { Reveal, staggerDelay } from '@/components/motion';
+import { Reveal, springs, staggerDelay } from '@/components/motion';
 import { Tabs } from '@/components/ui';
 import { ARRIVAL_TARGET_MIN, median } from '@/features/revenue/kpis';
 import { formatUgx } from '@/lib/format';
@@ -63,12 +64,15 @@ function Panel({
 }
 
 /** A magnitude bar; the number beside it carries the meaning. */
-function Bar({ share }: { share: number }) {
+function Bar({ share, delay = 0 }: { share: number; delay?: number }) {
   return (
-    <span aria-hidden className="block h-2 w-full rounded-[2px] bg-surface">
-      <span
-        className="block h-full rounded-[2px] bg-accent"
-        style={{ width: `${Math.max(0, Math.min(1, share)) * 100}%` }}
+    <span aria-hidden className="block h-2 w-full overflow-hidden rounded-[2px] bg-surface">
+      {/* Grows from the left (and glides when the period changes); a fade under reduced motion. */}
+      <motion.span
+        className="block h-full origin-left rounded-[2px] bg-accent"
+        initial={{ scaleX: 0 }}
+        animate={{ scaleX: Math.max(0, Math.min(1, share)) }}
+        transition={{ ...springs.settle, delay: delay / 1000 }}
       />
     </span>
   );
@@ -182,7 +186,7 @@ export function FunnelTab({ data }: { data: InsightsData }) {
                         ) : null}
                       </span>
                     </span>
-                    <Bar share={s.reached / f.requests} />
+                    <Bar share={s.reached / f.requests} delay={staggerDelay(i, f.stages.length)} />
                   </li>
                 );
               })}
@@ -195,7 +199,7 @@ export function FunnelTab({ data }: { data: InsightsData }) {
             context={`Median minutes for each step of a breakdown (bookings left out). Request to arrival overall: ${minutes(arrival)} against a target under ${ARRIVAL_TARGET_MIN} min. Medians do not add up exactly.`}
           >
             <ol aria-label="Median minutes per step" className="flex flex-col gap-3">
-              {legRows.map((l) => (
+              {legRows.map((l, i) => (
                 <li key={l.id} className="flex flex-col gap-1 text-sm">
                   <span className="flex items-baseline justify-between gap-3">
                     <span>
@@ -213,7 +217,10 @@ export function FunnelTab({ data }: { data: InsightsData }) {
                       </span>
                     </span>
                   </span>
-                  <Bar share={(l.medianMin ?? 0) / legMax} />
+                  <Bar
+                    share={(l.medianMin ?? 0) / legMax}
+                    delay={staggerDelay(i, legRows.length)}
+                  />
                 </li>
               ))}
             </ol>

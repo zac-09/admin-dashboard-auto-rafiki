@@ -609,6 +609,7 @@ export function SettingsEditor({
             id="publish-settings"
             type="submit"
             disabled={!!missing || publish.isPending}
+            loading={publish.isPending}
             hint={publish.isPending ? null : missing}
           >
             Publish to the app

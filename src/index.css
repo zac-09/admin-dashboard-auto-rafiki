@@ -121,6 +121,26 @@
   animation: skeleton-sweep 1.6s ease-in-out infinite;
 }
 
+/* Spinner: a faint ring with one arc travelling round it, in the text colour. */
+@keyframes spinner-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  border: 2px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-top-color: currentColor;
+  animation: spinner-turn 0.7s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Still turning (it is the only sign of progress), just slower and calmer. */
+  .spinner {
+    animation-duration: 1.6s;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .skeleton::after {
     animation: none;

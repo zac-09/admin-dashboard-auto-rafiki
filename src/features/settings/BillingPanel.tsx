@@ -129,7 +129,12 @@ function Editor({ current, onDone }: { current: PayTo | null; onDone: () => void
       ) : null}
       {save.error ? <Notice tone="error">{save.error.message}</Notice> : null}
       <div className="flex flex-wrap gap-2">
-        <Button type="submit" disabled={!!missing || save.isPending} hint={missing}>
+        <Button
+          type="submit"
+          disabled={!!missing || save.isPending}
+          loading={save.isPending}
+          hint={missing}
+        >
           {save.isPending ? 'Saving…' : 'Save numbers'}
         </Button>
         <Button variant="ghost" onClick={onDone}>

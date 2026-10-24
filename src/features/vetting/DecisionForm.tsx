@@ -171,6 +171,7 @@ export function DecisionForm({
         id="decide"
         type="submit"
         disabled={!valid || mutation.isPending}
+        loading={mutation.isPending}
         hint={mutation.isPending ? null : missing}
       >
         {mutation.isPending

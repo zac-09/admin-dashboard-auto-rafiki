@@ -48,6 +48,7 @@ function SetupLink({
         <Button
           variant="secondary"
           disabled={send.isPending || send.isSuccess}
+          loading={send.isPending}
           onClick={() => send.mutate(email)}
         >
           {send.isSuccess ? 'Email sent' : 'Email them a setup link'}
@@ -117,6 +118,7 @@ export function InvitePanel({ onClose }: { onClose: () => void }) {
           id="invite-submit"
           type="submit"
           disabled={!!missing || invite.isPending}
+          loading={invite.isPending}
           hint={invite.isPending ? null : missing}
         >
           {invite.isPending ? 'Inviting…' : 'Invite'}

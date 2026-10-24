@@ -137,6 +137,7 @@ function RebroadcastForm({ job, onMoment }: { job: Job; onMoment: (m: Moment) =>
             id={`rebroadcast-${job.id}`}
             type="submit"
             disabled={!!missing || run.isPending}
+            loading={run.isPending}
             hint={missing}
           >
             {radius !== null && radius > job.radiusKm ? `Widen to ${radius} km` : 'Renew broadcast'}
@@ -195,6 +196,7 @@ function CancelForm({ job, onMoment }: { job: Job; onMoment: (m: Moment) => void
             type="submit"
             variant="danger"
             disabled={!reason.trim() || run.isPending}
+            loading={run.isPending}
             hint={reason.trim() ? null : 'Add a reason'}
           >
             Cancel job for the customer

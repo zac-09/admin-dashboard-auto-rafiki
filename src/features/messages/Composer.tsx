@@ -308,7 +308,12 @@ export function Composer({
           : `Reaches ${reached.length} ${reached.length === 1 ? 'mechanic' : 'mechanics'}: ${withPush} by push now, the rest when they next open the app.`}
       </p>
       {send.error ? <Notice tone="error">{send.error.message}</Notice> : null}
-      <Button type="submit" disabled={!!missing || send.isPending} hint={missing}>
+      <Button
+        type="submit"
+        disabled={!!missing || send.isPending}
+        loading={send.isPending}
+        hint={missing}
+      >
         {send.isPending
           ? 'Sending…'
           : `Send to ${reached.length} ${reached.length === 1 ? 'mechanic' : 'mechanics'}`}

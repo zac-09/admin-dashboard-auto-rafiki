@@ -87,6 +87,7 @@ export function NotesPanel({ jobId }: { jobId: string }) {
             variant="secondary"
             className="self-end"
             disabled={!text.trim() || add.isPending}
+            loading={add.isPending}
           >
             {add.isPending ? 'Saving…' : 'Add note'}
           </Button>

@@ -4,7 +4,7 @@ import { Navigate, useLocation } from 'react-router';
 import { useAnimate, useReducedMotion } from 'motion/react';
 
 import { Reveal, SuccessMoment } from '@/components/motion';
-import { Button, Notice, TextField, WheelMark } from '@/components/ui';
+import { Button, Notice, Spinner, TextField, WheelMark } from '@/components/ui';
 import { env } from '@/lib/env';
 import { MOCK_PASSWORD } from '@/lib/mocks/fixtures';
 import { getRepositories } from '@/lib/repositories';
@@ -23,6 +23,7 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [moment, setMoment] = useState<Moment | null>(null);
+  const [resetting, setResetting] = useState(false);
   const [form, animate] = useAnimate<HTMLFormElement>();
   const reduced = useReducedMotion();
   useDocumentTitle('Sign in');
@@ -62,13 +63,18 @@ export function LoginPage() {
   const busy = moment !== null;
 
   async function onReset() {
+    if (resetting) return;
     setError(null);
+    setInfo(null);
     if (!email.trim()) return setError('Enter your email first, then choose "Reset password".');
+    setResetting(true);
     try {
       await getRepositories().auth.sendPasswordReset(email);
       setInfo(`If ${email.trim()} has a staff account, a reset link is on its way.`);
     } catch (e) {
       setError((e as Error).message);
+    } finally {
+      setResetting(false);
     }
   }
 
@@ -129,8 +135,15 @@ export function LoginPage() {
           >
             Sign in
           </Button>
-          <button type="button" onClick={onReset} className="self-start text-sm underline">
-            Reset password
+          <button
+            type="button"
+            onClick={onReset}
+            disabled={resetting}
+            aria-busy={resetting || undefined}
+            className="inline-flex min-h-10 items-center gap-2 self-start text-sm underline aria-busy:cursor-progress"
+          >
+            {resetting ? <Spinner className="size-3.5" /> : null}
+            {resetting ? 'Sending reset link…' : 'Reset password'}
           </button>
           {import.meta.env.DEV && env.useMocks ? (
             <p className="text-xs text-muted">
