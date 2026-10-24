@@ -4,7 +4,8 @@ import { Link } from 'react-router';
 
 import { PageHeader } from '@/app/pages/PageHeader';
 import { Reveal, staggerDelay } from '@/components/motion';
-import { Notice, SkeletonTable, Tabs } from '@/components/ui';
+import { SortButtons, useSort } from '@/components/table';
+import { Notice, Skeleton, SkeletonTable, Tabs } from '@/components/ui';
 import { INSIGHT_WEEKS, useInsightsInputs } from '@/features/insights/hooks';
 import { PhoneLink } from '@/features/vetting/PhoneLink';
 import { formatDate } from '@/lib/format';
@@ -62,7 +63,11 @@ function Row({
     >
       <span className="flex min-w-48 flex-col">
         <Link to={`/support/people/${c.customerId}`} className="font-semibold underline">
-          {user?.displayName || (user === undefined ? 'Loading…' : 'No name set')}
+          {user === undefined ? (
+            <Skeleton className="inline-block h-3.5 w-32 align-middle" />
+          ) : (
+            user?.displayName || 'No name set'
+          )}
         </Link>
         <span className="text-xs">
           <PhoneLink phone={user?.phone} />
@@ -98,7 +103,15 @@ export function CustomersPage() {
         .sort((a, b) => b.lastRequestAt.localeCompare(a.lastRequestAt)),
     ]),
   );
-  const list = bySegment.get(segment) ?? [];
+  const {
+    sorted: list,
+    sort,
+    toggle,
+  } = useSort(bySegment.get(segment) ?? [], {
+    requests: (c) => -c.requests,
+    completed: (c) => -c.completed,
+    unanswered: (c) => -c.unanswered,
+  });
   const shown = list.slice(0, SHOWN);
   const names = useNames(shown.map((c) => c.customerId));
   const o = overview(summaries, now);
@@ -131,6 +144,20 @@ export function CustomersPage() {
             }))}
           />
           <p className="mb-3 text-sm">{HINTS[segment]}</p>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <SortButtons
+              options={[
+                { key: 'requests', label: 'Most requests' },
+                { key: 'completed', label: 'Most completed' },
+                { key: 'unanswered', label: 'Most unanswered' },
+              ]}
+              sort={sort}
+              onSort={toggle}
+            />
+            <span className="text-xs text-muted">
+              Most recent first unless sorted. Looking for one person? Use Search (⌘K).
+            </span>
+          </div>
           {list.length === 0 ? (
             <Reveal className="panel p-6 text-sm text-muted">Nobody in this group.</Reveal>
           ) : (
@@ -148,7 +175,7 @@ export function CustomersPage() {
               </ul>
               {list.length > SHOWN ? (
                 <p className="mt-2 text-xs text-muted">
-                  Showing the {SHOWN} most recent of {list.length}.
+                  Showing the first {SHOWN} of {list.length}.
                 </p>
               ) : null}
             </>

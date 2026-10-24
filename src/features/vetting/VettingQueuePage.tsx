@@ -1,10 +1,11 @@
-import type { MouseEvent } from 'react';
+import { useState, type MouseEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 
 import { motion } from 'motion/react';
 
 import { PageHeader } from '@/app/pages/PageHeader';
 import { Reveal, springs, staggerDelay } from '@/components/motion';
+import { FilterBox, matchesQuery, SortHeader, useSort } from '@/components/table';
 import { Notice, SkeletonPanel, SkeletonTable, Tabs } from '@/components/ui';
 import { useDocumentTitle } from '@/lib/useDocumentTitle';
 import { useIsDesktop } from '@/lib/useMediaQuery';
@@ -84,6 +85,8 @@ function buildRows(
   });
 }
 
+const HEAD = 'micro-label px-3 py-2 font-semibold';
+
 export function VettingQueuePage() {
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
@@ -105,7 +108,26 @@ export function VettingQueuePage() {
   };
   const now = new Date();
   const rowsFor = (q: Queue) => buildRows(q, lists, audit.data ?? [], now);
-  const rows = rowsFor(queue);
+  const allRows = rowsFor(queue);
+  const [query, setQuery] = useState('');
+  const filtered = allRows.filter(({ mechanic, note }) =>
+    matchesQuery(query, [
+      mechanic.businessName,
+      mechanic.phone,
+      servicesText(mechanic),
+      vehiclesText(mechanic),
+      note,
+    ]),
+  );
+  const {
+    sorted: rows,
+    sort,
+    toggle,
+  } = useSort(filtered, {
+    business: (r) => r.mechanic.businessName,
+    rating: (r) => (r.mechanic.ratingCount ? r.mechanic.ratingAverage : null),
+    jobs: (r) => r.mechanic.jobsCompleted,
+  });
   const current = QUEUES.find((q) => q.id === queue)!;
 
   const openMechanic = (id: string) => (event: MouseEvent) => {
@@ -146,7 +168,7 @@ export function VettingQueuePage() {
             <SkeletonPanel lines={3} title={false} />
           </div>
         )
-      ) : rows.length === 0 ? (
+      ) : allRows.length === 0 ? (
         <Reveal
           key={`empty-${queue}`}
           className="panel flex items-center gap-3 p-6 text-sm text-muted"
@@ -154,89 +176,138 @@ export function VettingQueuePage() {
           <span aria-hidden className="diamond text-accent" />
           {current.empty}
         </Reveal>
-      ) : isDesktop ? (
-        <Reveal key={queue} from="fade" className="panel overflow-x-auto">
-          <table className="w-full min-w-[46rem] text-left text-sm">
-            <caption className="sr-only">{current.label} mechanics</caption>
-            <thead className="border-b border-hairline">
-              <tr>
-                {['Business', 'Services', 'Vehicles', 'Rating', 'Jobs', 'Status note'].map((h) => (
-                  <th key={h} scope="col" className="micro-label px-3 py-2 font-semibold">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
+      ) : (
+        <>
+          <FilterBox
+            label="Filter mechanics"
+            placeholder="Name, phone, service or vehicle"
+            value={query}
+            onChange={setQuery}
+            shown={rows.length}
+            total={allRows.length}
+          />
+          {rows.length === 0 ? (
+            <p className="panel p-6 text-sm text-muted">Nothing matches “{query.trim()}”.</p>
+          ) : isDesktop ? (
+            <Reveal key={queue} from="fade" className="panel overflow-x-auto">
+              <table className="w-full min-w-[46rem] text-left text-sm">
+                <caption className="sr-only">{current.label} mechanics</caption>
+                <thead className="border-b border-hairline">
+                  <tr>
+                    <SortHeader
+                      column="business"
+                      label="Business"
+                      sort={sort}
+                      onSort={toggle}
+                      className={HEAD}
+                    />
+                    <th scope="col" className={HEAD}>
+                      Services
+                    </th>
+                    <th scope="col" className={HEAD}>
+                      Vehicles
+                    </th>
+                    <SortHeader
+                      column="rating"
+                      label="Rating"
+                      sort={sort}
+                      onSort={toggle}
+                      className={HEAD}
+                    />
+                    <SortHeader
+                      column="jobs"
+                      label="Jobs"
+                      sort={sort}
+                      onSort={toggle}
+                      className={HEAD}
+                    />
+                    <th scope="col" className={HEAD}>
+                      Status note
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map(({ mechanic, note }, index) => (
+                    <motion.tr
+                      key={mechanic.userId}
+                      onClick={openMechanic(mechanic.userId)}
+                      className="group cursor-pointer border-b border-hairline transition-colors last:border-0 hover:bg-surface"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        ...springs.settle,
+                        delay: staggerDelay(index, rows.length) / 1000,
+                      }}
+                    >
+                      <td className="px-3 py-2.5 align-top">
+                        <Link
+                          to={`/vetting/${mechanic.userId}`}
+                          className="font-semibold underline"
+                        >
+                          {mechanic.businessName || 'Unnamed business'}
+                        </Link>
+                        <div className="text-xs">
+                          <PhoneLink phone={mechanic.phone} />
+                        </div>
+                      </td>
+                      <td className="px-3 py-2.5 align-top">{servicesText(mechanic)}</td>
+                      <td className="px-3 py-2.5 align-top">{vehiclesText(mechanic)}</td>
+                      <td className="px-3 py-2.5 align-top whitespace-nowrap">
+                        {ratingText(mechanic)}
+                      </td>
+                      <td className="px-3 py-2.5 align-top">{mechanic.jobsCompleted}</td>
+                      <td className="max-w-xs px-3 py-2.5 align-top text-muted">
+                        <span className="flex items-start justify-between gap-3">
+                          {note}
+                          <span
+                            aria-hidden
+                            className="mt-0.5 shrink-0 text-muted opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100"
+                          >
+                            →
+                          </span>
+                        </span>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </Reveal>
+          ) : (
+            // Phones: one card per mechanic instead of a sideways-scrolling table.
+            <ul
+              key={queue}
+              className="flex flex-col gap-3"
+              aria-label={`${current.label} mechanics`}
+            >
               {rows.map(({ mechanic, note }, index) => (
-                <motion.tr
+                <Reveal
+                  as="li"
                   key={mechanic.userId}
+                  delay={staggerDelay(index, rows.length)}
                   onClick={openMechanic(mechanic.userId)}
-                  className="group cursor-pointer border-b border-hairline transition-colors last:border-0 hover:bg-surface"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ ...springs.settle, delay: staggerDelay(index, rows.length) / 1000 }}
+                  className="panel flex cursor-pointer flex-col gap-2 p-4 text-sm active:bg-surface"
                 >
-                  <td className="px-3 py-2.5 align-top">
+                  <span className="flex items-start justify-between gap-3">
                     <Link to={`/vetting/${mechanic.userId}`} className="font-semibold underline">
                       {mechanic.businessName || 'Unnamed business'}
                     </Link>
-                    <div className="text-xs">
-                      <PhoneLink phone={mechanic.phone} />
-                    </div>
-                  </td>
-                  <td className="px-3 py-2.5 align-top">{servicesText(mechanic)}</td>
-                  <td className="px-3 py-2.5 align-top">{vehiclesText(mechanic)}</td>
-                  <td className="px-3 py-2.5 align-top whitespace-nowrap">
-                    {ratingText(mechanic)}
-                  </td>
-                  <td className="px-3 py-2.5 align-top">{mechanic.jobsCompleted}</td>
-                  <td className="max-w-xs px-3 py-2.5 align-top text-muted">
-                    <span className="flex items-start justify-between gap-3">
-                      {note}
-                      <span
-                        aria-hidden
-                        className="mt-0.5 shrink-0 text-muted opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100"
-                      >
-                        →
-                      </span>
+                    <span className="text-xs whitespace-nowrap text-muted">
+                      {mechanic.jobsCompleted} jobs
                     </span>
-                  </td>
-                </motion.tr>
+                  </span>
+                  <span className="text-xs">
+                    <PhoneLink phone={mechanic.phone} />
+                  </span>
+                  <span>
+                    {servicesText(mechanic)} · {vehiclesText(mechanic)}
+                  </span>
+                  <span className="text-xs text-muted">{ratingText(mechanic)}</span>
+                  <span className="border-t border-hairline pt-2 text-xs text-muted">{note}</span>
+                </Reveal>
               ))}
-            </tbody>
-          </table>
-        </Reveal>
-      ) : (
-        // Phones: one card per mechanic instead of a sideways-scrolling table.
-        <ul key={queue} className="flex flex-col gap-3" aria-label={`${current.label} mechanics`}>
-          {rows.map(({ mechanic, note }, index) => (
-            <Reveal
-              as="li"
-              key={mechanic.userId}
-              delay={staggerDelay(index, rows.length)}
-              onClick={openMechanic(mechanic.userId)}
-              className="panel flex cursor-pointer flex-col gap-2 p-4 text-sm active:bg-surface"
-            >
-              <span className="flex items-start justify-between gap-3">
-                <Link to={`/vetting/${mechanic.userId}`} className="font-semibold underline">
-                  {mechanic.businessName || 'Unnamed business'}
-                </Link>
-                <span className="text-xs whitespace-nowrap text-muted">
-                  {mechanic.jobsCompleted} jobs
-                </span>
-              </span>
-              <span className="text-xs">
-                <PhoneLink phone={mechanic.phone} />
-              </span>
-              <span>
-                {servicesText(mechanic)} · {vehiclesText(mechanic)}
-              </span>
-              <span className="text-xs text-muted">{ratingText(mechanic)}</span>
-              <span className="border-t border-hairline pt-2 text-xs text-muted">{note}</span>
-            </Reveal>
-          ))}
-        </ul>
+            </ul>
+          )}
+        </>
       )}
     </>
   );

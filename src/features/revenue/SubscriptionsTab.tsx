@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 
 import { AnimatedNumber, Reveal, springs, staggerDelay, SuccessMoment } from '@/components/motion';
+import { FilterBox, matchesQuery, SortButtons, useSort } from '@/components/table';
 import { Button, Notice, SkeletonPanel, SkeletonTable } from '@/components/ui';
 import { PhoneLink } from '@/features/vetting/PhoneLink';
 import { downloadCsv } from '@/lib/csv';
@@ -18,6 +19,7 @@ import {
   weekStartOf,
   WEEKLY_FEE,
   type MechanicWeek,
+  type WeekStatus,
 } from '@/lib/subscriptions';
 import { PAYMENT_METHOD_LABELS } from '@/types';
 import { toast } from '@/components/toast/toastStore';
@@ -136,6 +138,8 @@ function Row({
   );
 }
 
+const STATUS_RANK: Record<WeekStatus, number> = { overdue: 0, due: 1, paid: 2 };
+
 export function SubscriptionsTab() {
   const session = useSession();
   const inputs = useSubscriptionInputs();
@@ -143,6 +147,25 @@ export function SubscriptionsTab() {
   const current = weekStartOf(now);
   const [week, setWeek] = useState(current);
   const [moment, setMoment] = useState<Moment>(null);
+  const [query, setQuery] = useState('');
+  // Hooks before the loading and error returns: the week's rows, filtered and sorted.
+  const weekRows = inputs.data
+    ? summarizeWeek(week, inputs.data.mechanics, inputs.data.entries, inputs.data.payments, now)
+        .rows
+    : [];
+  const filtered = weekRows.filter((row) =>
+    matchesQuery(query, [row.mechanic.businessName, row.mechanic.phone]),
+  );
+  const {
+    sorted: rows,
+    sort,
+    toggle,
+  } = useSort(filtered, {
+    name: (row) => row.mechanic.businessName,
+    // Overdue first when ascending: the order someone chasing payments wants.
+    status: (row) => STATUS_RANK[row.status],
+    arrears: (row) => -row.unpaidEarlier.length,
+  });
 
   if (inputs.isPending) {
     return (
@@ -267,19 +290,44 @@ export function SubscriptionsTab() {
           No verified mechanics owed this week.
         </Reveal>
       ) : (
-        <ul key={week} className="panel" aria-label={`Subscriptions for ${weekLabel(week)}`}>
-          {summary.rows.map((row, i) => (
-            <Row
-              key={row.mechanic.userId}
-              row={row}
-              weekStart={week}
-              index={i}
-              count={summary.rows.length}
-              canMark={canMark}
-              onMoment={setMoment}
+        <div>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <FilterBox
+              label="Filter mechanics"
+              placeholder="Name or phone"
+              value={query}
+              onChange={setQuery}
+              shown={rows.length}
+              total={summary.rows.length}
             />
-          ))}
-        </ul>
+            <SortButtons
+              options={[
+                { key: 'name', label: 'Name' },
+                { key: 'status', label: 'Status' },
+                { key: 'arrears', label: 'Earlier weeks unpaid' },
+              ]}
+              sort={sort}
+              onSort={toggle}
+            />
+          </div>
+          {rows.length === 0 ? (
+            <p className="panel p-6 text-sm text-muted">Nothing matches “{query.trim()}”.</p>
+          ) : (
+            <ul key={week} className="panel" aria-label={`Subscriptions for ${weekLabel(week)}`}>
+              {rows.map((row, i) => (
+                <Row
+                  key={row.mechanic.userId}
+                  row={row}
+                  weekStart={week}
+                  index={i}
+                  count={rows.length}
+                  canMark={canMark}
+                  onMoment={setMoment}
+                />
+              ))}
+            </ul>
+          )}
+        </div>
       )}
     </div>
   );
