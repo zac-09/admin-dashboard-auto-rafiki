@@ -32,7 +32,8 @@ describe('connection and freshness', () => {
     const { rerender } = render(
       <Freshness updatedAt={Date.now() - 5 * 60_000} fetching={false} onRefresh={onRefresh} />,
     );
-    expect(screen.getByText('Updated 5 min ago')).toBeInTheDocument();
+    expect(screen.getByText('5 min ago', { selector: 'time' })).toHaveAttribute('title');
+    expect(screen.getByText(/^Updated/).textContent).toBe('Updated 5 min ago');
     await userEvent.setup().click(screen.getByRole('button', { name: 'Refresh' }));
     expect(onRefresh).toHaveBeenCalledOnce();
     rerender(<Freshness updatedAt={Date.now()} fetching onRefresh={onRefresh} />);

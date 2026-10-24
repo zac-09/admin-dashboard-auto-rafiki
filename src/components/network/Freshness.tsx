@@ -1,6 +1,7 @@
-import { formatAgo, formatDateTime } from '@/lib/format';
+import { formatAgo } from '@/lib/format';
 import { useNow } from '@/lib/useLive';
 
+import { Since } from '../time/Since';
 import { Spinner } from '../ui/Spinner';
 
 /**
@@ -20,9 +21,13 @@ export function Freshness({
   if (!updatedAt) return null;
   return (
     <span className="inline-flex items-center gap-2 text-xs text-muted" aria-live="polite">
-      <span title={formatDateTime(new Date(updatedAt).toISOString())}>
-        {fetching ? 'Refreshing…' : `Updated ${formatAgo(updatedAt, now)}`}
-      </span>
+      {fetching ? (
+        <span>Refreshing…</span>
+      ) : (
+        <span>
+          Updated <Since at={new Date(updatedAt).toISOString()}>{formatAgo(updatedAt, now)}</Since>
+        </span>
+      )}
       <button
         type="button"
         onClick={onRefresh}

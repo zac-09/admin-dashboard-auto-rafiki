@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 
+import { Since } from '@/components/time/Since';
 import { Notice, Skeleton, SkeletonDetail } from '@/components/ui';
 import { ChatTranscript } from '@/features/support/ChatTranscript';
 import { DisputePanel } from '@/features/support/DisputePanel';
@@ -20,7 +21,7 @@ import { useNow } from '@/lib/useLive';
 
 import { CANCELLED_BY_LABELS, STATUS_LABELS } from './board';
 import { useJob, useMechanic, useUser } from './hooks';
-import { formatDuration, msInStatus } from './jobTime';
+import { enteredStatusAt, formatDuration, msInStatus } from './jobTime';
 import { StepTrack } from './StepTrack';
 import { InterventionsPanel } from './InterventionsPanel';
 
@@ -121,11 +122,16 @@ export function JobDetailPage() {
         <p className="text-sm">
           <span className="font-semibold">{STATUS_LABELS[job.status]}</span>
           <span className="text-muted">
-            {job.status === 'cancelled' && job.cancelledBy
-              ? ` ${CANCELLED_BY_LABELS[job.cancelledBy] ?? ''}`
-              : closed
-                ? ''
-                : ` for ${formatDuration(msInStatus(job, now))}`}
+            {job.status === 'cancelled' && job.cancelledBy ? (
+              ` ${CANCELLED_BY_LABELS[job.cancelledBy] ?? ''}`
+            ) : closed ? (
+              ''
+            ) : (
+              <>
+                {' for '}
+                <Since at={enteredStatusAt(job)}>{formatDuration(msInStatus(job, now))}</Since>
+              </>
+            )}
           </span>
         </p>
       </header>

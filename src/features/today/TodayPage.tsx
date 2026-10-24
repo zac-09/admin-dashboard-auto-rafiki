@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 
+import { Since } from '@/components/time/Since';
 import { InfoTip } from '@/components/info/InfoTip';
 import { PageHeader } from '@/app/pages/PageHeader';
 import { useAttentionContext } from '@/app/useAttention';
@@ -10,7 +11,7 @@ import { STATUS_LABELS } from '@/features/operations/board';
 import { describeAlert } from '@/features/operations/notifications/plan';
 import { useKpiInputs } from '@/features/revenue/hooks';
 import { ARRIVAL_TARGET_MIN, computeKpis } from '@/features/revenue/kpis';
-import { formatUgx } from '@/lib/format';
+import { formatAgo, formatUgx } from '@/lib/format';
 import { can, type Permission } from '@/lib/permissions';
 import { useRepositories } from '@/lib/repositories';
 import { useSession } from '@/lib/session';
@@ -146,6 +147,7 @@ function TopAlerts() {
 function OpenHandover() {
   const { handover } = useRepositories();
   const notes = useLive<HandoverNote[]>('handover', (next, fail) => handover.subscribe(next, fail));
+  const now = useNow(60_000);
   if (notes.status === 'loading') return <SkeletonLines lines={3} />;
   if (notes.status === 'error') return <p className="text-sm text-danger">Could not load notes.</p>;
   const open = notes.data.filter((n) => !n.handledAt);
@@ -158,7 +160,8 @@ function OpenHandover() {
           <span className="flex min-w-0 flex-col gap-0.5">
             <span>{n.text}</span>
             <span className="text-xs text-muted">
-              {n.authorEmail ?? 'Staff'}
+              {n.authorEmail ?? 'Staff'} ·{' '}
+              <Since at={n.at}>{formatAgo(Date.parse(n.at), now.getTime())}</Since>
               {n.jobId ? (
                 <>
                   {' · '}

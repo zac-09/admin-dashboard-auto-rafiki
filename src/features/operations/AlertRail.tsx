@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react';
+import { Since } from '@/components/time/Since';
 import { bookingWindow, jobTitle } from '@/lib/jobs';
 import { Link } from 'react-router';
 
@@ -9,7 +10,7 @@ import { useSession } from '@/lib/session';
 
 import { ratingDirection, type Alert } from './alerts';
 import { DesktopAlertsToggle } from './notifications/DesktopAlertsToggle';
-import { formatDuration } from './jobTime';
+import { enteredStatusAt, formatDuration } from './jobTime';
 
 function AlertItem({ alert }: { alert: Alert }) {
   if (alert.kind === 'low-rating') {
@@ -42,9 +43,14 @@ function AlertItem({ alert }: { alert: Alert }) {
     return (
       <Link to={`/jobs/${job.id}`} className="flex flex-col gap-0.5">
         <span className="font-semibold">
-          {alert.msLeft > 0
-            ? `Booking not confirmed: ${formatDuration(alert.msLeft)} left to confirm`
-            : 'Booking not confirmed: the confirmation cutoff has passed'}
+          {alert.msLeft > 0 ? (
+            <>
+              Booking not confirmed:{' '}
+              <Since at={job.expiresAt}>{formatDuration(alert.msLeft)}</Since> left to confirm
+            </>
+          ) : (
+            'Booking not confirmed: the confirmation cutoff has passed'
+          )}
         </span>
         <span className="text-muted">
           {jobTitle(job)}, {job.request.location.label}
@@ -57,9 +63,8 @@ function AlertItem({ alert }: { alert: Alert }) {
   return (
     <Link to={`/jobs/${job.id}`} className="flex flex-col gap-0.5">
       <span className="font-semibold">
-        {alert.kind === 'stale-request'
-          ? `No taker for ${formatDuration(ms)}`
-          : `On the way for ${formatDuration(ms)}`}
+        {alert.kind === 'stale-request' ? 'No taker for ' : 'On the way for '}
+        <Since at={enteredStatusAt(job)}>{formatDuration(ms)}</Since>
       </span>
       <span className="text-muted">
         {jobTitle(job)}, {job.request.location.label}

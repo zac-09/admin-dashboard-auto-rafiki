@@ -123,7 +123,10 @@ describe('bookings in the control room', () => {
     );
     const rail = screen.getByRole('region', { name: 'Alerts' });
     expect(
-      within(rail).getByText(/^Booking not confirmed: (2 h \d+ min|3 h) left to confirm$/),
+      // The duration is its own <time> (exact time on hover): match the whole line's text.
+      within(rail).getByText((_, el) =>
+        /^Booking not confirmed: (2 h \d+ min|3 h) left to confirm$/.test(el?.textContent ?? ''),
+      ),
     ).toBeInTheDocument();
     expect(
       within(rail).getByRole('link', { name: 'Message mechanics near here' }),

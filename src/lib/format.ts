@@ -45,3 +45,19 @@ export function formatAgo(ms: number, now: number = Date.now()): string {
   const days = Math.floor(hours / 24);
   return `${days} ${days === 1 ? 'day' : 'days'} ago`;
 }
+
+const EXACT = new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'Africa/Kampala',
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+});
+
+/** `Sat, 24 Oct 2026, 14:05:32 (Kampala time)`: the exact moment behind a relative time. */
+export function formatExact(iso: string): string {
+  return `${EXACT.format(new Date(iso))} (Kampala time)`;
+}

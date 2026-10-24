@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 
+import { Since } from '@/components/time/Since';
 import { itemLabels } from '@/lib/catalogue';
 import { formatUgx } from '@/lib/format';
 import { bookingWindow, jobTitle } from '@/lib/jobs';
@@ -7,7 +8,7 @@ import { VEHICLE_LABELS } from '@/lib/labels';
 import type { CatalogueItem, Job } from '@/types';
 
 import { CANCELLED_BY_LABELS } from './board';
-import { formatDuration, msInStatus } from './jobTime';
+import { enteredStatusAt, formatDuration, msInStatus } from './jobTime';
 
 export function JobCard({
   job,
@@ -69,13 +70,17 @@ export function JobCard({
       <span className="flex items-center justify-between text-xs text-muted">
         <span>{formatUgx(job.fee)}</span>
         <span>
-          {job.status === 'cancelled' && job.cancelledBy
-            ? `Cancelled ${CANCELLED_BY_LABELS[job.cancelledBy] ?? ''}`
-            : closed
-              ? formatDuration(msInStatus(job, now)) + ' ago'
-              : job.request.booking && job.status === 'requested'
-                ? 'Waiting for a mechanic to confirm'
-                : `${formatDuration(msInStatus(job, now))} in status`}
+          {job.status === 'cancelled' && job.cancelledBy ? (
+            `Cancelled ${CANCELLED_BY_LABELS[job.cancelledBy] ?? ''}`
+          ) : closed ? (
+            <Since at={enteredStatusAt(job)}>{formatDuration(msInStatus(job, now))} ago</Since>
+          ) : job.request.booking && job.status === 'requested' ? (
+            'Waiting for a mechanic to confirm'
+          ) : (
+            <Since at={enteredStatusAt(job)}>
+              {formatDuration(msInStatus(job, now))} in status
+            </Since>
+          )}
         </span>
       </span>
     </Link>
