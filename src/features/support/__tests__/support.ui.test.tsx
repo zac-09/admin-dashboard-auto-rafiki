@@ -104,7 +104,7 @@ describe('disputes', () => {
     await user.click(screen.getByRole('button', { name: 'Flag a dispute' }));
     expect(await screen.findByText('Open dispute')).toBeInTheDocument();
     expect(screen.getByRole('list', { name: 'Support notes' })).toHaveTextContent(/Dispute opened/);
-    await user.click(screen.getByRole('link', { name: 'Support' }));
+    await user.click(screen.getByRole('link', { name: /^Support/ }));
     const open = await screen.findByRole('region', { name: 'Open disputes' });
     expect(within(open).getAllByRole('listitem')).toHaveLength(2);
   });

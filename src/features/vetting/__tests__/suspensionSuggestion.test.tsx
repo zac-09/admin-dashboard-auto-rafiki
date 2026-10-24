@@ -44,9 +44,11 @@ describe('suspension suggested', () => {
   it('flags the mechanic in To collect and prefills (never saves) the suspension', async () => {
     const user = await openAs('ops', '/revenue');
     const panel = await screen.findByRole('region', { name: 'Overdue payments' });
-    const okelloRow = within(panel)
-      .getAllByRole('listitem')
-      .find((li) => /Okello/.test(li.textContent ?? ''))!;
+    const okelloRow = (
+      await within(
+        await within(panel).findByRole('list', { name: 'Mechanics to remind' }),
+      ).findAllByRole('listitem')
+    ).find((li) => /Okello/.test(li.textContent ?? ''))!;
     await user.click(within(okelloRow).getByRole('link', { name: /Suspension suggested: review/ }));
 
     const suggestion = await screen.findByRole('region', { name: 'Suspension suggested' });

@@ -10,6 +10,8 @@ import { CommandPalette } from '@/features/support/CommandPalette';
 import { can } from '@/lib/permissions';
 import type { AdminSession } from '@/types';
 
+import { useAttention } from '../useAttention';
+
 import { Sidebar } from './Sidebar';
 
 /** Sidebar on desktop; a top bar with a sliding drawer on phones (triage from a phone). */
@@ -18,6 +20,7 @@ export function AppShell({ session }: { session: AdminSession }) {
   const { pathname } = useLocation();
   const menuButton = useRef<HTMLButtonElement>(null);
   const drawer = useRef<HTMLDivElement>(null);
+  const attention = useAttention();
 
   // Escape closes; focus moves into the drawer and back to the button; the page stays put.
   useEffect(() => {
@@ -40,7 +43,7 @@ export function AppShell({ session }: { session: AdminSession }) {
       {/* The column carries the background for the full page height; the content sticks. */}
       <aside className="hidden border-r border-hairline bg-surface md:block print:hidden">
         <div className="sticky top-0 h-dvh">
-          <Sidebar session={session} />
+          <Sidebar session={session} attention={attention} />
         </div>
       </aside>
 
@@ -84,7 +87,11 @@ export function AppShell({ session }: { session: AdminSession }) {
               animate={{ x: 0, transition: springs.settle }}
               exit={{ x: '-100%', transition: timings.exit }}
             >
-              <Sidebar session={session} onNavigate={() => setDrawerOpen(false)} />
+              <Sidebar
+                session={session}
+                attention={attention}
+                onNavigate={() => setDrawerOpen(false)}
+              />
             </motion.div>
           </div>
         ) : null}

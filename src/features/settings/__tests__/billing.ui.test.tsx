@@ -39,9 +39,9 @@ describe('subscription payment numbers', () => {
       await within(panel).findByText('MTN +256772123456 (AutoRafiki Ltd)'),
     ).toBeInTheDocument();
 
-    await user.click(screen.getAllByRole('link', { name: 'Revenue' })[0]!);
+    await user.click(screen.getAllByRole('link', { name: /^Revenue/ })[0]!);
     const overdue = await screen.findByRole('region', { name: 'Overdue payments' });
-    const wa = within(overdue).getAllByRole('link', { name: 'WhatsApp reminder' })[0]!;
+    const wa = (await within(overdue).findAllByRole('link', { name: 'WhatsApp reminder' }))[0]!;
     expect(decodeURIComponent(wa.getAttribute('href')!)).toContain(
       'Please pay by mobile money to MTN +256772123456 (AutoRafiki Ltd)',
     );

@@ -49,7 +49,7 @@ describe('shell polish', () => {
     const { user } = await openAs('/vetting');
     await user.click(await screen.findByRole('button', { name: 'Menu' }));
     const drawer = screen.getByRole('dialog', { name: 'Navigation' });
-    expect(within(drawer).getByRole('link', { name: 'Operations' })).toBeInTheDocument();
+    expect(within(drawer).getByRole('link', { name: /^Operations/ })).toBeInTheDocument();
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('dialog', { name: 'Navigation' })).not.toBeInTheDocument();
   });

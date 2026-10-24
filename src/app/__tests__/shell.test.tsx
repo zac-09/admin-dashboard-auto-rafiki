@@ -52,13 +52,27 @@ describe('role-gated shell', () => {
     expect(screen.getByRole('button', { name: 'Reset password' })).toBeEnabled();
   });
 
+  it('the sidebar counts what waits in each module, in words for screen readers', async () => {
+    await signInAs('admin@autorafiki.test');
+    const nav = await screen.findByRole('navigation', { name: 'Main' });
+    expect(
+      await within(nav).findByRole('link', { name: /^Vetting, \d+ applicants? waiting$/ }),
+    ).toBeInTheDocument();
+    expect(
+      await within(nav).findByRole('link', { name: /^Operations, \d+ open alerts?$/ }),
+    ).toBeInTheDocument();
+    // Nothing waiting: no badge at all, not a zero.
+    expect(within(nav).getByRole('link', { name: 'Settings' })).toBeInTheDocument();
+  });
+
   it('an admin lands on Vetting and sees every module, including Staff', async () => {
     await signInAs('admin@autorafiki.test');
     const nav = await screen.findByRole('navigation', { name: 'Main' });
     expect(
       within(nav)
         .getAllByRole('link')
-        .map((l) => l.textContent),
+        // The label without its count badge (labels have no digits; badges start with one).
+        .map((l) => l.textContent?.replace(/\d.*$/, '')),
     ).toEqual([
       'Vetting',
       'Operations',

@@ -2,21 +2,24 @@ import { motion } from 'motion/react';
 import { useId } from 'react';
 import { NavLink } from 'react-router';
 
-import { springs } from '@/components/motion';
+import { AnimatedNumber, springs } from '@/components/motion';
 import { WheelMark } from '@/components/ui';
 import { usePalette } from '@/features/support/paletteStore';
 import { can } from '@/lib/permissions';
 import type { AdminSession } from '@/types';
 
 import { NAV_ITEMS } from '../navigation';
+import { badgeFor, type Attention } from '../useAttention';
 
 import { UserMenu } from './UserMenu';
 
 export function Sidebar({
   session,
+  attention,
   onNavigate,
 }: {
   session: AdminSession;
+  attention: Attention;
   onNavigate?: () => void;
 }) {
   const items = NAV_ITEMS.filter((item) => can(session.role, item.permission));
@@ -59,27 +62,44 @@ export function Sidebar({
                   }`
                 }
               >
-                {({ isActive }) => (
-                  <>
-                    {/* The highlight slides from item to item; active also = diamond + weight. */}
-                    {isActive ? (
+                {({ isActive }) => {
+                  const badge = badgeFor(item.to, attention);
+                  return (
+                    <>
+                      {/* The highlight slides from item to item; active also = diamond + weight. */}
+                      {isActive ? (
+                        <motion.span
+                          layoutId={`nav-active-${highlight}`}
+                          aria-hidden
+                          className="absolute inset-0 rounded-control bg-background before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:bg-accent"
+                          transition={springs.snappy}
+                        />
+                      ) : null}
                       <motion.span
-                        layoutId={`nav-active-${highlight}`}
                         aria-hidden
-                        className="absolute inset-0 rounded-control bg-background before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:bg-accent"
-                        transition={springs.snappy}
+                        className="diamond relative"
+                        initial={false}
+                        animate={{ opacity: isActive ? 1 : 0, scale: isActive ? 1 : 0.4 }}
+                        transition={springs.pop}
                       />
-                    ) : null}
-                    <motion.span
-                      aria-hidden
-                      className="diamond relative"
-                      initial={false}
-                      animate={{ opacity: isActive ? 1 : 0, scale: isActive ? 1 : 0.4 }}
-                      transition={springs.pop}
-                    />
-                    <span className="relative">{item.label}</span>
-                  </>
-                )}
+                      <span className="relative flex-1">{item.label}</span>
+                      {badge ? (
+                        // The number is the signal (not colour); the full phrase is for screen readers.
+                        <span
+                          className="relative min-w-6 rounded-control border border-hairline bg-background px-1.5 text-center text-xs font-semibold text-primary tabular-nums"
+                          title={`${badge.count} ${badge.noun}`}
+                        >
+                          <span aria-hidden>
+                            <AnimatedNumber value={badge.count} />
+                          </span>
+                          <span className="sr-only">
+                            , {badge.count} {badge.noun}
+                          </span>
+                        </span>
+                      ) : null}
+                    </>
+                  );
+                }}
               </NavLink>
             </li>
           ))}

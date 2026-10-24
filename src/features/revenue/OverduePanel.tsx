@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 
 import { Reveal, staggerDelay } from '@/components/motion';
+import { SkeletonLines } from '@/components/ui';
 import type { PayTo } from '@/lib/billing';
 import { formatUgx } from '@/lib/format';
 import { useRepositories } from '@/lib/repositories';
@@ -128,6 +129,11 @@ export function OverduePanel({ accounts }: { accounts: readonly OverdueAccount[]
           <span aria-hidden className="diamond text-success" />
           Nobody is overdue.
         </p>
+      ) : billing.status === 'loading' ? (
+        // The reminders name where to pay: never offer one to copy before that is known.
+        <div role="status" aria-label="Loading reminders" className="px-4 pb-4">
+          <SkeletonLines lines={Math.min(accounts.length, 3)} />
+        </div>
       ) : (
         <ul aria-label="Mechanics to remind">
           {accounts.map((a, i) => (
